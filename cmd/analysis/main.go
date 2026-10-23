@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	comprehendsvc "github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -139,6 +141,37 @@ func handleAnalysis(ctx context.Context, sqsEvent events.SQSEvent) error {
 			if err := incidentStore.SaveIncident(ctx, inc); err != nil {
 				return fmt.Errorf("store analyzed incident %s: %w", inc.ID, err)
 			}
+		}
+
+		if level == model.RiskHigh && snsClient != nil && alertsTopicArn != "" {
+			var signalList []string
+			for _, m := range matches {
+				signalList = append(signalList, fmt.Sprintf("- %s: %s", m.Name, m.Description))
+			}
+
+			subject := fmt.Sprintf("[Sentry Alert] High risk scam detected (score %d/100)", score)
+			body := fmt.Sprintf(
+				"Sentry detected a high risk incident.\n\n"+
+					"Incident ID: %s\n"+
+					"Risk Score: %d / 100\n"+
+					"Category: %s\n"+
+					"Time: %s\n\n"+
+					"Signals:\n%s\n\n"+
+					"Senior Guidance:\n"+
+					"Hold off on: %s\n"+
+					"Safe alternative: %s\n"+
+					"Emergency hotline: %s (%s)\n\n"+
+					"Sign in to the caregiver portal to acknowledge or resolve.",
+				inc.ID, score, category, inc.UpdatedAt,
+				strings.Join(signalList, "\n"),
+				output.HoldOff, output.SafeAlternative, output.Hotline.Name, output.Hotline.Number,
+			)
+
+			_, _ = snsClient.Publish(ctx, &sns.PublishInput{
+				TopicArn: aws.String(alertsTopicArn),
+				Subject:  aws.String(subject),
+				Message:  aws.String(body),
+			})
 		}
 	}
 
