@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -119,11 +120,26 @@ func handleAnalysis(ctx context.Context, sqsEvent events.SQSEvent) error {
 		category := risk.ClassifyCategory(input)
 		output := risk.BuildSeniorOutput(category, level, msg.Country)
 
-		_ = score
-		_ = level
-		_ = matches
-		_ = category
-		_ = output
+		inc := &model.Incident{
+			ID:            msg.IncidentID,
+			ImageKey:      msg.ImageKey,
+			ExtractedText: extractedText,
+			UserContext:   msg.UserContext,
+			Score:         score,
+			RiskLevel:     level,
+			Category:      category,
+			Signals:       matches,
+			Output:        output,
+			Status:        model.StatusAnalyzed,
+			Country:       msg.Country,
+			UpdatedAt:     time.Now().UTC().Format(time.RFC3339),
+		}
+
+		if incidentStore != nil {
+			if err := incidentStore.SaveIncident(ctx, inc); err != nil {
+				return fmt.Errorf("store analyzed incident %s: %w", inc.ID, err)
+			}
+		}
 	}
 
 	return nil
