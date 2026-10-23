@@ -1,0 +1,45 @@
+resource "aws_apigatewayv2_api" "http" {
+  name          = "${var.name_prefix}-http-api"
+  protocol_type = "HTTP"
+
+  cors_configuration {
+    allow_origins = ["*"]
+    allow_methods = ["GET", "POST", "PATCH", "OPTIONS"]
+    allow_headers = ["Content-Type", "Authorization"]
+    max_age       = 3600
+  }
+}
+
+resource "aws_apigatewayv2_authorizer" "jwt" {
+  api_id           = aws_apigatewayv2_api.http.id
+  authorizer_type  = "JWT"
+  identity_sources = ["$request.header.Authorization"]
+  name             = "${var.name_prefix}-caregiver-jwt"
+
+  jwt_configuration {
+    audience = [var.cognito_client_id]
+    issuer   = "https://${var.cognito_user_pool_endpoint}"
+  }
+}
+
+resource "aws_apigatewayv2_route" "presign" {
+  api_id    = aws_apigatewayv2_api.http.id
+  route_key = "POST /api/presign"
+  target    = "integrations/presign"
+}
+
+resource "aws_apigatewayv2_route" "caregiver_incidents" {
+  api_id             = aws_apigatewayv2_api.http.id
+  route_key          = "GET /api/caregiver/incidents"
+  target             = "integrations/caregiver_list"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.jwt.id
+}
+
+resource "aws_apigatewayv2_route" "caregiver_status" {
+  api_id             = aws_apigatewayv2_api.http.id
+  route_key          = "POST /api/caregiver/status"
+  target             = "integrations/caregiver_status"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.jwt.id
+}
