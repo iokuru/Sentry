@@ -1,0 +1,291 @@
+openapi: 3.0.3
+info:
+  title: Sentry API
+  version: 1.0.0
+  description: Scam detection and caregiver notification API for older adults.
+
+paths:
+  /api/presign:
+    post:
+      summary: Request presigned S3 URL for screenshot upload
+      operationId: getPresignedUrl
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PresignRequest'
+      responses:
+        '200':
+          description: Presigned PUT URL generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresignResponse'
+        '400':
+          $ref: '#/components/responses/Error'
+
+  /api/intake:
+    post:
+      summary: Submit screenshot key and optional context for fraud analysis
+      operationId: submitIntake
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IntakeRequest'
+      responses:
+        '202':
+          description: Incident enqueued for async analysis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntakeResponse'
+        '400':
+          $ref: '#/components/responses/Error'
+
+  /api/incidents:
+    get:
+      summary: Fetch single incident result by ID or list for senior lookup
+      operationId: getIncident
+      parameters:
+        - name: id
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Incident details with three guidance outputs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Incident'
+        '404':
+          $ref: '#/components/responses/Error'
+
+  /api/caregiver/incidents:
+    get:
+      summary: List recent incidents for caregiver dashboard
+      operationId: listCaregiverIncidents
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of incidents sorted newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Incident'
+        '401':
+          $ref: '#/components/responses/Error'
+
+  /api/caregiver/status:
+    post:
+      summary: Update incident status to acknowledged or resolved
+      operationId: updateIncidentStatus
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatusUpdateRequest'
+      responses:
+        '200':
+          description: Incident status updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  incident_id:
+                    type: string
+                  status:
+                    $ref: '#/components/schemas/IncidentStatus'
+        '400':
+          $ref: '#/components/responses/Error'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    Error:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+
+  schemas:
+    PresignRequest:
+      type: object
+      properties:
+        content_type:
+          type: string
+          example: image/png
+        filename:
+          type: string
+          example: screenshot.png
+
+    PresignResponse:
+      type: object
+      required:
+        - upload_url
+        - image_key
+      properties:
+        upload_url:
+          type: string
+        image_key:
+          type: string
+
+    IntakeRequest:
+      type: object
+      properties:
+        image_key:
+          type: string
+        user_context:
+          type: string
+        locale:
+          type: string
+          example: en-US
+        country:
+          type: string
+          example: US
+        senior_id:
+          type: string
+
+    IntakeResponse:
+      type: object
+      required:
+        - incident_id
+        - status
+      properties:
+        incident_id:
+          type: string
+        status:
+          type: string
+
+    RiskLevel:
+      type: string
+      enum: [low, medium, high]
+
+    Category:
+      type: string
+      enum:
+        - bank
+        - delivery
+        - utility
+        - prize
+        - tech support
+        - relative in need
+        - romance
+        - tax
+        - other
+
+    IncidentStatus:
+      type: string
+      enum: [pending, analyzed, acknowledged, resolved, failed]
+
+    SignalMatch:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        weight:
+          type: integer
+        description:
+          type: string
+
+    HotlineInfo:
+      type: object
+      properties:
+        country:
+          type: string
+        name:
+          type: string
+        number:
+          type: string
+        tel_uri:
+          type: string
+        url:
+          type: string
+
+    SeniorOutput:
+      type: object
+      required:
+        - hold_off
+        - safe_alternative
+        - hotline
+      properties:
+        hold_off:
+          type: string
+        safe_alternative:
+          type: string
+        hotline:
+          $ref: '#/components/schemas/HotlineInfo'
+
+    Incident:
+      type: object
+      required:
+        - id
+        - score
+        - risk_level
+        - category
+        - status
+        - output
+      properties:
+        id:
+          type: string
+        senior_id:
+          type: string
+        image_key:
+          type: string
+        extracted_text:
+          type: string
+        user_context:
+          type: string
+        score:
+          type: integer
+        risk_level:
+          $ref: '#/components/schemas/RiskLevel'
+        category:
+          $ref: '#/components/schemas/Category'
+        signals:
+          type: array
+          items:
+            $ref: '#/components/schemas/SignalMatch'
+        output:
+          $ref: '#/components/schemas/SeniorOutput'
+        status:
+          $ref: '#/components/schemas/IncidentStatus'
+        country:
+          type: string
+        created_at:
+          type: string
+        updated_at:
+          type: string
+
+    StatusUpdateRequest:
+      type: object
+      required:
+        - incident_id
+        - status
+      properties:
+        incident_id:
+          type: string
+        status:
+          $ref: '#/components/schemas/IncidentStatus'
