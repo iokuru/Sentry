@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import CaregiverSignIn from '$lib/CaregiverSignIn.svelte';
   import SeverityChip from '$lib/SeverityChip.svelte';
 
@@ -17,14 +18,40 @@
   let incidents = $state<Incident[]>([]);
   let loading = $state(false);
   let actionBusy = $state<Record<string, boolean>>({});
+  let pollInterval: ReturnType<typeof setInterval> | null = null;
 
   function handleSignIn(email: string, pass: string) {
     signedIn = true;
     loadIncidents();
+    startPolling();
   }
 
+  function handleSignOut() {
+    stopPolling();
+    signedIn = false;
+  }
+
+  function startPolling() {
+    stopPolling();
+    // poll every five seconds for fresh reports
+    pollInterval = setInterval(loadIncidents, 5000);
+  }
+
+  function stopPolling() {
+    if (pollInterval) {
+      clearInterval(pollInterval);
+      pollInterval = null;
+    }
+  }
+
+  onDestroy(() => {
+    stopPolling();
+  });
+
   async function loadIncidents() {
-    loading = true;
+    if (incidents.length === 0) {
+      loading = true;
+    }
     try {
       const res = await fetch('/api/caregiver/incidents');
       if (res.ok) {
@@ -82,7 +109,7 @@
       <h1 class="portal-title">Caregiver Portal</h1>
     </div>
     {#if signedIn}
-      <button type="button" class="signout-btn" onclick={() => { signedIn = false; }}>
+      <button type="button" class="signout-btn" onclick={handleSignOut}>
         Sign out
       </button>
     {/if}
