@@ -1,5 +1,6 @@
 <script lang="ts">
   import CaregiverSignIn from '$lib/CaregiverSignIn.svelte';
+  import SeverityChip from '$lib/SeverityChip.svelte';
 
   interface Incident {
     id: string;
@@ -34,6 +35,21 @@
       loading = false;
     }
   }
+
+  function formatTime(iso: string): string {
+    if (!iso) return '';
+    try {
+      const d = new Date(iso);
+      return d.toLocaleDateString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
+      });
+    } catch {
+      return iso;
+    }
+  }
 </script>
 
 <main class="caregiver-page">
@@ -59,14 +75,21 @@
         <p class="status-msg">No incidents reported yet.</p>
       {:else}
         {#each incidents as inc (inc.id)}
-          <article class="incident-card">
-            <div class="card-meta">
-              <span class="incident-id">{inc.id}</span>
-              <span class="incident-time">{inc.created_at}</span>
+          <article class="incident-card" class:high-border={inc.risk_level === 'high'}>
+            <div class="card-top">
+              <SeverityChip level={inc.risk_level} score={inc.score} />
+              <time class="incident-time" datetime={inc.created_at}>
+                {formatTime(inc.created_at)}
+              </time>
             </div>
+
             <p class="incident-text">
-              {inc.user_context || inc.extracted_text || inc.category}
+              {inc.user_context || inc.extracted_text || `Suspicious ${inc.category} message`}
             </p>
+
+            <div class="card-status-bar">
+              <span class="status-badge status-{inc.status}">{inc.status}</span>
+            </div>
           </article>
         {/each}
       {/if}
@@ -129,26 +152,59 @@
   .incident-card {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 20px;
+    gap: 14px;
+    padding: 24px;
     background-color: var(--bg-surface);
     border: 2px solid var(--border-subtle);
     border-radius: var(--radius-md);
   }
 
-  .card-meta {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.875rem;
-    color: var(--text-muted);
+  .incident-card.high-border {
+    border-color: var(--rose-border);
   }
 
-  .incident-id {
-    font-weight: 700;
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .incident-time {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-muted);
   }
 
   .incident-text {
     font-size: var(--font-base);
+    font-weight: 600;
     color: var(--text-primary);
+    line-height: 1.4;
+  }
+
+  .card-status-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .status-badge {
+    font-size: 0.875rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    text-transform: capitalize;
+    background-color: var(--stone-bg);
+    color: var(--text-muted);
+  }
+
+  .status-acknowledged {
+    background-color: var(--amber-bg);
+    color: var(--amber-text);
+  }
+
+  .status-resolved {
+    background-color: #ecfdf5;
+    color: #065f46;
   }
 </style>
