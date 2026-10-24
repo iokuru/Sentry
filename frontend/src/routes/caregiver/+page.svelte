@@ -16,6 +16,7 @@
   let signedIn = $state(false);
   let incidents = $state<Incident[]>([]);
   let loading = $state(false);
+  let actionBusy = $state<Record<string, boolean>>({});
 
   function handleSignIn(email: string, pass: string) {
     signedIn = true;
@@ -33,6 +34,28 @@
       // ignore
     } finally {
       loading = false;
+    }
+  }
+
+  async function updateStatus(id: string, status: 'acknowledged' | 'resolved') {
+    actionBusy[id] = true;
+    try {
+      const res = await fetch('/api/caregiver/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ incident_id: id, status })
+      });
+
+      if (res.ok) {
+        const idx = incidents.findIndex((item) => item.id === id);
+        if (idx !== -1) {
+          incidents[idx].status = status;
+        }
+      }
+    } catch {
+      // ignore
+    } finally {
+      actionBusy[id] = false;
     }
   }
 
@@ -87,8 +110,29 @@
               {inc.user_context || inc.extracted_text || `Suspicious ${inc.category} message`}
             </p>
 
-            <div class="card-status-bar">
-              <span class="status-badge status-{inc.status}">{inc.status}</span>
+            <div class="card-actions">
+              {#if inc.status !== 'resolved'}
+                {#if inc.status !== 'acknowledged'}
+                  <button
+                    type="button"
+                    class="action-btn ack-btn"
+                    disabled={actionBusy[inc.id]}
+                    onclick={() => updateStatus(inc.id, 'acknowledged')}
+                  >
+                    Acknowledge
+                  </button>
+                {/if}
+                <button
+                  type="button"
+                  class="action-btn resolve-btn"
+                  disabled={actionBusy[inc.id]}
+                  onclick={() => updateStatus(inc.id, 'resolved')}
+                >
+                  Resolve
+                </button>
+              {:else}
+                <span class="resolved-label">Resolved</span>
+              {/if}
             </div>
           </article>
         {/each}
@@ -152,7 +196,7 @@
   .incident-card {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
     padding: 24px;
     background-color: var(--bg-surface);
     border: 2px solid var(--border-subtle);
@@ -182,29 +226,55 @@
     line-height: 1.4;
   }
 
-  .card-status-bar {
+  .card-actions {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    gap: 12px;
+    margin-top: 4px;
   }
 
-  .status-badge {
-    font-size: 0.875rem;
+  .action-btn {
+    flex: 1;
+    min-height: var(--touch-min);
+    font-size: var(--font-base);
     font-weight: 700;
-    padding: 2px 8px;
     border-radius: var(--radius-sm);
-    text-transform: capitalize;
-    background-color: var(--stone-bg);
-    color: var(--text-muted);
+    padding: 12px 20px;
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 0.15s ease;
   }
 
-  .status-acknowledged {
-    background-color: var(--amber-bg);
+  .ack-btn {
     color: var(--amber-text);
+    background-color: var(--amber-bg);
+    border: 2px solid var(--amber-border);
   }
 
-  .status-resolved {
-    background-color: #ecfdf5;
+  .ack-btn:hover:not(:disabled) {
+    background-color: #fef3c7;
+  }
+
+  .resolve-btn {
+    color: var(--text-inverse);
+    background-color: var(--text-primary);
+    border: 2px solid var(--text-primary);
+  }
+
+  .resolve-btn:hover:not(:disabled) {
+    background-color: #292524;
+  }
+
+  .action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .resolved-label {
+    font-size: var(--font-base);
+    font-weight: 700;
     color: #065f46;
+    background-color: #ecfdf5;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
   }
 </style>
