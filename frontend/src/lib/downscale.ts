@@ -3,6 +3,11 @@ export async function downscaleImage(
   maxDimension = 1600,
   quality = 0.85
 ): Promise<{ blob: Blob; previewUrl: string }> {
+  // reject unreasonably large input before processing
+  if (file.size > 20 * 1024 * 1024) {
+    throw new Error('Image exceeds 20MB limit. Please select a smaller screenshot.');
+  }
+
   return new Promise((resolve, reject) => {
     const objectUrl = URL.createObjectURL(file);
     const img = new Image();
@@ -36,6 +41,18 @@ export async function downscaleImage(
         (blob) => {
           if (!blob) {
             resolve({ blob: file, previewUrl: URL.createObjectURL(file) });
+            return;
+          }
+          // ensure blob is within 4mb textract limit
+          if (blob.size > 4 * 1024 * 1024) {
+            canvas.toBlob(
+              (smallerBlob) => {
+                const finalBlob = smallerBlob || blob;
+                resolve({ blob: finalBlob, previewUrl: URL.createObjectURL(finalBlob) });
+              },
+              'image/jpeg',
+              0.65
+            );
             return;
           }
           const previewUrl = URL.createObjectURL(blob);
