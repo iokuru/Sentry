@@ -1,5 +1,8 @@
 <script lang="ts">
-  let { country = $bindable('US') } = $props<{ country: string }>();
+  interface Props {
+    country?: string;
+  }
+  let { country = $bindable('US') }: Props = $props();
 
   const countries = [
     { code: 'US', label: 'US' },

@@ -1,8 +1,11 @@
 <script lang="ts">
-  let { advice } = $props<{ advice: string }>();
+  interface Props {
+    advice: string;
+  }
+  let { advice }: Props = $props();
 </script>
 
-<div class="result-card hold-off" role="region" aria-label="What to hold off on" tabindex="0">
+<div class="result-card hold-off" role="region" aria-label="What to hold off on">
   <div class="card-header">
     <svg class="header-icon" viewBox="0 0 24 24" width="32" height="32" aria-hidden="true">
       <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
@@ -21,11 +24,6 @@
     background-color: var(--rose-bg);
     border: 3px solid var(--rose-border);
     border-radius: var(--radius-md);
-  }
-
-  .result-card:focus-visible {
-    outline: 4px solid var(--rose-text);
-    outline-offset: 3px;
   }
 
   .card-header {

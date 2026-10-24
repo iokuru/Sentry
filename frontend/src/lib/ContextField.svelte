@@ -1,5 +1,8 @@
 <script lang="ts">
-  let { value = $bindable('') } = $props<{ value: string }>();
+  interface Props {
+    value?: string;
+  }
+  let { value = $bindable('') }: Props = $props();
 </script>
 
 <div class="field-group">

@@ -1,8 +1,9 @@
 <script lang="ts">
-  let { src, onremove } = $props<{
+  interface Props {
     src: string;
     onremove: () => void;
-  }>();
+  }
+  let { src, onremove }: Props = $props();
 </script>
 
 <div class="preview-card">

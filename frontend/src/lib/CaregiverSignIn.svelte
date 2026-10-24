@@ -1,7 +1,8 @@
 <script lang="ts">
-  let { onsignin } = $props<{
+  interface Props {
     onsignin: (email: string, pass: string) => void;
-  }>();
+  }
+  let { onsignin }: Props = $props();
 
   let email = $state('');
   let password = $state('');

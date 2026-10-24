@@ -1,9 +1,10 @@
 <script lang="ts">
-  let { busy = false, disabled = false, onclick } = $props<{
+  interface Props {
     busy?: boolean;
     disabled?: boolean;
     onclick: () => void;
-  }>();
+  }
+  let { busy = false, disabled = false, onclick }: Props = $props();
 </script>
 
 <button

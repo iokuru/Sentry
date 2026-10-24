@@ -1,8 +1,9 @@
 <script lang="ts">
-  let { level, score } = $props<{
+  interface Props {
     level: string;
     score?: number;
-  }>();
+  }
+  let { level, score }: Props = $props();
 
   const normalized = $derived((level || 'low').toLowerCase());
 </script>

@@ -18,10 +18,10 @@ import (
 )
 
 type SeedScenario struct {
-	Text     string
-	Country  string
-	Status   model.IncidentStatus
-	TimeAgo  time.Duration
+	Text    string
+	Country string
+	Status  model.IncidentStatus
+	TimeAgo time.Duration
 }
 
 var scenarios = []SeedScenario{

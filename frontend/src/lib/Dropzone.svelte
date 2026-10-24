@@ -1,8 +1,9 @@
 <script lang="ts">
-  let { onfile, hasFile = false } = $props<{
+  interface Props {
     onfile: (file: File) => void;
     hasFile?: boolean;
-  }>();
+  }
+  let { onfile, hasFile = false }: Props = $props();
 
   let isDragging = $state(false);
   let fileInput: HTMLInputElement;

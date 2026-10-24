@@ -1,8 +1,11 @@
 <script lang="ts">
-  let { action } = $props<{ action: string }>();
+  interface Props {
+    action: string;
+  }
+  let { action }: Props = $props();
 </script>
 
-<div class="result-card safe-alternative" role="region" aria-label="Safe alternative action" tabindex="0">
+<div class="result-card safe-alternative" role="region" aria-label="Safe alternative action">
   <div class="card-header">
     <svg class="header-icon" viewBox="0 0 24 24" width="32" height="32" aria-hidden="true">
       <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
@@ -21,11 +24,6 @@
     background-color: var(--amber-bg);
     border: 3px solid var(--amber-border);
     border-radius: var(--radius-md);
-  }
-
-  .result-card:focus-visible {
-    outline: 4px solid var(--amber-text);
-    outline-offset: 3px;
   }
 
   .card-header {

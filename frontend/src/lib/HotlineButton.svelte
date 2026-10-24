@@ -1,5 +1,5 @@
 <script lang="ts">
-  let { hotline } = $props<{
+  interface Props {
     hotline: {
       country: string;
       name: string;
@@ -7,7 +7,8 @@
       tel_uri: string;
       url?: string;
     };
-  }>();
+  }
+  let { hotline }: Props = $props();
 </script>
 
 <a
