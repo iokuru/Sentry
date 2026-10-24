@@ -22,9 +22,11 @@ resource "aws_cloudfront_distribution" "frontend" {
   }
 
   default_cache_behavior {
-    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
-    cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "frontend-s3"
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "frontend-s3"
+    viewer_protocol_policy = "redirect-to-https"
+    compress               = true
 
     forwarded_values {
       query_string = false
@@ -33,24 +35,43 @@ resource "aws_cloudfront_distribution" "frontend" {
       }
     }
 
+    min_ttl     = 0
+    default_ttl = 3600
+    max_ttl     = 86400
+  }
+
+  ordered_cache_behavior {
+    path_pattern           = "/_app/*"
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "frontend-s3"
     viewer_protocol_policy = "redirect-to-https"
-    min_ttl                = 0
-    default_ttl            = 86400
-    max_ttl                = 604800
+    compress               = true
+
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "none"
+      }
+    }
+
+    min_ttl     = 86400
+    default_ttl = 604800
+    max_ttl     = 31536000
   }
 
   custom_error_response {
     error_code            = 403
     response_code         = 200
     response_page_path    = "/index.html"
-    error_caching_min_ttl = 60
+    error_caching_min_ttl = 10
   }
 
   custom_error_response {
     error_code            = 404
     response_code         = 200
     response_page_path    = "/index.html"
-    error_caching_min_ttl = 60
+    error_caching_min_ttl = 10
   }
 
   restrictions {
