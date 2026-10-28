@@ -1,23 +1,30 @@
 <script lang="ts">
   interface Props {
+    busy?: boolean;
+    errorMessage?: string;
     onsignin: (email: string, pass: string) => void;
   }
-  let { onsignin }: Props = $props();
+  let { busy = false, errorMessage = '', onsignin }: Props = $props();
 
   let email = $state('');
   let password = $state('');
-  let busy = $state(false);
 
   function handleSubmit(e: SubmitEvent) {
     e.preventDefault();
-    if (!email || !password) return;
-    busy = true;
+    if (!email || !password || busy) return;
     onsignin(email, password);
   }
 </script>
 
 <div class="auth-card">
   <h1 class="title">Caregiver Sign In</h1>
+
+  {#if errorMessage}
+    <div class="error-banner" role="alert">
+      {errorMessage}
+    </div>
+  {/if}
+
   <form onsubmit={handleSubmit} class="form">
     <div class="field">
       <label for="caregiver-email" class="label">Email address</label>
@@ -44,7 +51,7 @@
     </div>
 
     <button type="submit" class="submit-btn" disabled={busy || !email || !password}>
-      Sign In
+      {busy ? 'Signing in...' : 'Sign In'}
     </button>
   </form>
 </div>
@@ -64,6 +71,16 @@
     font-size: var(--font-xl);
     font-weight: 800;
     color: var(--text-primary);
+  }
+
+  .error-banner {
+    padding: 12px 16px;
+    background-color: var(--rose-50);
+    border: 2px solid var(--rose-600);
+    color: var(--rose-800);
+    font-size: var(--font-base);
+    font-weight: 700;
+    border-radius: var(--radius-sm);
   }
 
   .form {
@@ -91,6 +108,12 @@
     background-color: var(--bg-app);
     border: 2px solid var(--border-strong);
     border-radius: var(--radius-sm);
+    color: var(--text-primary);
+  }
+
+  .input:focus-visible {
+    outline: 3px solid var(--ring-focus);
+    outline-offset: 2px;
   }
 
   .submit-btn {
@@ -98,15 +121,22 @@
     font-size: var(--font-lg);
     font-weight: 700;
     color: var(--text-inverse);
-    background-color: var(--text-primary);
-    border: 2px solid var(--text-primary);
+    background-color: var(--stone-900);
+    border: none;
     border-radius: var(--radius-sm);
-    padding: 14px 20px;
     cursor: pointer;
+    transition: background-color 150ms ease;
+  }
+
+  .submit-btn:hover:not(:disabled),
+  .submit-btn:focus-visible:not(:disabled) {
+    background-color: var(--stone-700);
+    outline: 3px solid var(--ring-focus);
+    outline-offset: 2px;
   }
 
   .submit-btn:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 </style>
