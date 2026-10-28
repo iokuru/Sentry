@@ -10,6 +10,13 @@
   import CountrySwitch from '$lib/CountrySwitch.svelte';
   import { detectCountry } from '$lib/locale';
   import { downscaleImage } from '$lib/downscale';
+  import {
+    presignUpload,
+    uploadScreenshot,
+    submitIntake,
+    pollIncident,
+    type Incident
+  } from '$lib/api';
 
   let country = $state('US');
   let selectedFile = $state<File | null>(null);
@@ -18,25 +25,7 @@
   let contextText = $state('');
   let busy = $state(false);
   let errorMessage = $state('');
-
-  interface IncidentResult {
-    id: string;
-    score: number;
-    risk_level: string;
-    category: string;
-    output: {
-      hold_off: string;
-      safe_alternative: string;
-      hotline: {
-        country: string;
-        name: string;
-        number: string;
-        tel_uri: string;
-      };
-    };
-  }
-
-  let result = $state<IncidentResult | null>(null);
+  let result = $state<Incident | null>(null);
 
   onMount(() => {
     country = detectCountry();
@@ -44,6 +33,18 @@
 
   async function handleFileSelected(file: File) {
     errorMessage = '';
+
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      errorMessage = 'Only PNG, JPG, and WebP images are supported';
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      errorMessage = 'Screenshot exceeds five megabyte limit';
+      return;
+    }
+
     selectedFile = file;
     try {
       const downscaled = await downscaleImage(file);
@@ -76,66 +77,22 @@
       let imageKey = '';
 
       if (processedBlob) {
-        const presignRes = await fetch('/api/presign', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            content_type: processedBlob.type || 'image/png',
-            filename: selectedFile?.name || 'screenshot.png'
-          })
-        });
+        const contentType = processedBlob.type || 'image/png';
+        const filename = selectedFile?.name || 'screenshot.png';
 
-        if (!presignRes.ok) {
-          throw new Error('Could not prepare upload');
-        }
-
-        const presignData = await presignRes.json();
+        const presignData = await presignUpload(contentType, filename);
         imageKey = presignData.image_key;
 
-        const uploadRes = await fetch(presignData.upload_url, {
-          method: 'PUT',
-          headers: { 'Content-Type': processedBlob.type || 'image/png' },
-          body: processedBlob
-        });
-
-        if (!uploadRes.ok) {
-          throw new Error('Could not upload image');
-        }
+        await uploadScreenshot(presignData.upload_url, processedBlob, contentType);
       }
 
-      const intakeRes = await fetch('/api/intake', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          image_key: imageKey,
-          user_context: contextText.trim(),
-          country: country
-        })
+      const intakeData = await submitIntake({
+        image_key: imageKey,
+        user_context: contextText.trim(),
+        country: country
       });
 
-      if (!intakeRes.ok) {
-        throw new Error('Analysis request failed');
-      }
-
-      const intakeData = await intakeRes.json();
-      const incidentId = intakeData.incident_id;
-
-      // poll for finished result
-      for (let attempt = 0; attempt < 25; attempt++) {
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        const res = await fetch(`/api/incidents?id=${incidentId}`);
-        if (res.ok) {
-          const data: IncidentResult = await res.json();
-          if (data && data.output && data.output.hold_off) {
-            result = data;
-            break;
-          }
-        }
-      }
-
-      if (!result) {
-        throw new Error('Analysis timed out. Please try again.');
-      }
+      result = await pollIncident(intakeData.incident_id);
     } catch (err: unknown) {
       errorMessage = err instanceof Error ? err.message : 'Something went wrong';
     } finally {
@@ -160,7 +117,7 @@
     </div>
   </header>
 
-  {#if !result}
+  {#if !result || !result.output}
     <section class="intake-section">
       {#if !previewUrl}
         <Dropzone onfile={handleFileSelected} hasFile={false} />
@@ -199,48 +156,58 @@
   .page {
     display: flex;
     flex-direction: column;
-    gap: 32px;
+    min-height: 100vh;
+    padding: 16px 20px 48px;
+    max-width: 680px;
+    margin: 0 auto;
+    gap: 24px;
   }
 
   .top-bar {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding-bottom: 16px;
+    justify-content: space-between;
+    padding-bottom: 8px;
     border-bottom: 2px solid var(--border-subtle);
   }
 
   .brand {
     font-size: var(--font-xl);
     font-weight: 800;
-    letter-spacing: -0.02em;
     color: var(--text-primary);
+    letter-spacing: -0.02em;
   }
 
   .actions {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
   }
 
   .portal-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--touch-min);
+    padding: 0 16px;
     font-size: var(--font-base);
-    font-weight: 600;
-    color: var(--text-muted);
-    padding: 6px 12px;
-    border-radius: var(--radius-sm);
-  }
-
-  .portal-link:hover {
+    font-weight: 700;
     color: var(--text-primary);
+    background-color: var(--bg-surface);
+    border: 2px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    transition: background-color 150ms ease;
   }
 
-  .intake-section {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
+  .portal-link:hover,
+  .portal-link:focus-visible {
+    background-color: var(--bg-hover);
+    outline: 3px solid var(--ring-focus);
+    outline-offset: 2px;
   }
 
+  .intake-section,
   .result-section {
     display: flex;
     flex-direction: column;
@@ -248,30 +215,36 @@
   }
 
   .error-banner {
-    padding: 16px;
+    padding: 14px 18px;
+    background-color: var(--rose-50);
+    border: 2px solid var(--rose-600);
+    color: var(--rose-800);
     font-size: var(--font-base);
-    font-weight: 600;
-    color: var(--rose-text);
-    background-color: var(--rose-bg);
-    border: 2px solid var(--rose-border);
+    font-weight: 700;
     border-radius: var(--radius-sm);
   }
 
   .reset-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     min-height: var(--touch-min);
-    font-size: var(--font-base);
+    width: 100%;
+    padding: 16px 24px;
+    font-size: var(--font-lg);
     font-weight: 700;
-    color: var(--text-secondary);
+    color: var(--text-primary);
     background-color: var(--bg-surface);
-    border: 2px solid var(--border-subtle);
-    border-radius: var(--radius-sm);
-    padding: 14px 20px;
+    border: 2px solid var(--border-strong);
+    border-radius: var(--radius-md);
     cursor: pointer;
-    text-align: center;
+    transition: background-color 150ms ease;
   }
 
-  .reset-btn:hover {
-    color: var(--text-primary);
-    border-color: var(--border-strong);
+  .reset-btn:hover,
+  .reset-btn:focus-visible {
+    background-color: var(--bg-hover);
+    outline: 3px solid var(--ring-focus);
+    outline-offset: 2px;
   }
 </style>
