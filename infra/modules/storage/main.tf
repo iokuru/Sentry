@@ -62,6 +62,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "uploads" {
     id     = "expire-screenshots-after-one-day"
     status = "Enabled"
 
+    filter {}
+
     expiration {
       days = 1
     }
