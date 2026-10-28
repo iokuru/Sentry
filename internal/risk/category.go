@@ -29,16 +29,16 @@ func ClassifyCategory(in Input) model.Category {
 		return model.CategoryTax
 	case techRegex.MatchString(combined):
 		return model.CategoryTechSupport
-	case bankRegex.MatchString(combined):
-		return model.CategoryBank
-	case deliveryRegex.MatchString(combined):
-		return model.CategoryDelivery
-	case utilityRegex.MatchString(combined):
-		return model.CategoryUtility
-	case prizeRegex.MatchString(combined):
-		return model.CategoryPrize
 	case romanceRegex.MatchString(combined):
 		return model.CategoryRomance
+	case prizeRegex.MatchString(combined):
+		return model.CategoryPrize
+	case utilityRegex.MatchString(combined):
+		return model.CategoryUtility
+	case deliveryRegex.MatchString(combined):
+		return model.CategoryDelivery
+	case bankRegex.MatchString(combined):
+		return model.CategoryBank
 	default:
 		return model.CategoryOther
 	}
