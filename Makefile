@@ -1,4 +1,4 @@
-.PHONY: all build build-lambdas test dev plan apply destroy seed clean check smoke smoke-live telegram-hook
+.PHONY: all build build-lambdas test dev plan apply destroy seed clean check smoke smoke-live telegram-hook deploy costguard
 
 all: build test
 
@@ -14,6 +14,13 @@ test:
 
 dev:
 	go run ./cmd/devserver
+
+deploy:
+	go run ./cmd/costguard
+	go run ./cmd/deploy
+
+costguard:
+	go run ./cmd/costguard
 
 telegram-hook:
 	go run ./cmd/telegram_set_webhook

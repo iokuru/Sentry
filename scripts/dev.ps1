@@ -39,6 +39,13 @@ switch ($Command) {
     "telegram-hook" {
         go run ./cmd/telegram_set_webhook
     }
+    "deploy" {
+        go run ./cmd/costguard
+        go run ./cmd/deploy
+    }
+    "costguard" {
+        go run ./cmd/costguard
+    }
     "clean" {
         go run ./cmd/build -clean
     }
