@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -15,12 +17,14 @@ import (
 	comprehendsvc "github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	textractsvc "github.com/aws/aws-sdk-go-v2/service/textract"
 	"github.com/iokuru/sentry/internal/comprehend"
 	"github.com/iokuru/sentry/internal/model"
 	"github.com/iokuru/sentry/internal/quota"
 	"github.com/iokuru/sentry/internal/risk"
 	"github.com/iokuru/sentry/internal/store"
+	"github.com/iokuru/sentry/internal/telegram"
 	"github.com/iokuru/sentry/internal/textract"
 )
 
@@ -35,6 +39,8 @@ var (
 	textractClient   *textractsvc.Client
 	comprehendClient *comprehendsvc.Client
 	snsClient        *sns.Client
+	telegramClient   *telegram.Client
+	telegramCfg      *telegram.Config
 	incidentStore    *store.Store
 	rateLimiter      *quota.Limiter
 	uploadBucket     string
@@ -58,6 +64,7 @@ func init() {
 	}
 
 	rateLimiter = quota.NewLimiter()
+	telegramClient = telegram.NewClient()
 
 	cfg, err := config.LoadDefaultConfig(context.Background())
 	if err == nil {
@@ -65,7 +72,11 @@ func init() {
 		comprehendClient = comprehendsvc.NewFromConfig(cfg)
 		snsClient = sns.NewFromConfig(cfg)
 		dbClient := dynamodb.NewFromConfig(cfg)
+		ssmClient := ssm.NewFromConfig(cfg)
 		incidentStore = store.NewStore(dbClient, incidentsTable, linksTable)
+
+		// cached telegram config loaded once at cold start
+		telegramCfg = telegram.LoadConfigFromSSM(context.Background(), ssmClient)
 	}
 }
 
@@ -143,7 +154,21 @@ func handleAnalysis(ctx context.Context, sqsEvent events.SQSEvent) error {
 			}
 		}
 
-		if level == model.RiskHigh && snsClient != nil && alertsTopicArn != "" {
+		if level == model.RiskHigh {
+			notifyCaregivers(ctx, inc, score, category, matches, output)
+		}
+	}
+
+	return nil
+}
+
+func notifyCaregivers(ctx context.Context, inc *model.Incident, score int, category model.Category, matches []model.SignalMatch, output model.SeniorOutput) {
+	var wg sync.WaitGroup
+
+	if snsClient != nil && alertsTopicArn != "" {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
 			var signalList []string
 			for _, m := range matches {
 				signalList = append(signalList, fmt.Sprintf("- %s: %s", m.Name, m.Description))
@@ -167,15 +192,45 @@ func handleAnalysis(ctx context.Context, sqsEvent events.SQSEvent) error {
 				output.HoldOff, output.SafeAlternative, output.Hotline.Name, output.Hotline.Number,
 			)
 
-			_, _ = snsClient.Publish(ctx, &sns.PublishInput{
+			_, err := snsClient.Publish(ctx, &sns.PublishInput{
 				TopicArn: aws.String(alertsTopicArn),
 				Subject:  aws.String(subject),
 				Message:  aws.String(body),
 			})
-		}
+			if err != nil {
+				log.Printf("sns alert failed: %v", err)
+			}
+		}()
 	}
 
-	return nil
+	if telegramCfg != nil && telegramCfg.Enabled && telegramClient != nil {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			detectedOneLine := "Suspicious patterns detected"
+			if len(matches) > 0 {
+				detectedOneLine = matches[0].Description
+			}
+
+			text, buttons := telegram.FormatAlertMessage(
+				string(category),
+				string(inc.RiskLevel),
+				detectedOneLine,
+				output.Hotline.Name,
+				output.Hotline.Number,
+				inc.ID,
+				inc.UpdatedAt,
+			)
+
+			_, err := telegramClient.Send(ctx, telegramCfg.Token, telegramCfg.ChatID, text, buttons)
+			if err != nil {
+				// logged once and never blocks
+				log.Printf("telegram alert failed: %v", err)
+			}
+		}()
+	}
+
+	wg.Wait()
 }
 
 func main() {
