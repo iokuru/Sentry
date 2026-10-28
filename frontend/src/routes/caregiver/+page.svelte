@@ -1,40 +1,72 @@
 <script lang="ts">
-  import { onDestroy } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import CaregiverSignIn from '$lib/CaregiverSignIn.svelte';
   import SeverityChip from '$lib/SeverityChip.svelte';
-
-  interface Incident {
-    id: string;
-    score: number;
-    risk_level: string;
-    category: string;
-    status: string;
-    user_context?: string;
-    extracted_text?: string;
-    created_at: string;
-  }
+  import { signIn, signOut, isAuthenticated } from '$lib/auth';
+  import { listCaregiverIncidents, updateCaregiverStatus, type Incident } from '$lib/api';
 
   let signedIn = $state(false);
+  let signInBusy = $state(false);
+  let signInError = $state('');
   let incidents = $state<Incident[]>([]);
   let loading = $state(false);
+  let feedError = $state('');
   let actionBusy = $state<Record<string, boolean>>({});
   let pollInterval: ReturnType<typeof setInterval> | null = null;
 
-  function handleSignIn(email: string, pass: string) {
-    signedIn = true;
-    loadIncidents();
-    startPolling();
+  onMount(() => {
+    signedIn = isAuthenticated();
+    if (signedIn) {
+      loadIncidents();
+      startPolling();
+    }
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    }
+  });
+
+  onDestroy(() => {
+    stopPolling();
+    if (typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }
+  });
+
+  function handleVisibilityChange() {
+    if (document.visibilityState === 'hidden') {
+      stopPolling();
+    } else if (document.visibilityState === 'visible' && signedIn) {
+      loadIncidents();
+      startPolling();
+    }
+  }
+
+  async function handleSignIn(email: string, pass: string) {
+    signInBusy = true;
+    signInError = '';
+    try {
+      await signIn(email, pass);
+      signedIn = true;
+      await loadIncidents();
+      startPolling();
+    } catch (err: unknown) {
+      signInError = err instanceof Error ? err.message : 'Sign in failed';
+    } finally {
+      signInBusy = false;
+    }
   }
 
   function handleSignOut() {
     stopPolling();
+    signOut();
     signedIn = false;
+    incidents = [];
   }
 
   function startPolling() {
     stopPolling();
-    // poll every five seconds for fresh reports
-    pollInterval = setInterval(loadIncidents, 5000);
+    // poll every fifteen seconds for fresh caregiver reports
+    pollInterval = setInterval(loadIncidents, 15000);
   }
 
   function stopPolling() {
@@ -44,43 +76,40 @@
     }
   }
 
-  onDestroy(() => {
-    stopPolling();
-  });
-
   async function loadIncidents() {
     if (incidents.length === 0) {
       loading = true;
     }
     try {
-      const res = await fetch('/api/caregiver/incidents');
-      if (res.ok) {
-        incidents = await res.json();
+      incidents = await listCaregiverIncidents();
+      feedError = '';
+    } catch (err: unknown) {
+      if (err instanceof Error && err.message === 'Unauthorized') {
+        handleSignOut();
+      } else {
+        feedError = 'Failed to refresh incidents';
       }
-    } catch {
-      // ignore
     } finally {
       loading = false;
     }
   }
 
-  async function updateStatus(id: string, status: 'acknowledged' | 'resolved') {
-    actionBusy[id] = true;
-    try {
-      const res = await fetch('/api/caregiver/status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ incident_id: id, status })
-      });
+  async function updateStatus(id: string, newStatus: 'acknowledged' | 'resolved') {
+    const idx = incidents.findIndex((item) => item.id === id);
+    if (idx === -1) return;
 
-      if (res.ok) {
-        const idx = incidents.findIndex((item) => item.id === id);
-        if (idx !== -1) {
-          incidents[idx].status = status;
-        }
-      }
+    const previousStatus = incidents[idx].status;
+    // optimistic update
+    incidents[idx].status = newStatus;
+    actionBusy[id] = true;
+    feedError = '';
+
+    try {
+      await updateCaregiverStatus(id, newStatus);
     } catch {
-      // ignore
+      // rollback status on failure
+      incidents[idx].status = previousStatus;
+      feedError = 'Could not update status, please retry';
     } finally {
       actionBusy[id] = false;
     }
@@ -116,8 +145,18 @@
   </header>
 
   {#if !signedIn}
-    <CaregiverSignIn onsignin={handleSignIn} />
+    <CaregiverSignIn
+      busy={signInBusy}
+      errorMessage={signInError}
+      onsignin={handleSignIn}
+    />
   {:else}
+    {#if feedError}
+      <div class="feed-error" role="alert">
+        {feedError}
+      </div>
+    {/if}
+
     <section class="incident-feed">
       {#if loading && incidents.length === 0}
         <p class="status-msg">Loading incidents...</p>
@@ -173,6 +212,9 @@
     display: flex;
     flex-direction: column;
     gap: 28px;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 20px 24px 60px;
   }
 
   .caregiver-header {
@@ -193,31 +235,64 @@
     font-size: var(--font-base);
     font-weight: 700;
     color: var(--text-secondary);
+    text-decoration: none;
+    min-height: var(--touch-min);
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .back-link:hover,
+  .back-link:focus-visible {
+    color: var(--text-primary);
   }
 
   .portal-title {
     font-size: var(--font-xl);
     font-weight: 800;
+    color: var(--text-primary);
   }
 
   .signout-btn {
+    min-height: var(--touch-min);
+    padding: 0 16px;
     font-size: var(--font-base);
-    font-weight: 600;
-    color: var(--text-muted);
-    padding: 6px 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    background: transparent;
+    border: 2px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+  }
+
+  .signout-btn:hover,
+  .signout-btn:focus-visible {
+    color: var(--text-primary);
+    background-color: var(--bg-hover);
+    outline: 3px solid var(--ring-focus);
+    outline-offset: 2px;
+  }
+
+  .feed-error {
+    padding: 12px 16px;
+    background-color: var(--rose-50);
+    border: 2px solid var(--rose-600);
+    color: var(--rose-800);
+    font-size: var(--font-base);
+    font-weight: 700;
+    border-radius: var(--radius-sm);
   }
 
   .incident-feed {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
   }
 
   .status-msg {
     font-size: var(--font-lg);
-    color: var(--text-muted);
+    color: var(--text-secondary);
+    padding: 32px 0;
     text-align: center;
-    padding: 40px 0;
   }
 
   .incident-card {
@@ -230,8 +305,8 @@
     border-radius: var(--radius-md);
   }
 
-  .incident-card.high-border {
-    border-color: var(--rose-border);
+  .high-border {
+    border-left: 6px solid var(--rose-600);
   }
 
   .card-top {
@@ -241,54 +316,60 @@
   }
 
   .incident-time {
-    font-size: 0.95rem;
-    font-weight: 600;
+    font-size: var(--font-sm);
     color: var(--text-muted);
+    font-weight: 600;
   }
 
   .incident-text {
     font-size: var(--font-base);
-    font-weight: 600;
     color: var(--text-primary);
-    line-height: 1.4;
+    line-height: 1.5;
+    word-break: break-word;
   }
 
   .card-actions {
     display: flex;
+    align-items: center;
     gap: 12px;
-    margin-top: 4px;
+    padding-top: 8px;
   }
 
   .action-btn {
-    flex: 1;
     min-height: var(--touch-min);
+    min-width: 140px;
+    padding: 12px 20px;
     font-size: var(--font-base);
     font-weight: 700;
     border-radius: var(--radius-sm);
-    padding: 12px 20px;
     cursor: pointer;
-    text-align: center;
-    transition: background-color 0.15s ease;
+    transition: background-color 150ms ease;
   }
 
   .ack-btn {
-    color: var(--amber-text);
-    background-color: var(--amber-bg);
-    border: 2px solid var(--amber-border);
+    background-color: var(--bg-surface);
+    border: 2px solid var(--border-strong);
+    color: var(--text-primary);
   }
 
-  .ack-btn:hover:not(:disabled) {
-    background-color: #fef3c7;
+  .ack-btn:hover:not(:disabled),
+  .ack-btn:focus-visible:not(:disabled) {
+    background-color: var(--bg-hover);
+    outline: 3px solid var(--ring-focus);
+    outline-offset: 2px;
   }
 
   .resolve-btn {
+    background-color: var(--stone-900);
+    border: 2px solid var(--stone-900);
     color: var(--text-inverse);
-    background-color: var(--text-primary);
-    border: 2px solid var(--text-primary);
   }
 
-  .resolve-btn:hover:not(:disabled) {
-    background-color: #292524;
+  .resolve-btn:hover:not(:disabled),
+  .resolve-btn:focus-visible:not(:disabled) {
+    background-color: var(--stone-700);
+    outline: 3px solid var(--ring-focus);
+    outline-offset: 2px;
   }
 
   .action-btn:disabled {
@@ -297,11 +378,11 @@
   }
 
   .resolved-label {
+    min-height: var(--touch-min);
+    display: inline-flex;
+    align-items: center;
     font-size: var(--font-base);
     font-weight: 700;
-    color: #065f46;
-    background-color: #ecfdf5;
-    padding: 8px 16px;
-    border-radius: var(--radius-sm);
+    color: var(--text-muted);
   }
 </style>
