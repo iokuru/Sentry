@@ -1,0 +1,45 @@
+param(
+    [string]$Command = "dev"
+)
+
+$ErrorActionPreference = "Stop"
+
+switch ($Command) {
+    "build" {
+        go run ./cmd/build -frontend
+    }
+    "build-lambdas" {
+        go run ./cmd/build
+    }
+    "test" {
+        go test ./...
+        Push-Location frontend
+        npm test
+        Pop-Location
+    }
+    "dev" {
+        go run ./cmd/devserver
+    }
+    "seed" {
+        go run ./cmd/seed
+    }
+    "smoke" {
+        go run ./cmd/smoke
+    }
+    "smoke-live" {
+        go run ./cmd/smoke -live
+    }
+    "check" {
+        gofmt -s -w .
+        go vet ./...
+        Push-Location frontend
+        npx svelte-check
+        Pop-Location
+    }
+    "clean" {
+        go run ./cmd/build -clean
+    }
+    default {
+        Write-Error "Unknown command: $Command. Available: build, build-lambdas, test, dev, seed, smoke, check, clean"
+    }
+}

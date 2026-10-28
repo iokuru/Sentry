@@ -1,26 +1,19 @@
-export GOOS := linux
-export GOARCH := arm64
-export CGO_ENABLED := 0
-
-.PHONY: all build test dev plan apply destroy seed clean check
+.PHONY: all build build-lambdas test dev plan apply destroy seed clean check smoke
 
 all: build test
 
 build:
-	go build -trimpath -ldflags="-s -w" -o bin/presign ./cmd/presign
-	go build -trimpath -ldflags="-s -w" -o bin/intake ./cmd/intake
-	go build -trimpath -ldflags="-s -w" -o bin/analysis ./cmd/analysis
-	go build -trimpath -ldflags="-s -w" -o bin/caregiver_list ./cmd/caregiver_list
-	go build -trimpath -ldflags="-s -w" -o bin/caregiver_status ./cmd/caregiver_status
-	go build -trimpath -ldflags="-s -w" -o bin/digest ./cmd/digest
-	cd frontend && npm run build
+	go run ./cmd/build -frontend
+
+build-lambdas:
+	go run ./cmd/build
 
 test:
-	go test -v ./...
+	go test ./...
 	cd frontend && npm test
 
 dev:
-	go run ./cmd/dev
+	go run ./cmd/devserver
 
 plan:
 	terraform -chdir=infra plan
@@ -34,10 +27,16 @@ destroy:
 seed:
 	go run ./cmd/seed
 
+smoke:
+	go run ./cmd/smoke
+
+smoke-live:
+	go run ./cmd/smoke -live
+
 check:
 	gofmt -s -w .
 	go vet ./...
 	cd frontend && npx svelte-check
 
 clean:
-	rm -rf bin dist frontend/build
+	go run ./cmd/build -clean
