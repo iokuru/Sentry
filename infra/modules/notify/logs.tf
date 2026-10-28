@@ -5,7 +5,8 @@ locals {
     "analysis",
     "caregiver_list",
     "caregiver_status",
-    "digest"
+    "digest",
+    "telegram_hook"
   ]
 }
 

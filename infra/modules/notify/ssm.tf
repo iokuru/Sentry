@@ -29,3 +29,39 @@ resource "aws_ssm_parameter" "risk_threshold_high" {
   value       = "70"
   tier        = "Standard"
 }
+
+resource "aws_ssm_parameter" "telegram_token" {
+  name        = "/sentry/telegram_token"
+  description = "telegram bot token for caregiver alerts"
+  type        = "SecureString"
+  value       = "PLACEHOLDER"
+  tier        = "Standard"
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
+resource "aws_ssm_parameter" "telegram_chat_id" {
+  name        = "/sentry/telegram_chat_id"
+  description = "telegram chat id for caregiver alerts"
+  type        = "SecureString"
+  value       = "PLACEHOLDER"
+  tier        = "Standard"
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
+resource "aws_ssm_parameter" "telegram_webhook_secret" {
+  name        = "/sentry/telegram_webhook_secret"
+  description = "telegram webhook verification secret"
+  type        = "SecureString"
+  value       = "PLACEHOLDER"
+  tier        = "Standard"
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}

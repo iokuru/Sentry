@@ -49,3 +49,9 @@ resource "aws_apigatewayv2_route" "caregiver_status" {
   authorization_type = "JWT"
   authorizer_id      = aws_apigatewayv2_authorizer.jwt.id
 }
+
+resource "aws_apigatewayv2_route" "telegram_hook" {
+  api_id    = aws_apigatewayv2_api.http.id
+  route_key = "POST /telegram/hook"
+  target    = "integrations/${aws_apigatewayv2_integration.telegram_hook.id}"
+}

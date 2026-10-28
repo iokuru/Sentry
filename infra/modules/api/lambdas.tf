@@ -59,6 +59,16 @@ resource "aws_iam_policy" "api_lambda" {
           "sqs:SendMessage"
         ]
         Resource = "*"
+      },
+      {
+        Sid    = "SsmConfig"
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:GetParametersByPath"
+        ]
+        Resource = "*"
       }
     ]
   })
@@ -201,6 +211,41 @@ resource "aws_lambda_permission" "caregiver_status" {
   statement_id  = "AllowAPIGatewayCaregiverStatus"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.caregiver_status.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.http.execution_arn}/*/*"
+}
+
+# telegram webhook lambda
+resource "aws_lambda_function" "telegram_hook" {
+  function_name = "${var.name_prefix}-telegram_hook"
+  role          = aws_iam_role.api_lambda.arn
+  runtime       = "provided.al2023"
+  architectures = ["arm64"]
+  handler       = "bootstrap"
+  memory_size   = 128
+  timeout       = 10
+  filename      = "${path.root}/../bin/telegram_hook.zip"
+
+  environment {
+    variables = {
+      INCIDENTS_TABLE = var.incidents_table
+      LINKS_TABLE     = var.links_table
+      SSM_PREFIX      = "/sentry"
+    }
+  }
+}
+
+resource "aws_apigatewayv2_integration" "telegram_hook" {
+  api_id                 = aws_apigatewayv2_api.http.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.telegram_hook.arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_lambda_permission" "telegram_hook" {
+  statement_id  = "AllowAPIGatewayTelegramHook"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.telegram_hook.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.http.execution_arn}/*/*"
 }
