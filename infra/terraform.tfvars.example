@@ -1,0 +1,11 @@
+# aws region where free tier resources are deployed
+aws_region = "us-east-1"
+
+# deployment environment tag
+environment = "prod"
+
+# prefix identifier for resource naming
+project_name = "sentry"
+
+# recipient email for the one dollar aws budget threshold alarm
+budget_alert_email = "caregiver@example.com"

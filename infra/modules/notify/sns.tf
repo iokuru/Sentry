@@ -9,8 +9,8 @@ resource "aws_sns_topic_policy" "caregiver_alerts" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid       = "AllowLambdaPublish"
-        Effect    = "Allow"
+        Sid    = "AllowLambdaPublish"
+        Effect = "Allow"
         Principal = {
           Service = "lambda.amazonaws.com"
         }

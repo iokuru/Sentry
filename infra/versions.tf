@@ -14,7 +14,7 @@ provider "aws" {
 
   default_tags {
     tags = {
-      project   = "sentry"
+      project    = "sentry"
       managed_by = "terraform"
     }
   }

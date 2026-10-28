@@ -27,3 +27,13 @@ output "region" {
   description = "aws deployment region"
   value       = var.aws_region
 }
+
+output "frontend_bucket" {
+  description = "s3 bucket id for frontend static hosting"
+  value       = module.storage.frontend_bucket_id
+}
+
+output "cloudfront_distribution_id" {
+  description = "id of cloudfront distribution for cache invalidation"
+  value       = module.api.cloudfront_distribution_id
+}

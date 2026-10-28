@@ -1,9 +1,9 @@
 resource "aws_budgets_budget" "zero_cost" {
-  name              = "${var.name_prefix}-monthly-one-dollar-cap"
-  budget_type       = "COST"
-  limit_amount      = "1.0"
-  limit_unit        = "USD"
-  time_unit         = "MONTHLY"
+  name         = "${var.name_prefix}-monthly-one-dollar-cap"
+  budget_type  = "COST"
+  limit_amount = "1.0"
+  limit_unit   = "USD"
+  time_unit    = "MONTHLY"
 
   notification {
     comparison_operator        = "GREATER_THAN"
