@@ -25,6 +25,7 @@ import (
 	"github.com/iokuru/sentry/internal/hotline"
 	"github.com/iokuru/sentry/internal/model"
 	"github.com/iokuru/sentry/internal/risk"
+	"github.com/iokuru/sentry/internal/telegram"
 )
 
 type MemoryStore struct {
@@ -148,6 +149,7 @@ func (s *Server) routes() http.Handler {
 	mux.HandleFunc("/api/incidents", s.handleGetIncident)
 	mux.HandleFunc("/api/caregiver/incidents", s.handleCaregiverList)
 	mux.HandleFunc("/api/caregiver/status", s.handleCaregiverStatus)
+	mux.HandleFunc("/telegram/simulate", s.handleTelegramSimulate)
 
 	// mock cognito idp endpoint for local auth
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -346,17 +348,51 @@ func (s *Server) handleIntake(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) printAlert(inc *model.Incident) {
+	detectedOneLine := "suspicious pattern detected"
+	if len(inc.Signals) > 0 {
+		detectedOneLine = inc.Signals[0].Description
+	}
+
+	formattedTelegram, _ := telegram.FormatAlertMessage(
+		string(inc.Category),
+		string(inc.RiskLevel),
+		detectedOneLine,
+		inc.Output.Hotline.Name,
+		inc.Output.Hotline.Number,
+		inc.ID,
+		inc.UpdatedAt,
+	)
+
 	fmt.Printf("\n==================== [DEV ALERT] ====================\n")
-	fmt.Printf("High risk incident detected!\n")
-	fmt.Printf("Incident ID: %s\n", inc.ID)
-	fmt.Printf("Risk Score:  %d / 100 (%s)\n", inc.Score, inc.RiskLevel)
-	fmt.Printf("Category:    %s\n", inc.Category)
-	fmt.Printf("Hold off:    %s\n", inc.Output.HoldOff)
-	fmt.Printf("Alternative: %s\n", inc.Output.SafeAlternative)
-	fmt.Printf("Hotline:     %s (%s)\n", inc.Output.Hotline.Name, inc.Output.Hotline.Number)
-	fmt.Printf("[Email Alert]:   caregiver alert queued\n")
-	fmt.Printf("[Telegram Alert]: simulated telegram message dispatched\n")
+	fmt.Printf("[Email Alert]: Caregiver email notification queued for %s\n\n", inc.ID)
+	fmt.Printf("[Telegram Alert Message]:\n%s\n\n", formattedTelegram)
+	fmt.Printf("Simulated Telegram Action Buttons:\n")
+	fmt.Printf("-> Acknowledge: http://localhost:8080/telegram/simulate?action=ack&id=%s\n", inc.ID)
+	fmt.Printf("-> Resolve:     http://localhost:8080/telegram/simulate?action=res&id=%s\n", inc.ID)
 	fmt.Printf("=====================================================\n\n")
+}
+
+func (s *Server) handleTelegramSimulate(w http.ResponseWriter, r *http.Request) {
+	action := r.URL.Query().Get("action")
+	id := r.URL.Query().Get("id")
+
+	var newStatus model.IncidentStatus
+	if action == "ack" {
+		newStatus = model.StatusAcknowledged
+	} else if action == "res" {
+		newStatus = model.StatusResolved
+	} else {
+		http.Error(w, "invalid action", http.StatusBadRequest)
+		return
+	}
+
+	if !s.store.UpdateStatus(id, newStatus) {
+		http.Error(w, "incident not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	fmt.Fprintf(w, "<h3>Telegram callback processed successfully</h3><p>Incident <b>%s</b> is now marked as <b>%s</b>.</p><p><a href=\"/caregiver\">View Caregiver Portal</a></p>", id, newStatus)
 }
 
 func (s *Server) handleGetIncident(w http.ResponseWriter, r *http.Request) {

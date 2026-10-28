@@ -36,6 +36,9 @@ switch ($Command) {
         npx svelte-check
         Pop-Location
     }
+    "telegram-hook" {
+        go run ./cmd/telegram_set_webhook
+    }
     "clean" {
         go run ./cmd/build -clean
     }

@@ -1,4 +1,4 @@
-.PHONY: all build build-lambdas test dev plan apply destroy seed clean check smoke
+.PHONY: all build build-lambdas test dev plan apply destroy seed clean check smoke smoke-live telegram-hook
 
 all: build test
 
@@ -14,6 +14,9 @@ test:
 
 dev:
 	go run ./cmd/devserver
+
+telegram-hook:
+	go run ./cmd/telegram_set_webhook
 
 plan:
 	terraform -chdir=infra plan
