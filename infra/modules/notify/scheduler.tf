@@ -46,7 +46,7 @@ resource "aws_scheduler_schedule" "daily_digest" {
   schedule_expression = "cron(0 9 * * ? *)"
 
   target {
-    arn      = "arn:aws:lambda:${var.name_prefix}:function:${var.name_prefix}-digest"
+    arn      = aws_lambda_function.digest.arn
     role_arn = aws_iam_role.scheduler.arn
   }
 }

@@ -104,3 +104,62 @@ resource "aws_iam_role_policy_attachment" "analysis" {
   role       = aws_iam_role.analysis.name
   policy_arn = aws_iam_policy.analysis.arn
 }
+
+resource "aws_iam_role" "digest" {
+  name = "${var.name_prefix}-digest-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy" "digest" {
+  name = "${var.name_prefix}-digest-policy"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "CloudWatchLogs"
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "arn:aws:logs:*:*:*"
+      },
+      {
+        Sid    = "DynamoStore"
+        Effect = "Allow"
+        Action = [
+          "dynamodb:Scan",
+          "dynamodb:Query",
+          "dynamodb:GetItem"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "SnsAlerts"
+        Effect = "Allow"
+        Action = [
+          "sns:Publish"
+        ]
+        Resource = aws_sns_topic.caregiver_alerts.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "digest" {
+  role       = aws_iam_role.digest.name
+  policy_arn = aws_iam_policy.digest.arn
+}

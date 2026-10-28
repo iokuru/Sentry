@@ -21,6 +21,9 @@ module "notify" {
   source             = "./modules/notify"
   name_prefix        = local.name_prefix
   budget_alert_email = var.budget_alert_email
+  uploads_bucket     = module.storage.uploads_bucket_id
+  incidents_table    = module.data.incidents_table_name
+  links_table        = module.data.links_table_name
 }
 
 module "api" {
