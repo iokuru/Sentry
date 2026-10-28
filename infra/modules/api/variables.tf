@@ -24,3 +24,33 @@ variable "cognito_client_id" {
   description = "app client id for jwt audience"
   default     = ""
 }
+
+variable "uploads_bucket" {
+  type        = string
+  description = "s3 uploads bucket name"
+  default     = ""
+}
+
+variable "incidents_table" {
+  type        = string
+  description = "dynamodb incidents table name"
+  default     = ""
+}
+
+variable "links_table" {
+  type        = string
+  description = "dynamodb links table name"
+  default     = ""
+}
+
+variable "analysis_queue_url" {
+  type        = string
+  description = "sqs queue url for intake submissions"
+  default     = ""
+}
+
+variable "analysis_queue_arn" {
+  type        = string
+  description = "sqs queue arn for intake permissions"
+  default     = ""
+}

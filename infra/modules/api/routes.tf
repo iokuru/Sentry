@@ -25,13 +25,19 @@ resource "aws_apigatewayv2_authorizer" "jwt" {
 resource "aws_apigatewayv2_route" "presign" {
   api_id    = aws_apigatewayv2_api.http.id
   route_key = "POST /api/presign"
-  target    = "integrations/presign"
+  target    = "integrations/${aws_apigatewayv2_integration.presign.id}"
+}
+
+resource "aws_apigatewayv2_route" "incidents" {
+  api_id    = aws_apigatewayv2_api.http.id
+  route_key = "GET /api/incidents"
+  target    = "integrations/${aws_apigatewayv2_integration.caregiver_list.id}"
 }
 
 resource "aws_apigatewayv2_route" "caregiver_incidents" {
   api_id             = aws_apigatewayv2_api.http.id
   route_key          = "GET /api/caregiver/incidents"
-  target             = "integrations/caregiver_list"
+  target             = "integrations/${aws_apigatewayv2_integration.caregiver_list.id}"
   authorization_type = "JWT"
   authorizer_id      = aws_apigatewayv2_authorizer.jwt.id
 }
@@ -39,7 +45,7 @@ resource "aws_apigatewayv2_route" "caregiver_incidents" {
 resource "aws_apigatewayv2_route" "caregiver_status" {
   api_id             = aws_apigatewayv2_api.http.id
   route_key          = "POST /api/caregiver/status"
-  target             = "integrations/caregiver_status"
+  target             = "integrations/${aws_apigatewayv2_integration.caregiver_status.id}"
   authorization_type = "JWT"
   authorizer_id      = aws_apigatewayv2_authorizer.jwt.id
 }

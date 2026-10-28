@@ -1,7 +1,7 @@
 resource "aws_apigatewayv2_route" "intake" {
   api_id    = aws_apigatewayv2_api.http.id
   route_key = "POST /api/intake"
-  target    = "integrations/intake"
+  target    = "integrations/${aws_apigatewayv2_integration.intake.id}"
 }
 
 resource "aws_apigatewayv2_stage" "default" {

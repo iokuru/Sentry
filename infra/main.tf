@@ -33,4 +33,9 @@ module "api" {
   frontend_bucket_arn        = module.storage.frontend_bucket_arn
   cognito_user_pool_endpoint = module.auth.user_pool_endpoint
   cognito_client_id          = module.auth.user_pool_client_id
+  uploads_bucket             = module.storage.uploads_bucket_id
+  incidents_table            = module.data.incidents_table_name
+  links_table                = module.data.links_table_name
+  analysis_queue_url         = module.notify.analysis_queue_url
+  analysis_queue_arn         = module.notify.analysis_queue_arn
 }
