@@ -1,0 +1,6 @@
+{
+  "api_url": "",
+  "user_pool_id": "local",
+  "user_pool_client_id": "local",
+  "region": "local"
+}
