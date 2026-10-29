@@ -24,7 +24,9 @@ import (
 	"github.com/iokuru/sentry/internal/comprehend"
 	"github.com/iokuru/sentry/internal/hotline"
 	"github.com/iokuru/sentry/internal/model"
+	"github.com/iokuru/sentry/internal/pairing"
 	"github.com/iokuru/sentry/internal/risk"
+	"github.com/iokuru/sentry/internal/store"
 	"github.com/iokuru/sentry/internal/telegram"
 )
 
@@ -32,13 +34,81 @@ type MemoryStore struct {
 	mu        sync.RWMutex
 	incidents map[string]*model.Incident
 	uploads   map[string][]byte
+	invites   map[string]*model.Invite
+	links     map[string][]*model.CaregiverLink
 }
 
 func newMemoryStore() *MemoryStore {
 	return &MemoryStore{
 		incidents: make(map[string]*model.Incident),
 		uploads:   make(map[string][]byte),
+		invites:   make(map[string]*model.Invite),
+		links:     make(map[string][]*model.CaregiverLink),
 	}
+}
+
+func (s *MemoryStore) SaveInvite(inv *model.Invite) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.invites[inv.Code] = inv
+}
+
+func (s *MemoryStore) GetInvite(code string) (*model.Invite, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	inv, ok := s.invites[code]
+	return inv, ok
+}
+
+func (s *MemoryStore) RedeemInvite(code, seniorID string) (*model.CaregiverLink, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	inv, ok := s.invites[code]
+	if !ok {
+		return nil, store.ErrInviteNotFound
+	}
+	if inv.Used {
+		return nil, store.ErrInviteUsed
+	}
+	if time.Now().UTC().Unix() > inv.ExpiresAt {
+		return nil, store.ErrInviteExpired
+	}
+	inv.Used = true
+	name := inv.SeniorName
+	if name == "" {
+		name = "Senior"
+	}
+	link := &model.CaregiverLink{
+		CaregiverID: inv.CaregiverID,
+		SeniorID:    seniorID,
+		SeniorName:  name,
+		LinkedAt:    time.Now().UTC(),
+	}
+	s.links[inv.CaregiverID] = append(s.links[inv.CaregiverID], link)
+	return link, nil
+}
+
+func (s *MemoryStore) ListLinks(caregiverID string) []*model.CaregiverLink {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	list := s.links[caregiverID]
+	if list == nil {
+		return []*model.CaregiverLink{}
+	}
+	return list
+}
+
+func (s *MemoryStore) DeleteLink(caregiverID, seniorID string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	current := s.links[caregiverID]
+	filtered := make([]*model.CaregiverLink, 0, len(current))
+	for _, l := range current {
+		if l.SeniorID != seniorID {
+			filtered = append(filtered, l)
+		}
+	}
+	s.links[caregiverID] = filtered
 }
 
 func (s *MemoryStore) Save(inc *model.Incident) {
@@ -149,6 +219,10 @@ func (s *Server) routes() http.Handler {
 	mux.HandleFunc("/api/incidents", s.handleGetIncident)
 	mux.HandleFunc("/api/caregiver/incidents", s.handleCaregiverList)
 	mux.HandleFunc("/api/caregiver/status", s.handleCaregiverStatus)
+	mux.HandleFunc("/api/caregiver/invites", s.handleCaregiverInvites)
+	mux.HandleFunc("/api/caregiver/links", s.handleCaregiverLinks)
+	mux.HandleFunc("/api/caregiver/links/", s.handleCaregiverLinks)
+	mux.HandleFunc("/api/senior/pair", s.handleSeniorPair)
 	mux.HandleFunc("/telegram/simulate", s.handleTelegramSimulate)
 
 	// mock cognito idp endpoint for local auth
@@ -448,6 +522,132 @@ func (s *Server) handleCaregiverStatus(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]string{
 		"incident_id": req.IncidentID,
 		"status":      string(req.Status),
+	})
+}
+
+func (s *Server) handleCaregiverInvites(w http.ResponseWriter, r *http.Request) {
+	s.enableCORS(w)
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		SeniorName string `json:"senior_name"`
+	}
+	_ = json.NewDecoder(r.Body).Decode(&req)
+
+	code, err := pairing.GenerateCode()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	now := time.Now().UTC().Unix()
+	inv := &model.Invite{
+		Code:        code,
+		CaregiverID: "caregiver",
+		SeniorName:  strings.TrimSpace(req.SeniorName),
+		CreatedAt:   now,
+		ExpiresAt:   now + 86400,
+	}
+	s.store.SaveInvite(inv)
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"code":       code,
+		"expires_at": inv.ExpiresAt,
+	})
+}
+
+func (s *Server) handleCaregiverLinks(w http.ResponseWriter, r *http.Request) {
+	s.enableCORS(w)
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		links := s.store.ListLinks("caregiver")
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(links)
+
+	case http.MethodDelete:
+		path := r.URL.Path
+		seniorID := strings.TrimPrefix(path, "/api/caregiver/links/")
+		if seniorID == "" || seniorID == "/api/caregiver/links" {
+			seniorID = r.URL.Query().Get("senior_id")
+		}
+		if seniorID == "" {
+			var body struct {
+				SeniorID string `json:"senior_id"`
+			}
+			_ = json.NewDecoder(r.Body).Decode(&body)
+			seniorID = body.SeniorID
+		}
+		if seniorID == "" {
+			http.Error(w, "senior_id is required", http.StatusBadRequest)
+			return
+		}
+		s.store.DeleteLink("caregiver", seniorID)
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]string{"status": "deleted"})
+
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (s *Server) handleSeniorPair(w http.ResponseWriter, r *http.Request) {
+	s.enableCORS(w)
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		Code     string `json:"code"`
+		DeviceID string `json:"device_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+
+	code := strings.ToUpper(strings.TrimSpace(req.Code))
+	deviceID := strings.TrimSpace(req.DeviceID)
+	if code == "" || deviceID == "" {
+		http.Error(w, "code and device_id are required", http.StatusBadRequest)
+		return
+	}
+
+	link, err := s.store.RedeemInvite(code, deviceID)
+	if err != nil {
+		switch err {
+		case store.ErrInviteNotFound:
+			http.Error(w, "invite code not found", http.StatusNotFound)
+		case store.ErrInviteExpired:
+			http.Error(w, "invite code expired", http.StatusGone)
+		case store.ErrInviteUsed:
+			http.Error(w, "invite code already used", http.StatusConflict)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]string{
+		"senior_id":   link.SeniorID,
+		"senior_name": link.SeniorName,
 	})
 }
 

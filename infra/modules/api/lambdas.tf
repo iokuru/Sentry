@@ -249,3 +249,71 @@ resource "aws_lambda_permission" "telegram_hook" {
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.http.execution_arn}/*/*"
 }
+
+# caregiver invite and link lambda
+resource "aws_lambda_function" "caregiver_invite" {
+  function_name = "${var.name_prefix}-caregiver_invite"
+  role          = aws_iam_role.api_lambda.arn
+  runtime       = "provided.al2023"
+  architectures = ["arm64"]
+  handler       = "bootstrap"
+  memory_size   = 128
+  timeout       = 10
+  filename      = "${path.root}/../bin/caregiver_invite.zip"
+
+  environment {
+    variables = {
+      INCIDENTS_TABLE = var.incidents_table
+      LINKS_TABLE     = var.links_table
+    }
+  }
+}
+
+resource "aws_apigatewayv2_integration" "caregiver_invite" {
+  api_id                 = aws_apigatewayv2_api.http.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.caregiver_invite.arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_lambda_permission" "caregiver_invite" {
+  statement_id  = "AllowAPIGatewayCaregiverInvite"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.caregiver_invite.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.http.execution_arn}/*/*"
+}
+
+# senior pair lambda
+resource "aws_lambda_function" "senior_pair" {
+  function_name = "${var.name_prefix}-senior_pair"
+  role          = aws_iam_role.api_lambda.arn
+  runtime       = "provided.al2023"
+  architectures = ["arm64"]
+  handler       = "bootstrap"
+  memory_size   = 128
+  timeout       = 10
+  filename      = "${path.root}/../bin/senior_pair.zip"
+
+  environment {
+    variables = {
+      INCIDENTS_TABLE = var.incidents_table
+      LINKS_TABLE     = var.links_table
+    }
+  }
+}
+
+resource "aws_apigatewayv2_integration" "senior_pair" {
+  api_id                 = aws_apigatewayv2_api.http.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.senior_pair.arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_lambda_permission" "senior_pair" {
+  statement_id  = "AllowAPIGatewaySeniorPair"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.senior_pair.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.http.execution_arn}/*/*"
+}

@@ -20,4 +20,10 @@ resource "aws_apigatewayv2_stage" "default" {
     throttling_burst_limit = 5
     throttling_rate_limit  = 2.0
   }
+
+  route_settings {
+    route_key              = "POST /api/senior/pair"
+    throttling_burst_limit = 5
+    throttling_rate_limit  = 2.0
+  }
 }

@@ -55,3 +55,33 @@ resource "aws_apigatewayv2_route" "telegram_hook" {
   route_key = "POST /telegram/hook"
   target    = "integrations/${aws_apigatewayv2_integration.telegram_hook.id}"
 }
+
+resource "aws_apigatewayv2_route" "caregiver_invites" {
+  api_id             = aws_apigatewayv2_api.http.id
+  route_key          = "POST /api/caregiver/invites"
+  target             = "integrations/${aws_apigatewayv2_integration.caregiver_invite.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.jwt.id
+}
+
+resource "aws_apigatewayv2_route" "caregiver_links" {
+  api_id             = aws_apigatewayv2_api.http.id
+  route_key          = "GET /api/caregiver/links"
+  target             = "integrations/${aws_apigatewayv2_integration.caregiver_invite.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.jwt.id
+}
+
+resource "aws_apigatewayv2_route" "caregiver_links_delete" {
+  api_id             = aws_apigatewayv2_api.http.id
+  route_key          = "DELETE /api/caregiver/links/{senior_id}"
+  target             = "integrations/${aws_apigatewayv2_integration.caregiver_invite.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.jwt.id
+}
+
+resource "aws_apigatewayv2_route" "senior_pair" {
+  api_id    = aws_apigatewayv2_api.http.id
+  route_key = "POST /api/senior/pair"
+  target    = "integrations/${aws_apigatewayv2_integration.senior_pair.id}"
+}

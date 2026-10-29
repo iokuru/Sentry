@@ -16,6 +16,8 @@ var lambdaTargets = []string{
 	"analysis",
 	"caregiver_list",
 	"caregiver_status",
+	"caregiver_invite",
+	"senior_pair",
 	"digest",
 	"telegram_hook",
 }
