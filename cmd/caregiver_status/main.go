@@ -41,8 +41,30 @@ func init() {
 	}
 }
 
+func extractCaregiverID(req events.APIGatewayV2HTTPRequest) string {
+	if req.RequestContext.Authorizer != nil && req.RequestContext.Authorizer.JWT != nil {
+		claims := req.RequestContext.Authorizer.JWT.Claims
+		if sub, ok := claims["sub"]; ok && sub != "" {
+			return sub
+		}
+		if username, ok := claims["cognito:username"]; ok && username != "" {
+			return username
+		}
+	}
+	if auth := req.Headers["authorization"]; auth != "" || req.Headers["Authorization"] != "" {
+		return "caregiver"
+	}
+	return ""
+}
+
 func handleStatusUpdate(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
 	ctx = logging.WithRequestID(ctx, req.RequestContext.RequestID)
+
+	caregiverID := extractCaregiverID(req)
+	if caregiverID == "" {
+		return errorResponse(http.StatusUnauthorized, "unauthorized: valid cognito jwt required"), nil
+	}
+
 	var input StatusUpdateRequest
 	if req.Body != "" {
 		if err := json.Unmarshal([]byte(req.Body), &input); err != nil {
@@ -64,6 +86,31 @@ func handleStatusUpdate(ctx context.Context, req events.APIGatewayV2HTTPRequest)
 
 	if incidentStore == nil {
 		return errorResponse(http.StatusInternalServerError, "store unavailable"), nil
+	}
+
+	inc, err := incidentStore.GetIncident(ctx, input.IncidentID)
+	if err != nil {
+		return errorResponse(http.StatusInternalServerError, err.Error()), nil
+	}
+	if inc == nil {
+		return errorResponse(http.StatusNotFound, "incident not found"), nil
+	}
+
+	if inc.SeniorID != "" {
+		links, err := incidentStore.ListLinksForCaregiver(ctx, caregiverID)
+		if err != nil {
+			return errorResponse(http.StatusInternalServerError, err.Error()), nil
+		}
+		isLinked := false
+		for _, l := range links {
+			if l.SeniorID == inc.SeniorID {
+				isLinked = true
+				break
+			}
+		}
+		if !isLinked {
+			return errorResponse(http.StatusForbidden, "forbidden: senior not linked to caregiver"), nil
+		}
 	}
 
 	if err := incidentStore.UpdateIncidentStatus(ctx, input.IncidentID, input.Status); err != nil {

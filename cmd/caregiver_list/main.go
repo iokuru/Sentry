@@ -62,13 +62,47 @@ func attachThumbnailURL(ctx context.Context, inc *model.Incident) {
 	}
 }
 
+func extractCaregiverID(req events.APIGatewayV2HTTPRequest) string {
+	if req.RequestContext.Authorizer != nil && req.RequestContext.Authorizer.JWT != nil {
+		claims := req.RequestContext.Authorizer.JWT.Claims
+		if sub, ok := claims["sub"]; ok && sub != "" {
+			return sub
+		}
+		if username, ok := claims["cognito:username"]; ok && username != "" {
+			return username
+		}
+	}
+	if auth := req.Headers["authorization"]; auth != "" || req.Headers["Authorization"] != "" {
+		return "caregiver"
+	}
+	return ""
+}
+
 func handleList(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
 	ctx = logging.WithRequestID(ctx, req.RequestContext.RequestID)
+
+	caregiverID := extractCaregiverID(req)
+	if caregiverID == "" {
+		return errorResponse(http.StatusUnauthorized, "unauthorized: valid cognito jwt required"), nil
+	}
+
+	if incidentStore == nil {
+		return errorResponse(http.StatusInternalServerError, "store unavailable"), nil
+	}
+
+	links, err := incidentStore.ListLinksForCaregiver(ctx, caregiverID)
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to query caregiver links", slog.String("error", err.Error()))
+		return errorResponse(http.StatusInternalServerError, err.Error()), nil
+	}
+
+	linkedSeniors := make(map[string]bool)
+	for _, l := range links {
+		linkedSeniors[l.SeniorID] = true
+	}
+
 	// check if individual incident is queried via query params or path
 	if id, ok := req.QueryStringParameters["id"]; ok && id != "" {
-		if incidentStore == nil {
-			return errorResponse(http.StatusInternalServerError, "store unavailable"), nil
-		}
 		inc, err := incidentStore.GetIncident(ctx, id)
 		if err != nil {
 			return errorResponse(http.StatusInternalServerError, err.Error()), nil
@@ -76,25 +110,31 @@ func handleList(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events
 		if inc == nil {
 			return errorResponse(http.StatusNotFound, "incident not found"), nil
 		}
+		if inc.SeniorID != "" && !linkedSeniors[inc.SeniorID] {
+			return errorResponse(http.StatusForbidden, "forbidden: senior not linked to caregiver"), nil
+		}
 		attachThumbnailURL(ctx, inc)
 		body, _ := json.Marshal(inc)
 		return jsonResponse(http.StatusOK, body), nil
 	}
 
-	if incidentStore == nil {
-		return errorResponse(http.StatusInternalServerError, "store unavailable"), nil
-	}
-
-	incidents, err := incidentStore.ListIncidents(ctx, 50)
+	allIncidents, err := incidentStore.ListIncidents(ctx, 50)
 	if err != nil {
 		return errorResponse(http.StatusInternalServerError, err.Error()), nil
 	}
 
-	for i := range incidents {
-		attachThumbnailURL(ctx, &incidents[i])
+	var incidents []model.Incident
+	for _, inc := range allIncidents {
+		if inc.SeniorID != "" && linkedSeniors[inc.SeniorID] {
+			attachThumbnailURL(ctx, &inc)
+			incidents = append(incidents, inc)
+		}
+	}
+	if incidents == nil {
+		incidents = []model.Incident{}
 	}
 
-	slog.InfoContext(ctx, "listed incidents for caregiver", slog.Int("count", len(incidents)))
+	slog.InfoContext(ctx, "listed incidents for caregiver", slog.String("caregiver_id", caregiverID), slog.Int("count", len(incidents)))
 
 	body, _ := json.Marshal(incidents)
 	return jsonResponse(http.StatusOK, body), nil

@@ -57,7 +57,10 @@ func extractCaregiverID(req events.APIGatewayV2HTTPRequest) string {
 			return username
 		}
 	}
-	return "caregiver"
+	if auth := req.Headers["authorization"]; auth != "" || req.Headers["Authorization"] != "" {
+		return "caregiver"
+	}
+	return ""
 }
 
 func handleCaregiverInvite(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
@@ -67,6 +70,9 @@ func handleCaregiverInvite(ctx context.Context, req events.APIGatewayV2HTTPReque
 	}
 
 	caregiverID := extractCaregiverID(req)
+	if caregiverID == "" {
+		return errorResponse(http.StatusUnauthorized, "unauthorized: valid cognito jwt required"), nil
+	}
 	method := req.RequestContext.HTTP.Method
 	path := req.RequestContext.HTTP.Path
 
