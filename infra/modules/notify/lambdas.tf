@@ -15,6 +15,7 @@ resource "aws_lambda_function" "analysis" {
       INCIDENTS_TABLE            = var.incidents_table
       LINKS_TABLE                = var.links_table
       ANALYSIS_DLQ_URL           = aws_sqs_queue.analysis_dlq.url
+      USE_COMPREHEND             = var.use_comprehend
     }
   }
 
