@@ -46,6 +46,9 @@ switch ($Command) {
     "preflight" {
         go run ./cmd/preflight
     }
+    "go-live" {
+        go run ./cmd/golive
+    }
     "costguard" {
         go run ./cmd/costguard
     }
