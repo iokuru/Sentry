@@ -20,6 +20,7 @@
     submitIntake,
     pollIncident,
     QuotaExceededError,
+    TextractBlockedError,
     type Incident
   } from '$lib/api';
 
@@ -227,12 +228,37 @@
       }
 
       isAnalyzing = true;
-      const combinedUserContext = [browserExtractedText, contextText.trim()].filter(Boolean).join('\n');
-      const intakeData = await submitIntake({
-        image_key: imageKey,
-        user_context: combinedUserContext,
-        country: country
-      });
+      let intakeData;
+      try {
+        const combinedUserContext = [browserExtractedText, contextText.trim()].filter(Boolean).join('\n');
+        intakeData = await submitIntake({
+          image_key: imageKey,
+          user_context: combinedUserContext,
+          country: country
+        });
+      } catch (submitErr: unknown) {
+        if (submitErr instanceof TextractBlockedError || (submitErr instanceof Error && submitErr.name === 'TextractBlockedError')) {
+          if (processedBlob && !browserExtractedText) {
+            readingStatus = 'Reading screenshot on your device...';
+            try {
+              const { extractTextWithBrowserOCR } = await import('$lib/ocr');
+              browserExtractedText = await extractTextWithBrowserOCR(processedBlob, (msg) => {
+                readingStatus = msg;
+              });
+            } finally {
+              readingStatus = '';
+            }
+          }
+          const retryContext = [browserExtractedText, contextText.trim()].filter(Boolean).join('\n');
+          intakeData = await submitIntake({
+            image_key: imageKey,
+            user_context: retryContext,
+            country: country
+          });
+        } else {
+          throw submitErr;
+        }
+      }
 
       const finishedResult = await pollIncident(intakeData.incident_id);
       result = finishedResult;
