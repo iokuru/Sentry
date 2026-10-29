@@ -36,9 +36,13 @@ resource "aws_iam_policy" "analysis" {
         Action = [
           "sqs:ReceiveMessage",
           "sqs:DeleteMessage",
-          "sqs:GetQueueAttributes"
+          "sqs:GetQueueAttributes",
+          "sqs:SendMessage"
         ]
-        Resource = aws_sqs_queue.analysis.arn
+        Resource = [
+          aws_sqs_queue.analysis.arn,
+          aws_sqs_queue.analysis_dlq.arn
+        ]
       },
       {
         Sid    = "S3UploadsRead"

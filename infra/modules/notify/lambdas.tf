@@ -14,6 +14,7 @@ resource "aws_lambda_function" "analysis" {
       CAREGIVER_ALERTS_TOPIC_ARN = aws_sns_topic.caregiver_alerts.arn
       INCIDENTS_TABLE            = var.incidents_table
       LINKS_TABLE                = var.links_table
+      ANALYSIS_DLQ_URL           = aws_sqs_queue.analysis_dlq.url
     }
   }
 

@@ -17,6 +17,8 @@ import (
 	comprehendsvc "github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	sqstypes "github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	textractsvc "github.com/aws/aws-sdk-go-v2/service/textract"
 	"github.com/iokuru/sentry/internal/comprehend"
@@ -40,12 +42,14 @@ var (
 	textractClient   *textractsvc.Client
 	comprehendClient *comprehendsvc.Client
 	snsClient        *sns.Client
+	sqsClient        *sqs.Client
 	telegramClient   *telegram.Client
 	telegramCfg      *telegram.Config
 	incidentStore    *store.Store
 	rateLimiter      *quota.Limiter
 	uploadBucket     string
 	alertsTopicArn   string
+	analysisDLQURL   string
 )
 
 func init() {
@@ -54,6 +58,7 @@ func init() {
 		uploadBucket = "sentry-uploads"
 	}
 	alertsTopicArn = os.Getenv("CAREGIVER_ALERTS_TOPIC_ARN")
+	analysisDLQURL = os.Getenv("ANALYSIS_DLQ_URL")
 	incidentsTable := os.Getenv("INCIDENTS_TABLE")
 	linksTable := os.Getenv("LINKS_TABLE")
 
@@ -72,6 +77,7 @@ func init() {
 		textractClient = textractsvc.NewFromConfig(cfg)
 		comprehendClient = comprehendsvc.NewFromConfig(cfg)
 		snsClient = sns.NewFromConfig(cfg)
+		sqsClient = sqs.NewFromConfig(cfg)
 		dbClient := dynamodb.NewFromConfig(cfg)
 		ssmClient := ssm.NewFromConfig(cfg)
 		incidentStore = store.NewStore(dbClient, incidentsTable, linksTable)
@@ -81,11 +87,50 @@ func init() {
 	}
 }
 
+func forwardPoisonToDLQ(ctx context.Context, body string, reason string) {
+	if sqsClient != nil && analysisDLQURL != "" {
+		_, err := sqsClient.SendMessage(ctx, &sqs.SendMessageInput{
+			QueueUrl:    aws.String(analysisDLQURL),
+			MessageBody: aws.String(body),
+			MessageAttributes: map[string]sqstypes.MessageAttributeValue{
+				"dlq_reason": {
+					DataType:    aws.String("String"),
+					StringValue: aws.String(reason),
+				},
+			},
+		})
+		if err != nil {
+			log.Printf("failed to forward poison message to dlq: %v", err)
+		}
+	}
+}
+
 func handleAnalysis(ctx context.Context, sqsEvent events.SQSEvent) error {
 	for _, record := range sqsEvent.Records {
 		var msg AnalysisQueueMessage
 		if err := json.Unmarshal([]byte(record.Body), &msg); err != nil {
-			return fmt.Errorf("unmarshal sqs message: %w", err)
+			log.Printf("corrupt poison sqs message: %v", err)
+			forwardPoisonToDLQ(ctx, record.Body, fmt.Sprintf("unmarshal error: %v", err))
+			continue
+		}
+
+		if strings.TrimSpace(msg.ImageKey) == "" && strings.TrimSpace(msg.UserContext) == "" {
+			log.Printf("invalid sqs message: empty image and context for %s", msg.IncidentID)
+			forwardPoisonToDLQ(ctx, record.Body, "empty image key and user context")
+			if incidentStore != nil && msg.IncidentID != "" {
+				_ = incidentStore.UpdateIncidentStatus(ctx, msg.IncidentID, model.StatusFailed)
+			}
+			continue
+		}
+
+		if incidentStore != nil && msg.IncidentID != "" {
+			existing, err := incidentStore.GetIncident(ctx, msg.IncidentID)
+			if err == nil && existing != nil {
+				if existing.Status == model.StatusAnalyzed || existing.Status == model.StatusAcknowledged || existing.Status == model.StatusResolved {
+					log.Printf("incident %s already processed with status %s, skipping retry", existing.ID, existing.Status)
+					continue
+				}
+			}
 		}
 
 		var extractedText string
