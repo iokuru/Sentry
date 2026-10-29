@@ -239,9 +239,10 @@ func (s *Server) routes() http.Handler {
 			return
 		}
 
-		if r.URL.Path == "/" {
+		if r.URL.Path == "/" || r.URL.Path == "/api/health" {
+			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write([]byte("sentry devserver running"))
+			_, _ = w.Write([]byte(`{"status":"healthy","service":"sentry"}`))
 			return
 		}
 

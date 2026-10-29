@@ -39,3 +39,15 @@ func (l *Limiter) Allow(ctx context.Context, service string, dailyCap int) (bool
 	l.counts[key] = count + 1
 	return true, count + 1, nil
 }
+
+func (l *Limiter) GetUsage(service string) int {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	today := time.Now().UTC().Format("2006-01-02")
+	if today != l.currDate {
+		return 0
+	}
+	key := fmt.Sprintf("%s:%s", service, today)
+	return l.counts[key]
+}

@@ -81,6 +81,10 @@ func extractCaregiverID(req events.APIGatewayV2HTTPRequest) string {
 func handleList(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
 	ctx = logging.WithRequestID(ctx, req.RequestContext.RequestID)
 
+	if req.RequestContext.HTTP.Path == "/api/health" || req.RawPath == "/api/health" {
+		return jsonResponse(http.StatusOK, []byte(`{"status":"healthy","service":"sentry"}`)), nil
+	}
+
 	caregiverID := extractCaregiverID(req)
 	if caregiverID == "" {
 		return errorResponse(http.StatusUnauthorized, "unauthorized: valid cognito jwt required"), nil

@@ -84,6 +84,12 @@ resource "aws_apigatewayv2_route" "caregiver_links_delete" {
   authorizer_id      = aws_apigatewayv2_authorizer.jwt.id
 }
 
+resource "aws_apigatewayv2_route" "health" {
+  api_id    = aws_apigatewayv2_api.http.id
+  route_key = "GET /api/health"
+  target    = "integrations/${aws_apigatewayv2_integration.caregiver_list.id}"
+}
+
 resource "aws_apigatewayv2_route" "senior_pair" {
   api_id    = aws_apigatewayv2_api.http.id
   route_key = "POST /api/senior/pair"

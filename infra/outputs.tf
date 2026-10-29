@@ -37,3 +37,13 @@ output "cloudfront_distribution_id" {
   description = "id of cloudfront distribution for cache invalidation"
   value       = module.api.cloudfront_distribution_id
 }
+
+output "analysis_dlq_url" {
+  description = "sqs dead letter queue url"
+  value       = module.notify.analysis_dlq_url
+}
+
+output "analysis_dlq_name" {
+  description = "sqs dead letter queue name"
+  value       = module.notify.analysis_dlq_name
+}

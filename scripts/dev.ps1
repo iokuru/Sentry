@@ -49,6 +49,9 @@ switch ($Command) {
     "go-live" {
         go run ./cmd/golive
     }
+    "status" {
+        go run ./cmd/status
+    }
     "costguard" {
         go run ./cmd/costguard
     }

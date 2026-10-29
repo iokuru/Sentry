@@ -1,4 +1,4 @@
-.PHONY: all build build-lambdas test dev plan apply destroy seed clean check smoke smoke-live telegram-hook deploy costguard preflight go-live
+.PHONY: all build build-lambdas test dev plan apply destroy seed clean check smoke smoke-live telegram-hook deploy costguard preflight go-live status
 
 all: build test
 
@@ -7,6 +7,9 @@ preflight:
 
 go-live:
 	go run ./cmd/golive
+
+status:
+	go run ./cmd/status
 
 build:
 	go run ./cmd/build -frontend
