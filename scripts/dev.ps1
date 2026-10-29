@@ -52,6 +52,9 @@ switch ($Command) {
     "status" {
         go run ./cmd/status
     }
+    "teardown" {
+        go run ./cmd/teardown
+    }
     "costguard" {
         go run ./cmd/costguard
     }
