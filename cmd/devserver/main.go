@@ -532,7 +532,7 @@ func (s *Server) handleCaregiverStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Status != model.StatusAcknowledged && req.Status != model.StatusResolved {
+	if req.Status != model.StatusAcknowledged && req.Status != model.StatusResolved && req.Status != model.StatusAnalyzed {
 		http.Error(w, "invalid status", http.StatusBadRequest)
 		return
 	}

@@ -54,8 +54,8 @@ func handleStatusUpdate(ctx context.Context, req events.APIGatewayV2HTTPRequest)
 		return errorResponse(http.StatusBadRequest, "incident_id is required"), nil
 	}
 
-	if input.Status != model.StatusAcknowledged && input.Status != model.StatusResolved {
-		return errorResponse(http.StatusBadRequest, "status must be acknowledged or resolved"), nil
+	if input.Status != model.StatusAcknowledged && input.Status != model.StatusResolved && input.Status != model.StatusAnalyzed {
+		return errorResponse(http.StatusBadRequest, "status must be acknowledged, resolved, or analyzed"), nil
 	}
 
 	if incidentStore == nil {

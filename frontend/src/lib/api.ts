@@ -199,7 +199,7 @@ export async function listCaregiverIncidents(): Promise<Incident[]> {
   return res.json();
 }
 
-export async function updateCaregiverStatus(id: string, status: 'acknowledged' | 'resolved'): Promise<void> {
+export async function updateCaregiverStatus(id: string, status: 'acknowledged' | 'resolved' | 'analyzed'): Promise<void> {
   const base = await getBaseUrl();
   const token = await getAuthToken();
   const headers: Record<string, string> = {

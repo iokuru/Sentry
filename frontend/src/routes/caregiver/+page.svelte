@@ -188,7 +188,7 @@
     }
   }
 
-  async function updateStatus(id: string, newStatus: 'acknowledged' | 'resolved') {
+  async function updateStatus(id: string, newStatus: 'acknowledged' | 'resolved' | 'analyzed') {
     const idx = incidents.findIndex((item) => item.id === id);
     if (idx === -1) return;
 
@@ -392,17 +392,17 @@
                 </p>
 
                 <div class="card-actions">
-                  {#if inc.status !== 'resolved'}
-                    {#if inc.status !== 'acknowledged'}
-                      <button
-                        type="button"
-                        class="action-btn ack-btn"
-                        disabled={actionBusy[inc.id]}
-                        onclick={() => updateStatus(inc.id, 'acknowledged')}
-                      >
-                        Acknowledge
-                      </button>
-                    {/if}
+                  {#if inc.status === 'resolved'}
+                    <span class="resolved-label">Resolved</span>
+                    <button
+                      type="button"
+                      class="action-btn reopen-btn"
+                      disabled={actionBusy[inc.id]}
+                      onclick={() => updateStatus(inc.id, 'analyzed')}
+                    >
+                      Reopen
+                    </button>
+                  {:else if inc.status === 'acknowledged'}
                     <button
                       type="button"
                       class="action-btn resolve-btn"
@@ -411,8 +411,31 @@
                     >
                       Resolve
                     </button>
+                    <button
+                      type="button"
+                      class="action-btn reopen-btn"
+                      disabled={actionBusy[inc.id]}
+                      onclick={() => updateStatus(inc.id, 'analyzed')}
+                    >
+                      Reopen
+                    </button>
                   {:else}
-                    <span class="resolved-label">Resolved</span>
+                    <button
+                      type="button"
+                      class="action-btn ack-btn"
+                      disabled={actionBusy[inc.id]}
+                      onclick={() => updateStatus(inc.id, 'acknowledged')}
+                    >
+                      Acknowledge
+                    </button>
+                    <button
+                      type="button"
+                      class="action-btn resolve-btn"
+                      disabled={actionBusy[inc.id]}
+                      onclick={() => updateStatus(inc.id, 'resolved')}
+                    >
+                      Resolve
+                    </button>
                   {/if}
                 </div>
               </article>
@@ -896,5 +919,18 @@
     font-size: var(--font-base);
     font-weight: 700;
     color: var(--text-muted);
+  }
+
+  .reopen-btn {
+    color: var(--text-primary);
+    background-color: var(--bg-surface);
+    border: 2px solid var(--border-strong);
+  }
+
+  .reopen-btn:hover:not(:disabled),
+  .reopen-btn:focus-visible:not(:disabled) {
+    background-color: var(--bg-hover);
+    outline: 3px solid var(--ring-focus);
+    outline-offset: 2px;
   }
 </style>
