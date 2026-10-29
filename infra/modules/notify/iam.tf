@@ -51,7 +51,7 @@ resource "aws_iam_policy" "analysis" {
           "s3:GetObject",
           "s3:DeleteObject"
         ]
-        Resource = "*"
+        Resource = "${var.uploads_bucket_arn}/*"
       },
       {
         Sid    = "TextractDetectText"
@@ -81,7 +81,12 @@ resource "aws_iam_policy" "analysis" {
           "dynamodb:UpdateItem",
           "dynamodb:Query"
         ]
-        Resource = "*"
+        Resource = [
+          var.incidents_table_arn,
+          "${var.incidents_table_arn}/index/*",
+          var.links_table_arn,
+          "${var.links_table_arn}/index/*"
+        ]
       },
       {
         Sid    = "SnsAlerts"
@@ -150,7 +155,10 @@ resource "aws_iam_policy" "digest" {
           "dynamodb:Query",
           "dynamodb:GetItem"
         ]
-        Resource = "*"
+        Resource = [
+          var.incidents_table_arn,
+          "${var.incidents_table_arn}/index/*"
+        ]
       },
       {
         Sid    = "SnsAlerts"

@@ -26,3 +26,21 @@ variable "links_table" {
   description = "dynamodb links table name"
   default     = ""
 }
+
+variable "uploads_bucket_arn" {
+  type        = string
+  description = "arn of uploads s3 bucket"
+  default     = ""
+}
+
+variable "incidents_table_arn" {
+  type        = string
+  description = "arn of dynamodb incidents table"
+  default     = ""
+}
+
+variable "links_table_arn" {
+  type        = string
+  description = "arn of dynamodb links table"
+  default     = ""
+}

@@ -18,12 +18,15 @@ module "auth" {
 }
 
 module "notify" {
-  source             = "./modules/notify"
-  name_prefix        = local.name_prefix
-  budget_alert_email = var.budget_alert_email
-  uploads_bucket     = module.storage.uploads_bucket_id
-  incidents_table    = module.data.incidents_table_name
-  links_table        = module.data.links_table_name
+  source              = "./modules/notify"
+  name_prefix         = local.name_prefix
+  budget_alert_email  = var.budget_alert_email
+  uploads_bucket      = module.storage.uploads_bucket_id
+  uploads_bucket_arn  = module.storage.uploads_bucket_arn
+  incidents_table     = module.data.incidents_table_name
+  incidents_table_arn = module.data.incidents_table_arn
+  links_table         = module.data.links_table_name
+  links_table_arn     = module.data.links_table_arn
 }
 
 module "api" {
@@ -34,8 +37,11 @@ module "api" {
   cognito_user_pool_endpoint = module.auth.user_pool_endpoint
   cognito_client_id          = module.auth.user_pool_client_id
   uploads_bucket             = module.storage.uploads_bucket_id
+  uploads_bucket_arn         = module.storage.uploads_bucket_arn
   incidents_table            = module.data.incidents_table_name
+  incidents_table_arn        = module.data.incidents_table_arn
   links_table                = module.data.links_table_name
+  links_table_arn            = module.data.links_table_arn
   analysis_queue_url         = module.notify.analysis_queue_url
   analysis_queue_arn         = module.notify.analysis_queue_arn
 }

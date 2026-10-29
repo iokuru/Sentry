@@ -38,7 +38,7 @@ resource "aws_iam_policy" "api_lambda" {
           "s3:PutObject",
           "s3:GetObject"
         ]
-        Resource = "*"
+        Resource = "${var.uploads_bucket_arn}/*"
       },
       {
         Sid    = "DynamoStore"
@@ -50,7 +50,12 @@ resource "aws_iam_policy" "api_lambda" {
           "dynamodb:Query",
           "dynamodb:Scan"
         ]
-        Resource = "*"
+        Resource = [
+          var.incidents_table_arn,
+          "${var.incidents_table_arn}/index/*",
+          var.links_table_arn,
+          "${var.links_table_arn}/index/*"
+        ]
       },
       {
         Sid    = "SqsSend"
@@ -58,7 +63,7 @@ resource "aws_iam_policy" "api_lambda" {
         Action = [
           "sqs:SendMessage"
         ]
-        Resource = "*"
+        Resource = var.analysis_queue_arn
       },
       {
         Sid    = "SsmConfig"
@@ -68,7 +73,7 @@ resource "aws_iam_policy" "api_lambda" {
           "ssm:GetParameters",
           "ssm:GetParametersByPath"
         ]
-        Resource = "*"
+        Resource = "arn:aws:ssm:*:*:parameter/${var.name_prefix}/*"
       }
     ]
   })

@@ -54,3 +54,21 @@ variable "analysis_queue_arn" {
   description = "sqs queue arn for intake permissions"
   default     = ""
 }
+
+variable "uploads_bucket_arn" {
+  type        = string
+  description = "arn of uploads s3 bucket"
+  default     = ""
+}
+
+variable "incidents_table_arn" {
+  type        = string
+  description = "arn of dynamodb incidents table"
+  default     = ""
+}
+
+variable "links_table_arn" {
+  type        = string
+  description = "arn of dynamodb links table"
+  default     = ""
+}
