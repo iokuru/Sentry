@@ -8,8 +8,10 @@
   import SafeAlternativeCard from '$lib/SafeAlternativeCard.svelte';
   import HotlineButton from '$lib/HotlineButton.svelte';
   import CountrySwitch from '$lib/CountrySwitch.svelte';
+  import PairingCard from '$lib/PairingCard.svelte';
   import { detectCountry } from '$lib/locale';
   import { downscaleImage } from '$lib/downscale';
+  import { isPaired, getSeniorName } from '$lib/device';
   import {
     presignUpload,
     uploadScreenshot,
@@ -26,10 +28,26 @@
   let busy = $state(false);
   let errorMessage = $state('');
   let result = $state<Incident | null>(null);
+  let paired = $state(false);
+  let seniorName = $state('');
+  let showPairing = $state(false);
 
   onMount(() => {
     country = detectCountry();
+    paired = isPaired();
+    seniorName = getSeniorName();
+    const skipped = localStorage.getItem('sentry_pair_skipped') === 'true';
+    if (!paired && !skipped) {
+      showPairing = true;
+    }
   });
+
+  function handlePairComplete() {
+    paired = isPaired();
+    seniorName = getSeniorName();
+    showPairing = false;
+    localStorage.setItem('sentry_pair_skipped', 'true');
+  }
 
   async function handleFileSelected(file: File) {
     errorMessage = '';
@@ -112,12 +130,21 @@
   <header class="top-bar">
     <span class="brand">Sentry</span>
     <div class="actions">
+      {#if paired}
+        <span class="pair-badge" title="Linked to caregiver">{seniorName || 'Linked'}</span>
+      {:else if !showPairing}
+        <button type="button" class="link-btn" onclick={() => showPairing = true}>
+          Link
+        </button>
+      {/if}
       <CountrySwitch bind:country />
       <a href="/caregiver" class="portal-link">Caregiver</a>
     </div>
   </header>
 
-  {#if !result || !result.output}
+  {#if showPairing}
+    <PairingCard oncomplete={handlePairComplete} />
+  {:else if !result || !result.output}
     <section class="intake-section">
       {#if !previewUrl}
         <Dropzone onfile={handleFileSelected} hasFile={false} />
@@ -182,6 +209,41 @@
     display: flex;
     align-items: center;
     gap: 16px;
+  }
+
+  .pair-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    font-size: var(--font-sm);
+    font-weight: 700;
+    color: var(--emerald-800, #065f46);
+    background-color: var(--emerald-50, #ecfdf5);
+    border: 2px solid var(--emerald-600, #059669);
+    border-radius: var(--radius-sm);
+  }
+
+  .link-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--touch-min);
+    padding: 0 14px;
+    font-size: var(--font-base);
+    font-weight: 700;
+    color: var(--text-primary);
+    background-color: var(--bg-surface);
+    border: 2px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background-color 150ms ease;
+  }
+
+  .link-btn:hover,
+  .link-btn:focus-visible {
+    background-color: var(--bg-hover);
+    outline: 3px solid var(--ring-focus);
+    outline-offset: 2px;
   }
 
   .portal-link {
