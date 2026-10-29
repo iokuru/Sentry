@@ -3,6 +3,7 @@ package comprehend
 import (
 	"context"
 	"fmt"
+	"strings"
 	"unicode/utf8"
 
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
@@ -48,7 +49,10 @@ func Analyze(ctx context.Context, client Client, text string) (*AnalysisResult, 
 	langOut, err := client.DetectDominantLanguage(ctx, &comprehend.DetectDominantLanguageInput{
 		Text: &sample,
 	})
-	if err == nil && len(langOut.Languages) > 0 && langOut.Languages[0].LanguageCode != nil {
+	if err != nil {
+		return nil, fmt.Errorf("detect dominant language: %w", err)
+	}
+	if len(langOut.Languages) > 0 && langOut.Languages[0].LanguageCode != nil {
 		res.Language = *langOut.Languages[0].LanguageCode
 	}
 
@@ -63,19 +67,21 @@ func Analyze(ctx context.Context, client Client, text string) (*AnalysisResult, 
 		LanguageCode: langCode,
 		Text:         &sample,
 	})
-	if err == nil {
-		res.Sentiment = string(sentOut.Sentiment)
+	if err != nil {
+		return nil, fmt.Errorf("detect sentiment: %w", err)
 	}
+	res.Sentiment = string(sentOut.Sentiment)
 
 	keyOut, err := client.DetectKeyPhrases(ctx, &comprehend.DetectKeyPhrasesInput{
 		LanguageCode: langCode,
 		Text:         &sample,
 	})
-	if err == nil {
-		for _, phrase := range keyOut.KeyPhrases {
-			if phrase.Text != nil {
-				res.KeyPhrases = append(res.KeyPhrases, *phrase.Text)
-			}
+	if err != nil {
+		return nil, fmt.Errorf("detect key phrases: %w", err)
+	}
+	for _, phrase := range keyOut.KeyPhrases {
+		if phrase.Text != nil {
+			res.KeyPhrases = append(res.KeyPhrases, *phrase.Text)
 		}
 	}
 
@@ -99,4 +105,17 @@ func Analyze(ctx context.Context, client Client, text string) (*AnalysisResult, 
 	}
 
 	return res, nil
+}
+
+func IsAccessOrSubscriptionError(err error) bool {
+	if err == nil {
+		return false
+	}
+	s := strings.ToLower(err.Error())
+	return strings.Contains(s, "subscriptionrequired") ||
+		strings.Contains(s, "accessdenied") ||
+		strings.Contains(s, "not authorized") ||
+		strings.Contains(s, "optinrequired") ||
+		strings.Contains(s, "unrecognizedclientexception") ||
+		strings.Contains(s, "subscription")
 }

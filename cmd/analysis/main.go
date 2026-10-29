@@ -53,6 +53,9 @@ var (
 	uploadBucket     string
 	alertsTopicArn   string
 	analysisDLQURL   string
+	useComprehend      string
+	comprehendDisabled bool
+	comprehendLogOnce  sync.Once
 )
 
 func init() {
@@ -71,6 +74,14 @@ func init() {
 	}
 	if linksTable == "" {
 		linksTable = "sentry-links"
+	}
+
+	useComprehend = strings.ToLower(os.Getenv("USE_COMPREHEND"))
+	if useComprehend == "" {
+		useComprehend = "auto"
+	}
+	if useComprehend == "off" {
+		comprehendDisabled = true
 	}
 
 	rateLimiter = quota.NewLimiter()
@@ -161,11 +172,28 @@ func handleAnalysis(ctx context.Context, sqsEvent events.SQSEvent) error {
 		}
 
 		var compRes *comprehend.AnalysisResult
-		if combinedText != "" && comprehendClient != nil {
+		if combinedText != "" && comprehendClient != nil && !comprehendDisabled {
 			// enforce daily request cap for comprehend free tier
 			allowed, _, _ := rateLimiter.Allow(ctx, "comprehend", 100)
 			if allowed {
-				compRes = comprehend.AnalyzeWithFallback(ctx, comprehendClient, combinedText)
+				res, err := comprehend.Analyze(ctx, comprehendClient, combinedText)
+				if err != nil {
+					if comprehend.IsAccessOrSubscriptionError(err) {
+						comprehendDisabled = true
+						comprehendLogOnce.Do(func() {
+							slog.WarnContext(recCtx, "comprehend disabled due to subscription or access error, falling back to rules", slog.String("error", err.Error()))
+						})
+					} else {
+						slog.WarnContext(recCtx, "comprehend call failed, falling back to rules", slog.String("error", err.Error()))
+					}
+					compRes = comprehend.FallbackAnalysis(combinedText, "en")
+				} else {
+					if res.Language != "en" {
+						compRes = comprehend.FallbackAnalysis(combinedText, res.Language)
+					} else {
+						compRes = res
+					}
+				}
 			} else {
 				compRes = comprehend.FallbackAnalysis(combinedText, "en")
 			}

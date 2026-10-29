@@ -153,6 +153,26 @@ func TestAnalyze_PiiErrorPropagation(t *testing.T) {
 	}
 }
 
+func TestIsAccessOrSubscriptionError(t *testing.T) {
+	cases := []struct {
+		err  error
+		want bool
+	}{
+		{errors.New("SubscriptionRequiredException: The AWS Access Key is not subscribed to this service"), true},
+		{errors.New("AccessDeniedException: User is not authorized to perform: comprehend:DetectSentiment"), true},
+		{errors.New("OptInRequired: Please subscribe to AWS Comprehend"), true},
+		{errors.New("connection timeout"), false},
+		{nil, false},
+	}
+
+	for _, tc := range cases {
+		got := comprehend.IsAccessOrSubscriptionError(tc.err)
+		if got != tc.want {
+			t.Errorf("IsAccessOrSubscriptionError(%v) = %v; want %v", tc.err, got, tc.want)
+		}
+	}
+}
+
 func TestTruncateUTF8(t *testing.T) {
 	t.Run("short string untouched", func(t *testing.T) {
 		s := "hello world"
