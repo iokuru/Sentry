@@ -80,6 +80,10 @@ describe('senior route page weight budget', () => {
     function walkDir(dir: string) {
       const entries = fs.readdirSync(dir, { withFileTypes: true });
       for (const entry of entries) {
+        if (entry.name === 'tesseract') {
+          // lazy worker assets are not loaded on initial senior page
+          continue;
+        }
         const fullPath = `${dir}/${entry.name}`;
         if (entry.isDirectory()) {
           walkDir(fullPath);
@@ -95,5 +99,13 @@ describe('senior route page weight budget', () => {
     const maxBudgetKb = 150;
     const actualKb = totalGzipBytes / 1024;
     expect(actualKb).toBeLessThan(maxBudgetKb);
+  });
+
+  it('senior initial page html does not preload tesseract assets', () => {
+    const buildDir = fileURLToPath(new URL('../../build', import.meta.url));
+    const indexPath = `${buildDir}/index.html`;
+    if (!fs.existsSync(indexPath)) return;
+    const html = fs.readFileSync(indexPath, 'utf-8');
+    expect(html.includes('tesseract')).toBe(false);
   });
 });
