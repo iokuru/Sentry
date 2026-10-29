@@ -1,6 +1,9 @@
-.PHONY: all build build-lambdas test dev plan apply destroy seed clean check smoke smoke-live telegram-hook deploy costguard
+.PHONY: all build build-lambdas test dev plan apply destroy seed clean check smoke smoke-live telegram-hook deploy costguard preflight
 
 all: build test
+
+preflight:
+	go run ./cmd/preflight
 
 build:
 	go run ./cmd/build -frontend

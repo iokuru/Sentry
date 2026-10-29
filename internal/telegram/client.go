@@ -194,6 +194,32 @@ func (c *Client) AnswerCallback(ctx context.Context, token, callbackQueryID, tex
 	return nil
 }
 
+func (c *Client) GetMe(ctx context.Context, token string) (*User, error) {
+	url := fmt.Sprintf("%s/bot%s/getMe", c.baseURL, token)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	res, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("status %d", res.StatusCode)
+	}
+
+	var apiRes struct {
+		OK     bool `json:"ok"`
+		Result User `json:"result"`
+	}
+	if err := json.NewDecoder(res.Body).Decode(&apiRes); err != nil {
+		return nil, err
+	}
+	return &apiRes.Result, nil
+}
+
 func FormatAlertMessage(category, level, detectedOneLine, hotlineName, hotlineNumber, incidentID, timestamp string) (string, [][]InlineKeyboardButton) {
 	text := fmt.Sprintf(
 		"*SENTRY ALERT*\n\n"+
