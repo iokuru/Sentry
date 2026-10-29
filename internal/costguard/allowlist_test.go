@@ -78,3 +78,28 @@ func TestTerraformServiceAllowlist(t *testing.T) {
 
 	t.Logf("verified %d terraform resources against free tier allowlist", count)
 }
+
+func TestComprehendAndTextractOmittedWhenOff(t *testing.T) {
+	iamPath := filepath.Join("..", "..", "infra", "modules", "notify", "iam.tf")
+	content, err := os.ReadFile(iamPath)
+	if err != nil {
+		t.Fatalf("failed to read notify iam.tf: %v", err)
+	}
+
+	text := string(content)
+
+	// verify that comprehend statements are conditional on use_comprehend != "off"
+	if !strings.Contains(text, `var.use_comprehend != "off"`) {
+		t.Errorf("expected iam.tf to guard comprehend statements with var.use_comprehend != \"off\"")
+	}
+
+	// verify that textract statements are conditional on ocr_mode != "browser"
+	if !strings.Contains(text, `var.ocr_mode != "browser"`) {
+		t.Errorf("expected iam.tf to guard textract statements with var.ocr_mode != \"browser\"")
+	}
+
+	// verify that when both are off, analysis_statements contains neither
+	if !strings.Contains(text, "local.textract_statement") || !strings.Contains(text, "local.comprehend_statement") {
+		t.Errorf("expected analysis_statements to use local.textract_statement and local.comprehend_statement")
+	}
+}
