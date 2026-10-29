@@ -37,3 +37,16 @@ func ExtractText(ctx context.Context, client Client, bucket, key string) (string
 
 	return strings.Join(lines, "\n"), nil
 }
+
+func IsAccessOrSubscriptionError(err error) bool {
+	if err == nil {
+		return false
+	}
+	s := strings.ToLower(err.Error())
+	return strings.Contains(s, "subscriptionrequired") ||
+		strings.Contains(s, "accessdenied") ||
+		strings.Contains(s, "not authorized") ||
+		strings.Contains(s, "optinrequired") ||
+		strings.Contains(s, "unrecognizedclientexception") ||
+		strings.Contains(s, "subscription")
+}

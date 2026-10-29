@@ -14,6 +14,14 @@ export class QuotaExceededError extends Error {
   }
 }
 
+export class TextractBlockedError extends Error {
+  code = 'TEXTRACT_UNAVAILABLE';
+  constructor(message = 'Textract unavailable: use browser ocr') {
+    super(message);
+    this.name = 'TextractBlockedError';
+  }
+}
+
 export interface PresignResponse {
   upload_url: string;
   image_key: string;
@@ -141,6 +149,16 @@ export async function submitIntake(req: IntakeRequest): Promise<IntakeResponse> 
 
   if (res.status === 429) {
     throw new QuotaExceededError('Daily limit reached');
+  }
+  if (res.status === 422 || res.status === 400) {
+    try {
+      const errJson = await res.json();
+      if (errJson && errJson.code === 'TEXTRACT_UNAVAILABLE') {
+        throw new TextractBlockedError(errJson.error || 'Textract unavailable: use browser ocr');
+      }
+    } catch (e) {
+      if (e instanceof TextractBlockedError) throw e;
+    }
   }
   if (!res.ok) {
     throw new Error('Analysis request failed, please retry');

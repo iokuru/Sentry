@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"log/slog"
@@ -19,11 +20,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	textractsvc "github.com/aws/aws-sdk-go-v2/service/textract"
+	textracttypes "github.com/aws/aws-sdk-go-v2/service/textract/types"
 	"github.com/iokuru/sentry/internal/awsconfig"
 	"github.com/iokuru/sentry/internal/hotline"
 	"github.com/iokuru/sentry/internal/logging"
 	"github.com/iokuru/sentry/internal/model"
 	"github.com/iokuru/sentry/internal/store"
+	"github.com/iokuru/sentry/internal/textract"
 )
 
 type IntakeRequest struct {
@@ -48,16 +52,36 @@ type AnalysisQueueMessage struct {
 }
 
 var (
-	sqsClient        *sqs.Client
-	analysisQueueURL string
-	incidentStore    *store.Store
+	sqsClient         *sqs.Client
+	textractClient    *textractsvc.Client
+	analysisQueueURL  string
+	incidentStore     *store.Store
+	ocrMode           string
+	textractBlocked   bool
+	textractProbeOnce sync.Once
 )
+
+var onePixelPNG = []byte{
+	0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d,
+	0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+	0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4, 0x89, 0x00, 0x00, 0x00,
+	0x0a, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9c, 0x63, 0x00, 0x01, 0x00, 0x00,
+	0x05, 0x00, 0x01, 0x0d, 0x0a, 0x2d, 0xb4, 0x00, 0x00, 0x00, 0x00, 0x49,
+	0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82,
+}
 
 func init() {
 	logging.Init()
 	analysisQueueURL = os.Getenv("ANALYSIS_QUEUE_URL")
 	incidentsTable := os.Getenv("INCIDENTS_TABLE")
 	linksTable := os.Getenv("LINKS_TABLE")
+	ocrMode = strings.ToLower(os.Getenv("OCR_MODE"))
+	if ocrMode == "" {
+		ocrMode = "auto"
+	}
+	if ocrMode == "browser" {
+		textractBlocked = true
+	}
 
 	if incidentsTable == "" {
 		incidentsTable = "sentry-incidents"
@@ -71,7 +95,37 @@ func init() {
 		sqsClient = sqs.NewFromConfig(cfg)
 		dbClient := dynamodb.NewFromConfig(cfg)
 		incidentStore = store.NewStore(dbClient, incidentsTable, linksTable)
+		if ocrMode != "browser" {
+			textractClient = textractsvc.NewFromConfig(cfg)
+		}
 	}
+}
+
+func isTextractBlocked(ctx context.Context) bool {
+	if ocrMode == "browser" {
+		return true
+	}
+	if ocrMode == "textract" {
+		return false
+	}
+	textractProbeOnce.Do(func() {
+		if textractClient == nil {
+			textractBlocked = true
+			return
+		}
+		probeCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+		defer cancel()
+		_, err := textractClient.DetectDocumentText(probeCtx, &textractsvc.DetectDocumentTextInput{
+			Document: &textracttypes.Document{
+				Bytes: onePixelPNG,
+			},
+		})
+		if err != nil && textract.IsAccessOrSubscriptionError(err) {
+			textractBlocked = true
+			slog.WarnContext(ctx, "textract probe failed, switching to browser ocr handoff", slog.String("error", err.Error()))
+		}
+	})
+	return textractBlocked
 }
 
 func handleIntake(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
@@ -89,6 +143,21 @@ func handleIntake(ctx context.Context, req events.APIGatewayV2HTTPRequest) (even
 
 	if strings.TrimSpace(input.ImageKey) == "" && strings.TrimSpace(input.UserContext) == "" {
 		return errorResponse(http.StatusBadRequest, "either screenshot or context message is required"), nil
+	}
+
+	if strings.TrimSpace(input.ImageKey) != "" && strings.TrimSpace(input.UserContext) == "" {
+		if isTextractBlocked(ctx) {
+			return events.APIGatewayV2HTTPResponse{
+				StatusCode: http.StatusUnprocessableEntity,
+				Headers: map[string]string{
+					"Content-Type":                 "application/json",
+					"Access-Control-Allow-Origin":  getCorsOrigin(),
+					"Access-Control-Allow-Headers": "Content-Type,Authorization",
+					"Access-Control-Allow-Methods": "POST,OPTIONS",
+				},
+				Body: `{"code":"TEXTRACT_UNAVAILABLE","error":"textract unavailable: use browser ocr"}`,
+			}, nil
+		}
 	}
 
 	country := input.Country

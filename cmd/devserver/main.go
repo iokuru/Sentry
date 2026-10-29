@@ -357,6 +357,19 @@ func (s *Server) handleIntake(w http.ResponseWriter, r *http.Request) {
 		country = hotline.ResolveCountry(req.Locale)
 	}
 
+	ocrMode := strings.ToLower(os.Getenv("OCR_MODE"))
+	if strings.TrimSpace(req.ImageKey) != "" && strings.TrimSpace(req.UserContext) == "" {
+		if ocrMode == "browser" || r.URL.Query().Get("textract_blocked") == "true" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			_ = json.NewEncoder(w).Encode(map[string]string{
+				"code":  "TEXTRACT_UNAVAILABLE",
+				"error": "textract unavailable: use browser ocr",
+			})
+			return
+		}
+	}
+
 	var id string
 	if strings.TrimSpace(req.ImageKey) != "" {
 		hash := sha256.Sum256([]byte(strings.TrimSpace(req.ImageKey)))
