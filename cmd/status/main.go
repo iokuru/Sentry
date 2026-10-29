@@ -63,6 +63,17 @@ func main() {
 			})
 		}
 
+		items = append(items, StatusItem{
+			Component: "OCR Path",
+			Status:    "LOCAL/BROWSER",
+			Details:   "in-memory mock or browser tesseract fallback",
+		})
+		items = append(items, StatusItem{
+			Component: "Comprehend",
+			Status:    "RULES-ONLY",
+			Details:   "local deterministic regex classification",
+		})
+
 		printTable(items)
 		return
 	}
@@ -193,21 +204,89 @@ func main() {
 		}
 	}
 
-	// 4. Check Textract and Comprehend Free Tier Quotas
+	// 4. Check Textract and Comprehend Status and Free Tier Quotas
+	compMode := strings.ToLower(strings.TrimSpace(inputs.UseComprehend))
+	if compMode == "" {
+		compMode = "auto"
+	}
+	ocrMode := strings.ToLower(strings.TrimSpace(inputs.OcrMode))
+	if ocrMode == "" {
+		ocrMode = "auto"
+	}
+
+	if compMode == "off" {
+		items = append(items, StatusItem{
+			Component: "Comprehend",
+			Status:    "DISABLED",
+			Details:   "rules-only analysis active (zero cloud comprehend requests)",
+		})
+	} else if compMode == "on" {
+		items = append(items, StatusItem{
+			Component: "Comprehend",
+			Status:    "ACTIVE",
+			Details:   "cloud comprehend linguistic analysis enabled",
+		})
+	} else {
+		items = append(items, StatusItem{
+			Component: "Comprehend",
+			Status:    "AUTO",
+			Details:   "cloud comprehend with automatic fallback to rules on subscription error",
+		})
+	}
+
+	if ocrMode == "browser" {
+		items = append(items, StatusItem{
+			Component: "OCR Path",
+			Status:    "BROWSER",
+			Details:   "client-side tesseract web worker with self-hosted language data",
+		})
+		items = append(items, StatusItem{
+			Component: "Textract",
+			Status:    "DISABLED",
+			Details:   "zero cloud textract requests (textract iam policy omitted)",
+		})
+	} else if ocrMode == "textract" {
+		items = append(items, StatusItem{
+			Component: "OCR Path",
+			Status:    "TEXTRACT",
+			Details:   "aws cloud textract document text detection",
+		})
+		items = append(items, StatusItem{
+			Component: "Textract",
+			Status:    "ACTIVE",
+			Details:   "detect document text enabled on private screenshots",
+		})
+	} else {
+		items = append(items, StatusItem{
+			Component: "OCR Path",
+			Status:    "AUTO",
+			Details:   "probes textract at cold start, hands off to browser worker on error",
+		})
+		items = append(items, StatusItem{
+			Component: "Textract",
+			Status:    "AUTO",
+			Details:   "cloud textract with automatic browser ocr retry on access failure",
+		})
+	}
+
 	limiter := quota.NewLimiter()
 	textractUsage := limiter.GetUsage("textract")
 	comprehendUsage := limiter.GetUsage("comprehend")
 
-	items = append(items, StatusItem{
-		Component: "Textract Cap",
-		Status:    "OK",
-		Details:   fmt.Sprintf("%d used / 100 daily limit (%d remaining)", textractUsage, 100-textractUsage),
-	})
-	items = append(items, StatusItem{
-		Component: "Comprehend Cap",
-		Status:    "OK",
-		Details:   fmt.Sprintf("%d used / 100 daily limit (%d remaining)", comprehendUsage, 100-comprehendUsage),
-	})
+	if ocrMode != "browser" {
+		items = append(items, StatusItem{
+			Component: "Textract Cap",
+			Status:    "OK",
+			Details:   fmt.Sprintf("%d used / 100 daily limit (%d remaining)", textractUsage, 100-textractUsage),
+		})
+	}
+	if compMode != "off" {
+		items = append(items, StatusItem{
+			Component: "Comprehend Cap",
+			Status:    "OK",
+			Details:   fmt.Sprintf("%d used / 100 daily limit (%d remaining)", comprehendUsage, 100-comprehendUsage),
+		})
+	}
 
 	printTable(items)
 }
