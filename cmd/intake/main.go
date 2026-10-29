@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"log/slog"
+
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -19,6 +21,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/iokuru/sentry/internal/hotline"
+	"github.com/iokuru/sentry/internal/logging"
 	"github.com/iokuru/sentry/internal/model"
 	"github.com/iokuru/sentry/internal/store"
 )
@@ -51,6 +54,7 @@ var (
 )
 
 func init() {
+	logging.Init()
 	analysisQueueURL = os.Getenv("ANALYSIS_QUEUE_URL")
 	incidentsTable := os.Getenv("INCIDENTS_TABLE")
 	linksTable := os.Getenv("LINKS_TABLE")
@@ -71,6 +75,7 @@ func init() {
 }
 
 func handleIntake(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
+	ctx = logging.WithRequestID(ctx, req.RequestContext.RequestID)
 	var input IntakeRequest
 	if req.Body != "" {
 		if err := json.Unmarshal([]byte(req.Body), &input); err != nil {
@@ -150,9 +155,12 @@ func handleIntake(ctx context.Context, req events.APIGatewayV2HTTPRequest) (even
 			MessageBody: aws.String(string(msgBody)),
 		})
 		if err != nil {
+			slog.ErrorContext(ctx, "failed to enqueue analysis job", slog.String("incident_id", incidentID), slog.String("error", err.Error()))
 			return errorResponse(http.StatusInternalServerError, "failed to enqueue analysis job"), nil
 		}
 	}
+
+	slog.InfoContext(ctx, "incident queued for analysis", slog.String("incident_id", incidentID), slog.String("country", country))
 
 	res := IntakeResponse{
 		IncidentID: incidentID,

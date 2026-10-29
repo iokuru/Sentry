@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/iokuru/sentry/internal/logging"
 	"github.com/iokuru/sentry/internal/model"
 	"github.com/iokuru/sentry/internal/store"
 )
@@ -24,6 +26,7 @@ var (
 )
 
 func init() {
+	logging.Init()
 	uploadBucket = os.Getenv("UPLOADS_BUCKET")
 	if uploadBucket == "" {
 		uploadBucket = "sentry-uploads"
@@ -60,6 +63,7 @@ func attachThumbnailURL(ctx context.Context, inc *model.Incident) {
 }
 
 func handleList(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
+	ctx = logging.WithRequestID(ctx, req.RequestContext.RequestID)
 	// check if individual incident is queried via query params or path
 	if id, ok := req.QueryStringParameters["id"]; ok && id != "" {
 		if incidentStore == nil {
@@ -89,6 +93,8 @@ func handleList(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events
 	for i := range incidents {
 		attachThumbnailURL(ctx, &incidents[i])
 	}
+
+	slog.InfoContext(ctx, "listed incidents for caregiver", slog.Int("count", len(incidents)))
 
 	body, _ := json.Marshal(incidents)
 	return jsonResponse(http.StatusOK, body), nil

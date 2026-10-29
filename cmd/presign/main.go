@@ -12,11 +12,14 @@ import (
 	"strings"
 	"time"
 
+	"log/slog"
+
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/iokuru/sentry/internal/logging"
 )
 
 type PresignRequest struct {
@@ -35,6 +38,7 @@ var (
 )
 
 func init() {
+	logging.Init()
 	uploadBucket = os.Getenv("UPLOADS_BUCKET")
 	if uploadBucket == "" {
 		uploadBucket = "sentry-uploads"
@@ -48,6 +52,7 @@ func init() {
 }
 
 func handlePresign(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
+	ctx = logging.WithRequestID(ctx, req.RequestContext.RequestID)
 	var input PresignRequest
 	if req.Body != "" {
 		_ = json.Unmarshal([]byte(req.Body), &input)
@@ -83,11 +88,14 @@ func handlePresign(ctx context.Context, req events.APIGatewayV2HTTPRequest) (eve
 		ContentType: aws.String(contentType),
 	}, s3.WithPresignExpires(15*time.Minute))
 	if err != nil {
+		slog.ErrorContext(ctx, "failed to presign put object", slog.String("error", err.Error()))
 		return events.APIGatewayV2HTTPResponse{
 			StatusCode: http.StatusInternalServerError,
 			Body:       fmt.Sprintf(`{"error":"failed to presign: %s"}`, err.Error()),
 		}, nil
 	}
+
+	slog.InfoContext(ctx, "presigned upload url created", slog.String("image_key", key))
 
 	res := PresignResponse{
 		UploadURL: presignedReq.URL,

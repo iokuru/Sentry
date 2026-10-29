@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"os"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/iokuru/sentry/internal/logging"
 	"github.com/iokuru/sentry/internal/model"
 	"github.com/iokuru/sentry/internal/store"
 )
@@ -22,6 +24,7 @@ type StatusUpdateRequest struct {
 var incidentStore *store.Store
 
 func init() {
+	logging.Init()
 	incidentsTable := os.Getenv("INCIDENTS_TABLE")
 	linksTable := os.Getenv("LINKS_TABLE")
 	if incidentsTable == "" {
@@ -39,6 +42,7 @@ func init() {
 }
 
 func handleStatusUpdate(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
+	ctx = logging.WithRequestID(ctx, req.RequestContext.RequestID)
 	var input StatusUpdateRequest
 	if req.Body != "" {
 		if err := json.Unmarshal([]byte(req.Body), &input); err != nil {
@@ -63,8 +67,11 @@ func handleStatusUpdate(ctx context.Context, req events.APIGatewayV2HTTPRequest)
 	}
 
 	if err := incidentStore.UpdateIncidentStatus(ctx, input.IncidentID, input.Status); err != nil {
+		slog.ErrorContext(ctx, "failed to update status", slog.String("incident_id", input.IncidentID), slog.String("error", err.Error()))
 		return errorResponse(http.StatusInternalServerError, err.Error()), nil
 	}
+
+	slog.InfoContext(ctx, "status updated", slog.String("incident_id", input.IncidentID), slog.String("status", string(input.Status)))
 
 	resBody, _ := json.Marshal(map[string]string{
 		"incident_id": input.IncidentID,

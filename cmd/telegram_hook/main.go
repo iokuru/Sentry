@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"strings"
@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	"github.com/iokuru/sentry/internal/logging"
 	"github.com/iokuru/sentry/internal/model"
 	"github.com/iokuru/sentry/internal/store"
 	"github.com/iokuru/sentry/internal/telegram"
@@ -26,6 +27,7 @@ var (
 )
 
 func init() {
+	logging.Init()
 	incidentsTable := os.Getenv("INCIDENTS_TABLE")
 	linksTable := os.Getenv("LINKS_TABLE")
 	if incidentsTable == "" {
@@ -47,6 +49,7 @@ func init() {
 }
 
 func handleWebhook(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
+	ctx = logging.WithRequestID(ctx, req.RequestContext.RequestID)
 	if telegramCfg == nil || !telegramCfg.Enabled {
 		return events.APIGatewayV2HTTPResponse{
 			StatusCode: http.StatusOK,
@@ -110,7 +113,7 @@ func handleCallback(ctx context.Context, cb *telegram.CallbackQuery) {
 
 	if incidentStore != nil {
 		if err := incidentStore.UpdateIncidentStatus(ctx, incidentID, newStatus); err != nil {
-			log.Printf("failed to update incident %s: %v", incidentID, err)
+			slog.ErrorContext(ctx, "failed to update incident from callback", slog.String("incident_id", incidentID), slog.String("error", err.Error()))
 		}
 	}
 
@@ -180,7 +183,7 @@ func handleMessage(ctx context.Context, msg *telegram.Message) {
 	}
 
 	if err := incidentStore.SetTelegramChatID(ctx, inv.CaregiverID, chatID); err != nil {
-		log.Printf("failed to associate telegram chat id: %v", err)
+		slog.ErrorContext(ctx, "failed to associate telegram chat id", slog.String("error", err.Error()))
 		_, _ = telegramClient.Send(ctx, telegramCfg.Token, chatID, "Failed to link Telegram. Please try again.", nil)
 		return
 	}

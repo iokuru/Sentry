@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
+	"github.com/iokuru/sentry/internal/logging"
 	"github.com/iokuru/sentry/internal/store"
 )
 
@@ -22,6 +24,7 @@ var (
 )
 
 func init() {
+	logging.Init()
 	alertsTopicArn = os.Getenv("CAREGIVER_ALERTS_TOPIC_ARN")
 	incidentsTable := os.Getenv("INCIDENTS_TABLE")
 	linksTable := os.Getenv("LINKS_TABLE")
@@ -51,10 +54,12 @@ func handleDigest(ctx context.Context) error {
 	}
 
 	if len(unresolved) == 0 {
+		slog.InfoContext(ctx, "daily digest: no unresolved incidents")
 		return nil
 	}
 
 	if snsClient == nil || alertsTopicArn == "" {
+		slog.InfoContext(ctx, "daily digest: sns disabled or topic missing", slog.Int("unresolved_count", len(unresolved)))
 		return nil
 	}
 
@@ -82,9 +87,11 @@ func handleDigest(ctx context.Context) error {
 		Message:  aws.String(body),
 	})
 	if err != nil {
+		slog.ErrorContext(ctx, "failed to publish daily digest", slog.String("error", err.Error()))
 		return fmt.Errorf("publish daily digest: %w", err)
 	}
 
+	slog.InfoContext(ctx, "daily digest sent", slog.Int("unresolved_count", len(unresolved)))
 	return nil
 }
 

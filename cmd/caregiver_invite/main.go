@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"os"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/iokuru/sentry/internal/logging"
 	"github.com/iokuru/sentry/internal/model"
 	"github.com/iokuru/sentry/internal/pairing"
 	"github.com/iokuru/sentry/internal/store"
@@ -28,6 +30,7 @@ type CreateInviteResponse struct {
 var linkStore *store.Store
 
 func init() {
+	logging.Init()
 	incidentsTable := os.Getenv("INCIDENTS_TABLE")
 	linksTable := os.Getenv("LINKS_TABLE")
 	if incidentsTable == "" {
@@ -58,6 +61,7 @@ func extractCaregiverID(req events.APIGatewayV2HTTPRequest) string {
 }
 
 func handleCaregiverInvite(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
+	ctx = logging.WithRequestID(ctx, req.RequestContext.RequestID)
 	if linkStore == nil {
 		return errorResponse(http.StatusInternalServerError, "store unavailable"), nil
 	}
@@ -86,6 +90,8 @@ func handleCaregiverInvite(ctx context.Context, req events.APIGatewayV2HTTPReque
 		if err := linkStore.CreateInvite(ctx, inv); err != nil {
 			return errorResponse(http.StatusInternalServerError, err.Error()), nil
 		}
+
+		slog.InfoContext(ctx, "created caregiver invite", slog.String("caregiver_id", caregiverID))
 
 		body, _ := json.Marshal(CreateInviteResponse{
 			Code:      code,

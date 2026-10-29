@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"strings"
 	"sync"
@@ -23,6 +23,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	textractsvc "github.com/aws/aws-sdk-go-v2/service/textract"
 	"github.com/iokuru/sentry/internal/comprehend"
+	"github.com/iokuru/sentry/internal/logging"
 	"github.com/iokuru/sentry/internal/model"
 	"github.com/iokuru/sentry/internal/quota"
 	"github.com/iokuru/sentry/internal/risk"
@@ -55,6 +56,7 @@ var (
 )
 
 func init() {
+	logging.Init()
 	uploadBucket = os.Getenv("UPLOADS_BUCKET")
 	if uploadBucket == "" {
 		uploadBucket = "sentry-uploads"
@@ -103,34 +105,35 @@ func forwardPoisonToDLQ(ctx context.Context, body string, reason string) {
 			},
 		})
 		if err != nil {
-			log.Printf("failed to forward poison message to dlq: %v", err)
+			slog.ErrorContext(ctx, "failed to forward poison message to dlq", slog.String("error", err.Error()))
 		}
 	}
 }
 
 func handleAnalysis(ctx context.Context, sqsEvent events.SQSEvent) error {
 	for _, record := range sqsEvent.Records {
+		recCtx := logging.WithRequestID(ctx, record.MessageId)
 		var msg AnalysisQueueMessage
 		if err := json.Unmarshal([]byte(record.Body), &msg); err != nil {
-			log.Printf("corrupt poison sqs message: %v", err)
-			forwardPoisonToDLQ(ctx, record.Body, fmt.Sprintf("unmarshal error: %v", err))
+			slog.WarnContext(recCtx, "corrupt poison sqs message", slog.String("error", err.Error()))
+			forwardPoisonToDLQ(recCtx, record.Body, fmt.Sprintf("unmarshal error: %v", err))
 			continue
 		}
 
 		if strings.TrimSpace(msg.ImageKey) == "" && strings.TrimSpace(msg.UserContext) == "" {
-			log.Printf("invalid sqs message: empty image and context for %s", msg.IncidentID)
-			forwardPoisonToDLQ(ctx, record.Body, "empty image key and user context")
+			slog.WarnContext(recCtx, "invalid sqs message: empty image and context", slog.String("incident_id", msg.IncidentID))
+			forwardPoisonToDLQ(recCtx, record.Body, "empty image key and user context")
 			if incidentStore != nil && msg.IncidentID != "" {
-				_ = incidentStore.UpdateIncidentStatus(ctx, msg.IncidentID, model.StatusFailed)
+				_ = incidentStore.UpdateIncidentStatus(recCtx, msg.IncidentID, model.StatusFailed)
 			}
 			continue
 		}
 
 		if incidentStore != nil && msg.IncidentID != "" {
-			existing, err := incidentStore.GetIncident(ctx, msg.IncidentID)
+			existing, err := incidentStore.GetIncident(recCtx, msg.IncidentID)
 			if err == nil && existing != nil {
 				if existing.Status == model.StatusAnalyzed || existing.Status == model.StatusAcknowledged || existing.Status == model.StatusResolved {
-					log.Printf("incident %s already processed with status %s, skipping retry", existing.ID, existing.Status)
+					slog.InfoContext(recCtx, "incident already processed, skipping retry", slog.String("incident_id", existing.ID), slog.String("status", string(existing.Status)))
 					continue
 				}
 			}
@@ -199,23 +202,30 @@ func handleAnalysis(ctx context.Context, sqsEvent events.SQSEvent) error {
 		}
 
 		if incidentStore != nil {
-			if err := incidentStore.SaveIncident(ctx, inc); err != nil {
+			if err := incidentStore.SaveIncident(recCtx, inc); err != nil {
 				return fmt.Errorf("store analyzed incident %s: %w", inc.ID, err)
 			}
 		}
 
 		if s3Client != nil && msg.ImageKey != "" && uploadBucket != "" {
-			_, err := s3Client.DeleteObject(ctx, &s3.DeleteObjectInput{
+			_, err := s3Client.DeleteObject(recCtx, &s3.DeleteObjectInput{
 				Bucket: aws.String(uploadBucket),
 				Key:    aws.String(msg.ImageKey),
 			})
 			if err != nil {
-				log.Printf("failed to delete analyzed screenshot %s: %v", msg.ImageKey, err)
+				slog.WarnContext(recCtx, "failed to delete analyzed screenshot", slog.String("image_key", msg.ImageKey), slog.String("error", err.Error()))
 			}
 		}
 
+		slog.InfoContext(recCtx, "analysis completed",
+			slog.String("incident_id", inc.ID),
+			slog.Int("score", score),
+			slog.String("risk_level", string(level)),
+			slog.String("category", string(category)),
+		)
+
 		if level == model.RiskHigh {
-			notifyCaregivers(ctx, inc, score, category, matches, output)
+			notifyCaregivers(recCtx, inc, score, category, matches, output)
 		}
 	}
 
@@ -258,7 +268,7 @@ func notifyCaregivers(ctx context.Context, inc *model.Incident, score int, categ
 				Message:  aws.String(body),
 			})
 			if err != nil {
-				log.Printf("sns alert failed: %v", err)
+				slog.ErrorContext(ctx, "sns alert failed", slog.String("error", err.Error()))
 			}
 		}()
 	}
@@ -301,7 +311,7 @@ func notifyCaregivers(ctx context.Context, inc *model.Incident, score int, categ
 			for chatID := range targetChatIDs {
 				_, err := telegramClient.Send(ctx, telegramCfg.Token, chatID, text, buttons)
 				if err != nil {
-					log.Printf("telegram alert to %s failed: %v", chatID, err)
+					slog.ErrorContext(ctx, "telegram alert failed", slog.String("chat_id", chatID), slog.String("error", err.Error()))
 				}
 			}
 		}()
