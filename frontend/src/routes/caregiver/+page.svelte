@@ -27,6 +27,49 @@
   let inviteBusy = $state(false);
   let showInviteForm = $state(false);
   let removeBusy = $state<Record<string, boolean>>({});
+  let activeFilter = $state<'open' | 'acknowledged' | 'resolved'>('open');
+
+  const seniorMap = $derived.by(() => {
+    const map: Record<string, string> = {};
+    for (const l of links) {
+      if (l.senior_id) {
+        map[l.senior_id] = l.senior_name || 'Senior';
+      }
+    }
+    return map;
+  });
+
+  const filteredIncidents = $derived.by(() => {
+    return incidents.filter((inc) => {
+      if (activeFilter === 'open') {
+        return inc.status !== 'acknowledged' && inc.status !== 'resolved';
+      }
+      return inc.status === activeFilter;
+    });
+  });
+
+  const groupedIncidents = $derived.by(() => {
+    const groups: { seniorId: string; seniorName: string; items: Incident[] }[] = [];
+    const groupMap = new Map<string, Incident[]>();
+
+    for (const inc of filteredIncidents) {
+      const sid = inc.senior_id || 'unknown';
+      if (!groupMap.has(sid)) {
+        groupMap.set(sid, []);
+      }
+      groupMap.get(sid)!.push(inc);
+    }
+
+    for (const [sid, items] of groupMap.entries()) {
+      groups.push({
+        seniorId: sid,
+        seniorName: seniorMap[sid] || (sid === 'unknown' ? 'Senior' : 'Senior'),
+        items
+      });
+    }
+
+    return groups;
+  });
 
   onMount(() => {
     signedIn = isAuthenticated();
@@ -270,49 +313,89 @@
     </section>
 
     <section class="incident-feed">
+      <div class="filters-bar" role="tablist" aria-label="Incident status filters">
+        <button
+          type="button"
+          class="filter-tab"
+          class:active={activeFilter === 'open'}
+          role="tab"
+          aria-selected={activeFilter === 'open'}
+          onclick={() => activeFilter = 'open'}
+        >
+          Open
+        </button>
+        <button
+          type="button"
+          class="filter-tab"
+          class:active={activeFilter === 'acknowledged'}
+          role="tab"
+          aria-selected={activeFilter === 'acknowledged'}
+          onclick={() => activeFilter = 'acknowledged'}
+        >
+          Acknowledged
+        </button>
+        <button
+          type="button"
+          class="filter-tab"
+          class:active={activeFilter === 'resolved'}
+          role="tab"
+          aria-selected={activeFilter === 'resolved'}
+          onclick={() => activeFilter = 'resolved'}
+        >
+          Resolved
+        </button>
+      </div>
+
       {#if loading && incidents.length === 0}
         <p class="status-msg">Loading incidents...</p>
-      {:else if incidents.length === 0}
-        <p class="status-msg">No incidents reported yet.</p>
+      {:else if groupedIncidents.length === 0}
+        <div class="empty-state">
+          <p class="status-msg">No {activeFilter} incidents</p>
+        </div>
       {:else}
-        {#each incidents as inc (inc.id)}
-          <article class="incident-card" class:high-border={inc.risk_level === 'high'}>
-            <div class="card-top">
-              <SeverityChip level={inc.risk_level} score={inc.score} />
-              <time class="incident-time" datetime={inc.created_at}>
-                {formatTime(inc.created_at)}
-              </time>
-            </div>
+        {#each groupedIncidents as group (group.seniorId)}
+          <div class="senior-group">
+            <h3 class="senior-group-header">{group.seniorName}</h3>
+            {#each group.items as inc (inc.id)}
+              <article class="incident-card" class:high-border={inc.risk_level === 'high'}>
+                <div class="card-top">
+                  <SeverityChip level={inc.risk_level} score={inc.score} />
+                  <time class="incident-time" datetime={inc.created_at}>
+                    {formatTime(inc.created_at)}
+                  </time>
+                </div>
 
-            <p class="incident-text">
-              {inc.user_context || inc.extracted_text || `Suspicious ${inc.category} message`}
-            </p>
+                <p class="incident-text">
+                  {inc.user_context || inc.extracted_text || `Suspicious ${inc.category} message`}
+                </p>
 
-            <div class="card-actions">
-              {#if inc.status !== 'resolved'}
-                {#if inc.status !== 'acknowledged'}
-                  <button
-                    type="button"
-                    class="action-btn ack-btn"
-                    disabled={actionBusy[inc.id]}
-                    onclick={() => updateStatus(inc.id, 'acknowledged')}
-                  >
-                    Acknowledge
-                  </button>
-                {/if}
-                <button
-                  type="button"
-                  class="action-btn resolve-btn"
-                  disabled={actionBusy[inc.id]}
-                  onclick={() => updateStatus(inc.id, 'resolved')}
-                >
-                  Resolve
-                </button>
-              {:else}
-                <span class="resolved-label">Resolved</span>
-              {/if}
-            </div>
-          </article>
+                <div class="card-actions">
+                  {#if inc.status !== 'resolved'}
+                    {#if inc.status !== 'acknowledged'}
+                      <button
+                        type="button"
+                        class="action-btn ack-btn"
+                        disabled={actionBusy[inc.id]}
+                        onclick={() => updateStatus(inc.id, 'acknowledged')}
+                      >
+                        Acknowledge
+                      </button>
+                    {/if}
+                    <button
+                      type="button"
+                      class="action-btn resolve-btn"
+                      disabled={actionBusy[inc.id]}
+                      onclick={() => updateStatus(inc.id, 'resolved')}
+                    >
+                      Resolve
+                    </button>
+                  {:else}
+                    <span class="resolved-label">Resolved</span>
+                  {/if}
+                </div>
+              </article>
+            {/each}
+          </div>
         {/each}
       {/if}
     </section>
@@ -579,6 +662,64 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+  }
+
+  .filters-bar {
+    display: flex;
+    gap: 8px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--border-subtle);
+  }
+
+  .filter-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--touch-min);
+    padding: 0 18px;
+    font-size: var(--font-base);
+    font-weight: 700;
+    color: var(--text-secondary);
+    background: transparent;
+    border: 2px solid transparent;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 150ms ease;
+  }
+
+  .filter-tab:hover,
+  .filter-tab:focus-visible {
+    color: var(--text-primary);
+    background-color: var(--bg-hover);
+    outline: 3px solid var(--ring-focus);
+    outline-offset: 2px;
+  }
+
+  .filter-tab.active {
+    color: var(--bg-surface);
+    background-color: var(--text-primary);
+    border-color: var(--text-primary);
+  }
+
+  .senior-group {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .senior-group-header {
+    font-size: var(--font-lg);
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 8px 0 0;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .empty-state {
+    display: flex;
+    justify-content: center;
+    padding: 32px 0;
   }
 
   .status-msg {
