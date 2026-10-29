@@ -71,6 +71,20 @@
     return groups;
   });
 
+  const unresolvedHighRiskCount = $derived.by(() => {
+    return incidents.filter((inc) => inc.status !== 'resolved' && inc.risk_level === 'high').length;
+  });
+
+  $effect(() => {
+    if (typeof document !== 'undefined') {
+      if (unresolvedHighRiskCount > 0) {
+        document.title = `(${unresolvedHighRiskCount}) Sentry Caregiver`;
+      } else {
+        document.title = 'Sentry Caregiver';
+      }
+    }
+  });
+
   onMount(() => {
     signedIn = isAuthenticated();
     if (signedIn) {
@@ -224,6 +238,10 @@
     }
   }
 </script>
+
+<svelte:head>
+  <title>{unresolvedHighRiskCount > 0 ? `(${unresolvedHighRiskCount}) ` : ''}Sentry Caregiver</title>
+</svelte:head>
 
 <main class="caregiver-page">
   <header class="caregiver-header">
