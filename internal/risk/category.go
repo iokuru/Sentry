@@ -80,6 +80,11 @@ func BuildSeniorOutput(category model.Category, level model.RiskLevel, country s
 		alternative = "Verify the request through an established contact method you know and trust."
 	}
 
+	if level == model.RiskLow {
+		holdOff = "Nothing urgent found. Take your time and do not feel pressured to act immediately."
+		alternative = "Double-check the sender details through an official website or your existing contacts."
+	}
+
 	return model.SeniorOutput{
 		HoldOff:         holdOff,
 		SafeAlternative: alternative,

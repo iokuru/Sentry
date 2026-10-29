@@ -47,6 +47,15 @@
       showPairing = true;
     }
 
+    const savedResult = localStorage.getItem('sentry_last_result');
+    if (savedResult) {
+      try {
+        result = JSON.parse(savedResult);
+      } catch {
+        localStorage.removeItem('sentry_last_result');
+      }
+    }
+
     const updateOnline = () => {
       isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
     };
@@ -173,6 +182,13 @@
       });
 
       result = await pollIncident(intakeData.incident_id);
+      if (result) {
+        try {
+          localStorage.setItem('sentry_last_result', JSON.stringify(result));
+        } catch {
+          // ignore storage quota error
+        }
+      }
     } catch (err: unknown) {
       if (err instanceof QuotaExceededError || (err instanceof Error && err.name === 'QuotaExceededError')) {
         isQuotaReached = true;
@@ -194,6 +210,11 @@
     errorMessage = '';
     isFailed = false;
     isQuotaReached = false;
+    try {
+      localStorage.removeItem('sentry_last_result');
+    } catch {
+      // quiet fail
+    }
   }
 </script>
 
