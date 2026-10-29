@@ -13,6 +13,7 @@
   import { detectCountry } from '$lib/locale';
   import { downscaleImage } from '$lib/downscale';
   import { isPaired, getSeniorName } from '$lib/device';
+  import { loadConfig } from '$lib/config';
   import {
     presignUpload,
     uploadScreenshot,
@@ -39,11 +40,19 @@
   let paired = $state(false);
   let seniorName = $state('');
   let showPairing = $state(false);
+  let ocrMode = $state('auto');
+  let readingStatus = $state('');
+  let browserExtractedText = $state('');
 
   onMount(() => {
     country = detectCountry();
     paired = isPaired();
     seniorName = getSeniorName();
+    loadConfig().then((cfg) => {
+      if (cfg && cfg.ocr_mode) {
+        ocrMode = cfg.ocr_mode.toLowerCase();
+      }
+    });
     const skipped = localStorage.getItem('sentry_pair_skipped') === 'true';
     if (!paired && !skipped) {
       showPairing = true;
@@ -137,6 +146,8 @@
     }
 
     selectedFile = file;
+    browserExtractedText = '';
+    readingStatus = '';
     try {
       const downscaled = await downscaleImage(file);
       processedBlob = downscaled.blob;
@@ -145,11 +156,27 @@
       processedBlob = file;
       previewUrl = URL.createObjectURL(file);
     }
+
+    if (ocrMode === 'browser' && processedBlob) {
+      readingStatus = 'Reading screenshot on your device...';
+      try {
+        const { extractTextWithBrowserOCR } = await import('$lib/ocr');
+        browserExtractedText = await extractTextWithBrowserOCR(processedBlob, (msg) => {
+          readingStatus = msg;
+        });
+      } catch {
+        // quiet fail
+      } finally {
+        readingStatus = '';
+      }
+    }
   }
 
   function handleRemoveFile() {
     selectedFile = null;
     processedBlob = null;
+    browserExtractedText = '';
+    readingStatus = '';
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
       previewUrl = '';
@@ -185,10 +212,25 @@
         isUploading = false;
       }
 
+      if (ocrMode === 'browser' && processedBlob && !browserExtractedText) {
+        readingStatus = 'Reading screenshot on your device...';
+        try {
+          const { extractTextWithBrowserOCR } = await import('$lib/ocr');
+          browserExtractedText = await extractTextWithBrowserOCR(processedBlob, (msg) => {
+            readingStatus = msg;
+          });
+        } catch {
+          // quiet fail
+        } finally {
+          readingStatus = '';
+        }
+      }
+
       isAnalyzing = true;
+      const combinedUserContext = [browserExtractedText, contextText.trim()].filter(Boolean).join('\n');
       const intakeData = await submitIntake({
         image_key: imageKey,
-        user_context: contextText.trim(),
+        user_context: combinedUserContext,
         country: country
       });
 
@@ -309,10 +351,16 @@
         </div>
       {/if}
 
+      {#if readingStatus}
+        <div class="reading-status" aria-live="polite">
+          {readingStatus}
+        </div>
+      {/if}
+
       <CheckButton
         {busy}
-        busyLabel={isUploading ? 'Uploading screenshot...' : (isAnalyzing ? 'Analyzing message...' : 'Checking...')}
-        disabled={!processedBlob && !contextText.trim() || isOffline}
+        busyLabel={readingStatus || (isUploading ? 'Uploading screenshot...' : (isAnalyzing ? 'Analyzing message...' : 'Checking...'))}
+        disabled={!processedBlob && !contextText.trim() || isOffline || !!readingStatus}
         onclick={handleCheck}
       />
     </section>
@@ -449,6 +497,17 @@
     padding: 20px 24px;
     border-radius: var(--radius-md);
     border: 2px solid;
+  }
+
+  .reading-status {
+    padding: 12px 16px;
+    font-size: var(--font-base);
+    font-weight: 600;
+    color: var(--text-secondary);
+    background-color: var(--bg-surface);
+    border: 2px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    text-align: center;
   }
 
   .offline-card {
