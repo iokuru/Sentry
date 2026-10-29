@@ -47,4 +47,5 @@ sentry helps older adults check suspicious screenshots or messages for fraud.
 - pure functions for scoring signals with individual table tests
 - sveltekit hand-written css with custom properties, minimum 60px touch targets
 - zero dollar target: serverless pay-per-request and free tier only
+- modes: auto (probe and fallback), on (cloud only), off/browser (zero subscription)
 - comments explain why, single line, lowercase, no full stop

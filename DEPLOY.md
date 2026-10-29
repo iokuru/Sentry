@@ -32,9 +32,17 @@ edit `inputs.local.json` with your configuration:
   "caregiver_email": "caregiver@example.com",
   "budget_alert_email": "billing@example.com",
   "telegram_bot_token": "",
-  "telegram_chat_id": ""
+  "telegram_chat_id": "",
+  "use_comprehend": "auto",
+  "ocr_mode": "auto"
 }
 ```
+
+### selecting operational modes
+
+- **auto (default):** `use_comprehend: "auto"`, `ocr_mode: "auto"`. probes textract and comprehend; if your aws account gets subscription errors, comprehend falls back to rules and textract hands off to the client-side browser ocr worker. uses eleven core services plus textract and comprehend when accessible.
+- **cloud on:** `use_comprehend: "on"`, `ocr_mode: "textract"`. enforces textract and comprehend. requires active aws subscriptions. uses all thirteen services.
+- **zero-subscription free mode:** `use_comprehend: "off"`, `ocr_mode: "browser"`. completely disables comprehend and textract. terraform creates no textract or comprehend policies. ocr runs in a browser web worker using self-hosted language data, and scoring runs via local rules. uses eleven services (s3, cloudfront, api gateway, lambda, dynamodb, sqs, sns, cognito, scheduler, cloudwatch, ssm). neither textract nor comprehend is used.
 
 telegram fields are optional. leave them empty if you only want email alerts.
 

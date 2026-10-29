@@ -17,6 +17,16 @@ when risk is high, linked caregivers receive an immediate alert by email and opt
 
 everything runs at zero usd on aws free tier or always-free allowances. textract and comprehend are the only services with limited free allowances, with a daily request cap of 100 requests per day enforced in code (falling back to rule-based classification when exhausted). an aws budget alarm is configured at 1 usd to alert on any unexpected spend.
 
+### operational modes
+
+sentry supports three operational modes configured in `inputs.local.json`:
+
+1. **auto mode (default):** `use_comprehend: "auto"`, `ocr_mode: "auto"`. probes textract and comprehend. uses cloud services when available; automatically falls back to deterministic rules if comprehend throws subscription errors, and automatically hands off to client-side browser ocr worker if textract is blocked. services used: s3, cloudfront, api gateway, lambda, dynamodb, sqs, sns, cognito, eventbridge scheduler, cloudwatch, ssm, plus textract and comprehend when accessible.
+2. **cloud mode:** `use_comprehend: "on"`, `ocr_mode: "textract"`. enforces cloud textract ocr and comprehend analysis. preflight checks fail if your aws account lacks active subscriptions. services used: all thirteen services including textract and comprehend.
+3. **zero-subscription free mode:** `use_comprehend: "off"`, `ocr_mode: "browser"`. completely disables textract and comprehend. terraform creates no textract or comprehend iam policies. text extraction runs entirely inside the user's browser using a self-hosted web worker with bundled language models, and classification runs using local deterministic rules. services used: eleven always-free or free tier services (s3, cloudfront, api gateway, lambda, dynamodb, sqs, sns, cognito, eventbridge scheduler, cloudwatch, ssm). neither textract nor comprehend is touched.
+
+### services breakdown
+
 - **s3:** 5 gb standard storage and 20,000 get requests. private uploads expire after 1 day via s3 lifecycle rule and are deleted immediately after analysis completes.
 - **cloudfront:** 1 tb data transfer out per month and 10,000,000 requests (always free). serves static frontend with origin access control and security headers.
 - **api gateway:** http api has 1,000,000 free requests per month. jwt authorizer on caregiver routes, throttled intake route for seniors.
