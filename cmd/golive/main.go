@@ -30,6 +30,7 @@ type Inputs struct {
 	BudgetAlertEmail string `json:"budget_alert_email"`
 	TelegramBotToken string `json:"telegram_bot_token"`
 	TelegramChatID   string `json:"telegram_chat_id"`
+	UseComprehend    string `json:"use_comprehend"`
 }
 
 type Outputs struct {
@@ -71,6 +72,20 @@ func main() {
 
 	// Step 3: Run terraform apply
 	fmt.Println("\n--> Step 3/7: Running terraform apply...")
+	compMode := strings.ToLower(strings.TrimSpace(inputs.UseComprehend))
+	if compMode == "" {
+		compMode = "auto"
+	}
+	tfvars := map[string]interface{}{
+		"aws_region":         inputs.AWSRegion,
+		"environment":        inputs.Environment,
+		"project_name":       inputs.ProjectName,
+		"budget_alert_email": inputs.BudgetAlertEmail,
+		"use_comprehend":     compMode,
+	}
+	tfvarsBytes, _ := json.MarshalIndent(tfvars, "", "  ")
+	_ = os.WriteFile(filepath.Join("infra", "terraform.tfvars.json"), tfvarsBytes, 0644)
+
 	if err := runCmd("terraform", "-chdir=infra", "apply", "-auto-approve"); err != nil {
 		failStep("Terraform apply failed", "Inspect the Terraform error output above, verify your AWS IAM permissions, and retry.")
 	}

@@ -22,8 +22,9 @@ import (
 type Inputs struct {
 	AWSProfile  string `json:"aws_profile"`
 	AWSRegion   string `json:"aws_region"`
-	ProjectName string `json:"project_name"`
-	Environment string `json:"environment"`
+	ProjectName   string `json:"project_name"`
+	Environment   string `json:"environment"`
+	UseComprehend string `json:"use_comprehend"`
 }
 
 type StatusItem struct {

@@ -9,6 +9,12 @@ variable "budget_alert_email" {
   default     = "caregiver@example.com"
 }
 
+variable "use_comprehend" {
+  type        = string
+  description = "comprehend mode: auto, on, or off"
+  default     = "auto"
+}
+
 variable "uploads_bucket" {
   type        = string
   description = "s3 uploads bucket name"

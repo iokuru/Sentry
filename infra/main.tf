@@ -21,6 +21,7 @@ module "notify" {
   source              = "./modules/notify"
   name_prefix         = local.name_prefix
   budget_alert_email  = var.budget_alert_email
+  use_comprehend      = var.use_comprehend
   uploads_bucket      = module.storage.uploads_bucket_id
   uploads_bucket_arn  = module.storage.uploads_bucket_arn
   incidents_table     = module.data.incidents_table_name

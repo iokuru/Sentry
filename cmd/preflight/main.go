@@ -24,6 +24,7 @@ type Inputs struct {
 	BudgetAlertEmail string `json:"budget_alert_email"`
 	TelegramBotToken string `json:"telegram_bot_token"`
 	TelegramChatID   string `json:"telegram_chat_id"`
+	UseComprehend    string `json:"use_comprehend"`
 }
 
 func main() {
@@ -64,6 +65,14 @@ func main() {
 	}
 	if !strings.Contains(inputs.BudgetAlertEmail, "@") {
 		failures = append(failures, "valid budget_alert_email required in inputs.local.json")
+	}
+
+	compMode := strings.ToLower(strings.TrimSpace(inputs.UseComprehend))
+	if compMode == "" {
+		compMode = "auto"
+	}
+	if compMode != "auto" && compMode != "on" && compMode != "off" {
+		failures = append(failures, "use_comprehend must be auto, on, or off")
 	}
 
 	if len(failures) == 0 {

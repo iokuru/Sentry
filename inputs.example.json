@@ -6,5 +6,6 @@
   "caregiver_email": "caregiver@example.com",
   "budget_alert_email": "billing@example.com",
   "telegram_bot_token": "",
-  "telegram_chat_id": ""
+  "telegram_chat_id": "",
+  "use_comprehend": "auto"
 }

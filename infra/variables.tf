@@ -21,3 +21,9 @@ variable "budget_alert_email" {
   description = "email recipient for zero dollar budget warnings"
   default     = "caregiver@example.com"
 }
+
+variable "use_comprehend" {
+  type        = string
+  description = "comprehend mode: auto, on, or off"
+  default     = "auto"
+}
