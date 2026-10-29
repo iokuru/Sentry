@@ -30,6 +30,7 @@ import (
 
 type AnalysisQueueMessage struct {
 	IncidentID  string `json:"incident_id"`
+	SeniorID    string `json:"senior_id,omitempty"`
 	ImageKey    string `json:"image_key"`
 	UserContext string `json:"user_context"`
 	Country     string `json:"country"`
@@ -135,6 +136,7 @@ func handleAnalysis(ctx context.Context, sqsEvent events.SQSEvent) error {
 
 		inc := &model.Incident{
 			ID:            msg.IncidentID,
+			SeniorID:      msg.SeniorID,
 			ImageKey:      msg.ImageKey,
 			ExtractedText: extractedText,
 			UserContext:   msg.UserContext,
@@ -222,10 +224,27 @@ func notifyCaregivers(ctx context.Context, inc *model.Incident, score int, categ
 				inc.UpdatedAt,
 			)
 
-			_, err := telegramClient.Send(ctx, telegramCfg.Token, telegramCfg.ChatID, text, buttons)
-			if err != nil {
-				// logged once and never blocks
-				log.Printf("telegram alert failed: %v", err)
+			targetChatIDs := make(map[string]struct{})
+			if incidentStore != nil && inc.SeniorID != "" {
+				links, err := incidentStore.ListLinksForSenior(ctx, inc.SeniorID)
+				if err == nil {
+					for _, l := range links {
+						if l.TelegramChatID != "" {
+							targetChatIDs[l.TelegramChatID] = struct{}{}
+						}
+					}
+				}
+			}
+
+			if len(targetChatIDs) == 0 && telegramCfg.ChatID != "" {
+				targetChatIDs[telegramCfg.ChatID] = struct{}{}
+			}
+
+			for chatID := range targetChatIDs {
+				_, err := telegramClient.Send(ctx, telegramCfg.Token, chatID, text, buttons)
+				if err != nil {
+					log.Printf("telegram alert to %s failed: %v", chatID, err)
+				}
 			}
 		}()
 	}

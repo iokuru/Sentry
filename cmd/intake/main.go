@@ -37,6 +37,7 @@ type IntakeResponse struct {
 
 type AnalysisQueueMessage struct {
 	IncidentID  string `json:"incident_id"`
+	SeniorID    string `json:"senior_id,omitempty"`
 	ImageKey    string `json:"image_key"`
 	UserContext string `json:"user_context"`
 	Country     string `json:"country"`
@@ -110,6 +111,7 @@ func handleIntake(ctx context.Context, req events.APIGatewayV2HTTPRequest) (even
 	if sqsClient != nil && analysisQueueURL != "" {
 		msg := AnalysisQueueMessage{
 			IncidentID:  incidentID,
+			SeniorID:    input.SeniorID,
 			ImageKey:    input.ImageKey,
 			UserContext: input.UserContext,
 			Country:     country,
