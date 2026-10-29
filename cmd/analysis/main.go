@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	comprehendsvc "github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	sqstypes "github.com/aws/aws-sdk-go-v2/service/sqs/types"
@@ -43,6 +44,7 @@ var (
 	comprehendClient *comprehendsvc.Client
 	snsClient        *sns.Client
 	sqsClient        *sqs.Client
+	s3Client         *s3.Client
 	telegramClient   *telegram.Client
 	telegramCfg      *telegram.Config
 	incidentStore    *store.Store
@@ -78,6 +80,7 @@ func init() {
 		comprehendClient = comprehendsvc.NewFromConfig(cfg)
 		snsClient = sns.NewFromConfig(cfg)
 		sqsClient = sqs.NewFromConfig(cfg)
+		s3Client = s3.NewFromConfig(cfg)
 		dbClient := dynamodb.NewFromConfig(cfg)
 		ssmClient := ssm.NewFromConfig(cfg)
 		incidentStore = store.NewStore(dbClient, incidentsTable, linksTable)
@@ -198,6 +201,16 @@ func handleAnalysis(ctx context.Context, sqsEvent events.SQSEvent) error {
 		if incidentStore != nil {
 			if err := incidentStore.SaveIncident(ctx, inc); err != nil {
 				return fmt.Errorf("store analyzed incident %s: %w", inc.ID, err)
+			}
+		}
+
+		if s3Client != nil && msg.ImageKey != "" && uploadBucket != "" {
+			_, err := s3Client.DeleteObject(ctx, &s3.DeleteObjectInput{
+				Bucket: aws.String(uploadBucket),
+				Key:    aws.String(msg.ImageKey),
+			})
+			if err != nil {
+				log.Printf("failed to delete analyzed screenshot %s: %v", msg.ImageKey, err)
 			}
 		}
 

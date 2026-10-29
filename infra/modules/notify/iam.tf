@@ -48,7 +48,8 @@ resource "aws_iam_policy" "analysis" {
         Sid    = "S3UploadsRead"
         Effect = "Allow"
         Action = [
-          "s3:GetObject"
+          "s3:GetObject",
+          "s3:DeleteObject"
         ]
         Resource = "*"
       },
