@@ -40,6 +40,38 @@
     if (!paired && !skipped) {
       showPairing = true;
     }
+
+    const handlePaste = (e: ClipboardEvent) => {
+      if (!e.clipboardData) return;
+      const files = e.clipboardData.files;
+      if (files && files.length > 0) {
+        for (let i = 0; i < files.length; i++) {
+          if (files[i].type.startsWith('image/')) {
+            e.preventDefault();
+            handleFileSelected(files[i]);
+            return;
+          }
+        }
+      }
+      const items = e.clipboardData.items;
+      if (items) {
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type.startsWith('image/')) {
+            const blob = items[i].getAsFile();
+            if (blob) {
+              e.preventDefault();
+              handleFileSelected(blob);
+              return;
+            }
+          }
+        }
+      }
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => {
+      window.removeEventListener('paste', handlePaste);
+    };
   });
 
   function handlePairComplete() {

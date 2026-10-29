@@ -8,6 +8,7 @@
 
   let isDragging = $state(false);
   let fileInput: HTMLInputElement;
+  let cameraInput: HTMLInputElement;
 
   function handleDrop(e: DragEvent) {
     e.preventDefault();
@@ -32,6 +33,10 @@
   function triggerSelect() {
     fileInput?.click();
   }
+
+  function triggerCamera() {
+    cameraInput?.click();
+  }
 </script>
 
 <div
@@ -54,6 +59,14 @@
     class="file-input"
     onchange={handleFileChange}
   />
+  <input
+    bind:this={cameraInput}
+    type="file"
+    accept="image/*"
+    capture="environment"
+    class="file-input"
+    onchange={handleFileChange}
+  />
 
   <svg class="icon" viewBox="0 0 24 24" width="48" height="48" aria-hidden="true">
     <path
@@ -65,6 +78,23 @@
   <span class="label">
     {hasFile ? 'Replace image' : 'Drop message or screenshot here'}
   </span>
+
+  <div class="drop-actions">
+    <button
+      type="button"
+      class="drop-action-btn"
+      onclick={(e) => { e.stopPropagation(); triggerSelect(); }}
+    >
+      Upload image
+    </button>
+    <button
+      type="button"
+      class="drop-action-btn"
+      onclick={(e) => { e.stopPropagation(); triggerCamera(); }}
+    >
+      Take photo
+    </button>
+  </div>
 </div>
 
 <style>
@@ -109,5 +139,36 @@
     font-weight: 700;
     color: var(--text-primary);
     line-height: 1.3;
+  }
+
+  .drop-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .drop-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--touch-min);
+    padding: 0 16px;
+    font-size: var(--font-base);
+    font-weight: 700;
+    color: var(--text-primary);
+    background-color: var(--bg-surface);
+    border: 2px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background-color 150ms ease;
+  }
+
+  .drop-action-btn:hover,
+  .drop-action-btn:focus-visible {
+    background-color: var(--bg-hover);
+    outline: 3px solid var(--ring-focus);
+    outline-offset: 2px;
   }
 </style>
