@@ -450,6 +450,22 @@ func (s *Server) handleTelegramSimulate(w http.ResponseWriter, r *http.Request) 
 	action := r.URL.Query().Get("action")
 	id := r.URL.Query().Get("id")
 
+	if action == "start" {
+		code := strings.ToUpper(strings.TrimSpace(r.URL.Query().Get("code")))
+		inv, ok := s.store.GetInvite(code)
+		if !ok {
+			http.Error(w, "invite code not found", http.StatusNotFound)
+			return
+		}
+		links := s.store.ListLinks(inv.CaregiverID)
+		for _, l := range links {
+			l.TelegramChatID = "simulated-chat-id"
+		}
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		fmt.Fprintf(w, "<h3>Telegram /start processed</h3><p>Linked Telegram to caregiver account for <b>%s</b>.</p>", inv.SeniorName)
+		return
+	}
+
 	var newStatus model.IncidentStatus
 	if action == "ack" {
 		newStatus = model.StatusAcknowledged

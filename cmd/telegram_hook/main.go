@@ -77,6 +77,8 @@ func handleWebhook(ctx context.Context, req events.APIGatewayV2HTTPRequest) (eve
 
 	if update.CallbackQuery != nil {
 		handleCallback(ctx, update.CallbackQuery)
+	} else if update.Message != nil {
+		handleMessage(ctx, update.Message)
 	}
 
 	return events.APIGatewayV2HTTPResponse{
@@ -145,6 +147,51 @@ func handleCallback(ctx context.Context, cb *telegram.CallbackQuery) {
 
 		_ = telegramClient.EditMessage(ctx, telegramCfg.Token, chatID, messageID, updatedText, remainingButtons)
 	}
+}
+
+func handleMessage(ctx context.Context, msg *telegram.Message) {
+	if msg == nil || telegramCfg == nil || telegramClient == nil {
+		return
+	}
+
+	chatID := fmt.Sprintf("%d", msg.Chat.ID)
+	text := strings.TrimSpace(msg.Text)
+
+	if !strings.HasPrefix(text, "/start") {
+		return
+	}
+
+	parts := strings.Fields(text)
+	if len(parts) < 2 {
+		_, _ = telegramClient.Send(ctx, telegramCfg.Token, chatID, "Welcome to Sentry. Send /start <CODE> using your invite code to link your caregiver account.", nil)
+		return
+	}
+
+	code := strings.ToUpper(strings.TrimSpace(parts[1]))
+	if incidentStore == nil {
+		_, _ = telegramClient.Send(ctx, telegramCfg.Token, chatID, "Sentry service temporarily unavailable.", nil)
+		return
+	}
+
+	inv, err := incidentStore.GetInvite(ctx, code)
+	if err != nil || inv == nil {
+		_, _ = telegramClient.Send(ctx, telegramCfg.Token, chatID, "Invite code not found or expired. Please generate a new invite code in your caregiver portal.", nil)
+		return
+	}
+
+	if err := incidentStore.SetTelegramChatID(ctx, inv.CaregiverID, chatID); err != nil {
+		log.Printf("failed to associate telegram chat id: %v", err)
+		_, _ = telegramClient.Send(ctx, telegramCfg.Token, chatID, "Failed to link Telegram. Please try again.", nil)
+		return
+	}
+
+	displayName := inv.SeniorName
+	if displayName == "" {
+		displayName = "your senior"
+	}
+
+	confirmMsg := fmt.Sprintf("Sentry linked. You will receive high risk alerts for %s in this chat.", displayName)
+	_, _ = telegramClient.Send(ctx, telegramCfg.Token, chatID, confirmMsg, nil)
 }
 
 func main() {
