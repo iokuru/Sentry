@@ -3,6 +3,7 @@ package comprehend
 import (
 	"context"
 	"fmt"
+	"unicode/utf8"
 
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend/types"
@@ -23,16 +24,24 @@ type AnalysisResult struct {
 	Entities   []risk.Entity
 }
 
+func TruncateUTF8(s string, maxBytes int) string {
+	if len(s) <= maxBytes {
+		return s
+	}
+	s = s[:maxBytes]
+	for len(s) > 0 && !utf8.ValidString(s) {
+		s = s[:len(s)-1]
+	}
+	return s
+}
+
 func Analyze(ctx context.Context, client Client, text string) (*AnalysisResult, error) {
 	if text == "" {
 		return &AnalysisResult{Language: "en"}, nil
 	}
 
-	// cap text at 5000 bytes to stay within comprehend limits
-	sample := text
-	if len(sample) > 4900 {
-		sample = sample[:4900]
-	}
+	// cap text at 4900 bytes to safely stay within comprehend 5000 byte limit
+	sample := TruncateUTF8(text, 4900)
 
 	res := &AnalysisResult{Language: "en"}
 

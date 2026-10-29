@@ -152,3 +152,38 @@ func TestAnalyze_PiiErrorPropagation(t *testing.T) {
 		t.Fatalf("expected error from pii failure, got nil")
 	}
 }
+
+func TestTruncateUTF8(t *testing.T) {
+	t.Run("short string untouched", func(t *testing.T) {
+		s := "hello world"
+		res := comprehend.TruncateUTF8(s, 50)
+		if res != s {
+			t.Errorf("expected %s, got %s", s, res)
+		}
+	})
+
+	t.Run("multi-byte runes truncated cleanly", func(t *testing.T) {
+		// "€" is 3 bytes (0xE2, 0x82, 0xAC)
+		// 5 bytes total: "ab" (2 bytes) + "€" (3 bytes)
+		s := "ab€cd"
+		// If we truncate at 4 bytes, "€" would be cut into 2 bytes unless handled properly
+		res := comprehend.TruncateUTF8(s, 4)
+		if res != "ab" {
+			t.Errorf("expected 'ab', got %q (len %d)", res, len(res))
+		}
+		if len(res) > 4 {
+			t.Errorf("expected length <= 4, got %d", len(res))
+		}
+	})
+
+	t.Run("large text under comprehend limits", func(t *testing.T) {
+		large := ""
+		for i := 0; i < 2000; i++ {
+			large += "alert! "
+		}
+		res := comprehend.TruncateUTF8(large, 4900)
+		if len(res) > 4900 {
+			t.Errorf("expected length <= 4900, got %d", len(res))
+		}
+	})
+}
