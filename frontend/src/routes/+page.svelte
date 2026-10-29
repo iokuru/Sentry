@@ -17,6 +17,7 @@
     uploadScreenshot,
     submitIntake,
     pollIncident,
+    QuotaExceededError,
     type Incident
   } from '$lib/api';
 
@@ -30,6 +31,7 @@
   let isAnalyzing = $state(false);
   let isOffline = $state(false);
   let isFailed = $state(false);
+  let isQuotaReached = $state(false);
   let errorMessage = $state('');
   let result = $state<Incident | null>(null);
   let paired = $state(false);
@@ -172,8 +174,12 @@
 
       result = await pollIncident(intakeData.incident_id);
     } catch (err: unknown) {
-      isFailed = true;
-      errorMessage = err instanceof Error ? err.message : 'Analysis failed';
+      if (err instanceof QuotaExceededError || (err instanceof Error && err.name === 'QuotaExceededError')) {
+        isQuotaReached = true;
+      } else {
+        isFailed = true;
+        errorMessage = err instanceof Error ? err.message : 'Analysis failed';
+      }
     } finally {
       busy = false;
       isUploading = false;
@@ -187,6 +193,7 @@
     result = null;
     errorMessage = '';
     isFailed = false;
+    isQuotaReached = false;
   }
 </script>
 
@@ -221,6 +228,16 @@
       {/if}
 
       <ContextField bind:value={contextText} />
+
+      {#if isQuotaReached}
+        <div class="state-card quota-card" role="alert">
+          <h2 class="state-title">Daily Limit Reached</h2>
+          <p class="state-desc">The free analysis allowance has been reached for today. Resets at midnight UTC.</p>
+          <button type="button" class="retry-btn" onclick={handleReset}>
+            Check another message
+          </button>
+        </div>
+      {/if}
 
       {#if isOffline}
         <div class="state-card offline-card" role="alert">
@@ -389,6 +406,12 @@
     background-color: var(--rose-50);
     border-color: var(--rose-600);
     color: var(--rose-900, #881337);
+  }
+
+  .quota-card {
+    background-color: var(--stone-100, #f5f5f4);
+    border-color: var(--stone-500, #78716c);
+    color: var(--stone-900, #1c1917);
   }
 
   .state-title {

@@ -7,6 +7,13 @@ export interface PresignRequest {
   filename: string;
 }
 
+export class QuotaExceededError extends Error {
+  constructor(message = 'Daily limit reached') {
+    super(message);
+    this.name = 'QuotaExceededError';
+  }
+}
+
 export interface PresignResponse {
   upload_url: string;
   image_key: string;
@@ -80,7 +87,7 @@ export async function presignUpload(contentType: string, filename: string): Prom
   }
 
   if (res.status === 429) {
-    throw new Error('Daily analysis limit reached, please try again tomorrow');
+    throw new QuotaExceededError('Daily limit reached');
   }
   if (!res.ok) {
     throw new Error('Could not prepare upload');
@@ -132,7 +139,7 @@ export async function submitIntake(req: IntakeRequest): Promise<IntakeResponse> 
   }
 
   if (res.status === 429) {
-    throw new Error('Daily analysis limit reached, please try again tomorrow');
+    throw new QuotaExceededError('Daily limit reached');
   }
   if (!res.ok) {
     throw new Error('Analysis request failed, please retry');
