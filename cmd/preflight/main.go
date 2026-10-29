@@ -9,7 +9,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	comprehendsvc "github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/iokuru/sentry/internal/costguard"
 	"github.com/iokuru/sentry/internal/telegram"
@@ -125,10 +127,30 @@ func main() {
 				account = *caller.Account
 			}
 			fmt.Printf("[PASS] AWS Credentials: authenticated as account %s in %s\n", account, awsCfg.Region)
+
+			// 5. probe comprehend
+			if compMode == "off" {
+				fmt.Println("[INFO] Comprehend: probe skipped (use_comprehend set to off)")
+			} else {
+				compClient := comprehendsvc.NewFromConfig(awsCfg)
+				probeText := "safe test verification probe"
+				_, err := compClient.DetectDominantLanguage(ctx, &comprehendsvc.DetectDominantLanguageInput{
+					Text: aws.String(probeText),
+				})
+				if err != nil {
+					if compMode == "on" {
+						failures = append(failures, fmt.Sprintf("comprehend probe failed (mode on): %v", err))
+					} else {
+						warnings = append(warnings, fmt.Sprintf("comprehend unavailable in this account (%v); continuing in rules fallback mode", err))
+					}
+				} else {
+					fmt.Println("[PASS] Comprehend: service active and accessible")
+				}
+			}
 		}
 	}
 
-	// 5. check telegram configuration
+	// 6. check telegram configuration
 	if strings.TrimSpace(inputs.TelegramBotToken) != "" {
 		tgClient := telegram.NewClient()
 		user, err := tgClient.GetMe(ctx, inputs.TelegramBotToken)
