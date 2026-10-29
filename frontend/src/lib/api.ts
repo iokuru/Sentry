@@ -1,4 +1,5 @@
 import { loadConfig } from './config';
+import { getDeviceId } from './device';
 import { getAuthToken } from './auth';
 
 export interface PresignRequest {
@@ -116,6 +117,9 @@ export async function uploadScreenshot(uploadUrl: string, blob: Blob, contentTyp
 
 export async function submitIntake(req: IntakeRequest): Promise<IntakeResponse> {
   const base = await getBaseUrl();
+  if (!req.senior_id) {
+    req.senior_id = getDeviceId();
+  }
   let res: Response;
   try {
     res = await fetch(`${base}/api/intake`, {
@@ -208,5 +212,96 @@ export async function updateCaregiverStatus(id: string, status: 'acknowledged' |
   }
   if (!res.ok) {
     throw new Error('Status update failed');
+  }
+}
+
+export async function pairDevice(code: string, deviceId: string): Promise<{ senior_id: string; senior_name: string }> {
+  const base = await getBaseUrl();
+  let res: Response;
+  try {
+    res = await fetch(`${base}/api/senior/pair`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, device_id: deviceId })
+    });
+  } catch {
+    throw new Error('Connection failed, please check your network and retry');
+  }
+
+  if (res.status === 404) {
+    throw new Error('Invite code not found');
+  }
+  if (res.status === 410) {
+    throw new Error('Invite code has expired');
+  }
+  if (res.status === 409) {
+    throw new Error('Invite code has already been used');
+  }
+  if (!res.ok) {
+    throw new Error('Pairing failed, please check your code and retry');
+  }
+
+  return res.json();
+}
+
+export async function createCaregiverInvite(seniorName?: string): Promise<{ code: string; expires_at: number }> {
+  const base = await getBaseUrl();
+  const token = await getAuthToken();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json'
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(`${base}/api/caregiver/invites`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ senior_name: seniorName || '' })
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to create invite code');
+  }
+  return res.json();
+}
+
+export interface CaregiverLinkInfo {
+  caregiver_id: string;
+  senior_id: string;
+  senior_name: string;
+  telegram_chat_id?: string;
+  linked_at: string;
+}
+
+export async function fetchCaregiverLinks(): Promise<CaregiverLinkInfo[]> {
+  const base = await getBaseUrl();
+  const token = await getAuthToken();
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(`${base}/api/caregiver/links`, { headers });
+  if (!res.ok) {
+    return [];
+  }
+  return res.json();
+}
+
+export async function removeCaregiverLink(seniorId: string): Promise<void> {
+  const base = await getBaseUrl();
+  const token = await getAuthToken();
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(`${base}/api/caregiver/links/${encodeURIComponent(seniorId)}`, {
+    method: 'DELETE',
+    headers
+  });
+  if (!res.ok) {
+    throw new Error('Failed to remove link');
   }
 }
