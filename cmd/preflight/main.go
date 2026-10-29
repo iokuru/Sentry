@@ -13,6 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	comprehendsvc "github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
+	textractsvc "github.com/aws/aws-sdk-go-v2/service/textract"
+	textracttypes "github.com/aws/aws-sdk-go-v2/service/textract/types"
 	"github.com/iokuru/sentry/internal/costguard"
 	"github.com/iokuru/sentry/internal/telegram"
 )
@@ -156,10 +158,41 @@ func main() {
 					fmt.Println("[PASS] Comprehend: service active and accessible")
 				}
 			}
+
+			// 6. probe textract
+			if ocrMode == "browser" {
+				fmt.Println("[INFO] Textract: probe skipped (ocr_mode set to browser)")
+			} else {
+				textractClient := textractsvc.NewFromConfig(awsCfg)
+				onePixelPNG := []byte{
+					0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d,
+					0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+					0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4, 0x89, 0x00, 0x00, 0x00,
+					0x0a, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9c, 0x63, 0x00, 0x01, 0x00, 0x00,
+					0x05, 0x00, 0x01, 0x0d, 0x0a, 0x2d, 0xb4, 0x00, 0x00, 0x00, 0x00, 0x49,
+					0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82,
+				}
+				probeCtx, pCancel := context.WithTimeout(ctx, 4*time.Second)
+				defer pCancel()
+				_, err := textractClient.DetectDocumentText(probeCtx, &textractsvc.DetectDocumentTextInput{
+					Document: &textracttypes.Document{
+						Bytes: onePixelPNG,
+					},
+				})
+				if err != nil {
+					if ocrMode == "textract" {
+						failures = append(failures, fmt.Sprintf("textract probe failed (mode textract): %v", err))
+					} else {
+						warnings = append(warnings, fmt.Sprintf("textract unavailable in this account (%v); continuing in browser ocr fallback mode", err))
+					}
+				} else {
+					fmt.Println("[PASS] Textract: service active and accessible")
+				}
+			}
 		}
 	}
 
-	// 6. check telegram configuration
+	// 7. check telegram configuration
 	if strings.TrimSpace(inputs.TelegramBotToken) != "" {
 		tgClient := telegram.NewClient()
 		user, err := tgClient.GetMe(ctx, inputs.TelegramBotToken)
