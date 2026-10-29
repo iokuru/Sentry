@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -86,9 +87,36 @@ func handleIntake(ctx context.Context, req events.APIGatewayV2HTTPRequest) (even
 		country = hotline.ResolveCountry(input.Locale)
 	}
 
-	randBytes := make([]byte, 8)
-	_, _ = rand.Read(randBytes)
-	incidentID := fmt.Sprintf("inc-%d-%s", time.Now().Unix(), hex.EncodeToString(randBytes))
+	var incidentID string
+	if strings.TrimSpace(input.ImageKey) != "" {
+		hash := sha256.Sum256([]byte(strings.TrimSpace(input.ImageKey)))
+		incidentID = fmt.Sprintf("inc-%s", hex.EncodeToString(hash[:10]))
+	} else {
+		randBytes := make([]byte, 8)
+		_, _ = rand.Read(randBytes)
+		incidentID = fmt.Sprintf("inc-%d-%s", time.Now().Unix(), hex.EncodeToString(randBytes))
+	}
+
+	if incidentStore != nil {
+		existing, err := incidentStore.GetIncident(ctx, incidentID)
+		if err == nil && existing != nil {
+			res := IntakeResponse{
+				IncidentID: existing.ID,
+				Status:     string(existing.Status),
+			}
+			resBody, _ := json.Marshal(res)
+			return events.APIGatewayV2HTTPResponse{
+				StatusCode: http.StatusOK,
+				Headers: map[string]string{
+					"Content-Type":                 "application/json",
+					"Access-Control-Allow-Origin":  "*",
+					"Access-Control-Allow-Headers": "Content-Type,Authorization",
+					"Access-Control-Allow-Methods": "POST,OPTIONS",
+				},
+				Body: string(resBody),
+			}, nil
+		}
+	}
 
 	now := time.Now().UTC().Format(time.RFC3339)
 	inc := &model.Incident{

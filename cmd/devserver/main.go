@@ -356,9 +356,24 @@ func (s *Server) handleIntake(w http.ResponseWriter, r *http.Request) {
 		country = hotline.ResolveCountry(req.Locale)
 	}
 
-	randBytes := make([]byte, 8)
-	_, _ = rand.Read(randBytes)
-	id := fmt.Sprintf("inc-%d-%s", time.Now().Unix(), hex.EncodeToString(randBytes))
+	var id string
+	if strings.TrimSpace(req.ImageKey) != "" {
+		hash := sha256.Sum256([]byte(strings.TrimSpace(req.ImageKey)))
+		id = fmt.Sprintf("inc-%s", hex.EncodeToString(hash[:10]))
+		if existing, ok := s.store.Get(id); ok {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			_ = json.NewEncoder(w).Encode(map[string]string{
+				"incident_id": existing.ID,
+				"status":      string(existing.Status),
+			})
+			return
+		}
+	} else {
+		randBytes := make([]byte, 8)
+		_, _ = rand.Read(randBytes)
+		id = fmt.Sprintf("inc-%d-%s", time.Now().Unix(), hex.EncodeToString(randBytes))
+	}
 
 	var extractedText string
 	if req.ImageKey != "" {
