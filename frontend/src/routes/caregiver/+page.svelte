@@ -3,7 +3,15 @@
   import CaregiverSignIn from '$lib/CaregiverSignIn.svelte';
   import SeverityChip from '$lib/SeverityChip.svelte';
   import { signIn, signOut, isAuthenticated } from '$lib/auth';
-  import { listCaregiverIncidents, updateCaregiverStatus, type Incident } from '$lib/api';
+  import {
+    listCaregiverIncidents,
+    updateCaregiverStatus,
+    createCaregiverInvite,
+    fetchCaregiverLinks,
+    removeCaregiverLink,
+    type Incident,
+    type CaregiverLinkInfo
+  } from '$lib/api';
 
   let signedIn = $state(false);
   let signInBusy = $state(false);
@@ -13,11 +21,18 @@
   let feedError = $state('');
   let actionBusy = $state<Record<string, boolean>>({});
   let pollInterval: ReturnType<typeof setInterval> | null = null;
+  let links = $state<CaregiverLinkInfo[]>([]);
+  let inviteCode = $state('');
+  let inviteSeniorName = $state('');
+  let inviteBusy = $state(false);
+  let showInviteForm = $state(false);
+  let removeBusy = $state<Record<string, boolean>>({});
 
   onMount(() => {
     signedIn = isAuthenticated();
     if (signedIn) {
       loadIncidents();
+      loadLinks();
       startPolling();
     }
     if (typeof document !== 'undefined') {
@@ -47,7 +62,7 @@
     try {
       await signIn(email, pass);
       signedIn = true;
-      await loadIncidents();
+      await Promise.all([loadIncidents(), loadLinks()]);
       startPolling();
     } catch (err: unknown) {
       signInError = err instanceof Error ? err.message : 'Sign in failed';
@@ -61,6 +76,42 @@
     signOut();
     signedIn = false;
     incidents = [];
+    links = [];
+    inviteCode = '';
+  }
+
+  async function loadLinks() {
+    try {
+      links = await fetchCaregiverLinks();
+    } catch {
+      // quiet fallback
+    }
+  }
+
+  async function handleCreateInvite() {
+    inviteBusy = true;
+    feedError = '';
+    try {
+      const res = await createCaregiverInvite(inviteSeniorName.trim());
+      inviteCode = res.code;
+    } catch (err: unknown) {
+      feedError = err instanceof Error ? err.message : 'Could not create invite';
+    } finally {
+      inviteBusy = false;
+    }
+  }
+
+  async function handleRemoveLink(seniorId: string) {
+    removeBusy[seniorId] = true;
+    feedError = '';
+    try {
+      await removeCaregiverLink(seniorId);
+      links = links.filter((l) => l.senior_id !== seniorId);
+    } catch (err: unknown) {
+      feedError = err instanceof Error ? err.message : 'Could not remove link';
+    } finally {
+      removeBusy[seniorId] = false;
+    }
   }
 
   function startPolling() {
@@ -156,6 +207,67 @@
         {feedError}
       </div>
     {/if}
+
+    <section class="links-panel">
+      <div class="links-header">
+        <h2 class="section-title">Linked Seniors</h2>
+        <button
+          type="button"
+          class="create-invite-btn"
+          onclick={() => { showInviteForm = !showInviteForm; inviteCode = ''; }}
+        >
+          {showInviteForm ? 'Close' : 'Invite Senior'}
+        </button>
+      </div>
+
+      {#if showInviteForm}
+        <div class="invite-box">
+          <div class="invite-inputs">
+            <input
+              type="text"
+              class="senior-name-input"
+              bind:value={inviteSeniorName}
+              placeholder="Senior name (e.g. Mom)"
+              maxlength="40"
+              aria-label="Senior name"
+            />
+            <button
+              type="button"
+              class="generate-btn"
+              disabled={inviteBusy}
+              onclick={handleCreateInvite}
+            >
+              {inviteBusy ? 'Generating...' : 'Create Code'}
+            </button>
+          </div>
+
+          {#if inviteCode}
+            <div class="invite-result">
+              <span class="invite-label">Code (valid 24h):</span>
+              <strong class="invite-code">{inviteCode}</strong>
+            </div>
+          {/if}
+        </div>
+      {/if}
+
+      {#if links.length > 0}
+        <ul class="links-list">
+          {#each links as link (link.senior_id)}
+            <li class="link-item">
+              <span class="link-name">{link.senior_name || 'Senior'}</span>
+              <button
+                type="button"
+                class="remove-link-btn"
+                disabled={removeBusy[link.senior_id]}
+                onclick={() => handleRemoveLink(link.senior_id)}
+              >
+                {removeBusy[link.senior_id] ? 'Removing...' : 'Remove'}
+              </button>
+            </li>
+          {/each}
+        </ul>
+      {/if}
+    </section>
 
     <section class="incident-feed">
       {#if loading && incidents.length === 0}
@@ -280,6 +392,187 @@
     font-size: var(--font-base);
     font-weight: 700;
     border-radius: var(--radius-sm);
+  }
+
+  .links-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+    background-color: var(--bg-surface);
+    border: 2px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+  }
+
+  .links-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .section-title {
+    font-size: var(--font-lg);
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .create-invite-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--touch-min);
+    padding: 0 16px;
+    font-size: var(--font-sm);
+    font-weight: 700;
+    color: var(--text-primary);
+    background-color: var(--bg-surface);
+    border: 2px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background-color 150ms ease;
+  }
+
+  .create-invite-btn:hover,
+  .create-invite-btn:focus-visible {
+    background-color: var(--bg-hover);
+    outline: 3px solid var(--ring-focus);
+    outline-offset: 2px;
+  }
+
+  .invite-box {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background-color: var(--bg-canvas);
+    border: 2px dashed var(--border-subtle);
+    border-radius: var(--radius-sm);
+  }
+
+  .invite-inputs {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .senior-name-input {
+    flex: 1;
+    min-width: 200px;
+    min-height: var(--touch-min);
+    padding: 0 14px;
+    font-size: var(--font-base);
+    color: var(--text-primary);
+    background-color: var(--bg-surface);
+    border: 2px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+  }
+
+  .senior-name-input:focus-visible {
+    outline: 3px solid var(--ring-focus);
+    outline-offset: 2px;
+  }
+
+  .generate-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--touch-min);
+    padding: 0 18px;
+    font-size: var(--font-base);
+    font-weight: 700;
+    color: var(--bg-surface);
+    background-color: var(--text-primary);
+    border: 2px solid var(--text-primary);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+  }
+
+  .generate-btn:hover:not(:disabled),
+  .generate-btn:focus-visible:not(:disabled) {
+    opacity: 0.9;
+    outline: 3px solid var(--ring-focus);
+    outline-offset: 2px;
+  }
+
+  .generate-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .invite-result {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background-color: var(--emerald-50, #ecfdf5);
+    border: 2px solid var(--emerald-600, #059669);
+    border-radius: var(--radius-sm);
+  }
+
+  .invite-label {
+    font-size: var(--font-sm);
+    font-weight: 700;
+    color: var(--emerald-800, #065f46);
+  }
+
+  .invite-code {
+    font-size: var(--font-xl);
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    color: var(--emerald-900, #064e3b);
+  }
+
+  .links-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .link-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background-color: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+  }
+
+  .link-name {
+    font-size: var(--font-base);
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .remove-link-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--touch-min);
+    padding: 0 12px;
+    font-size: var(--font-sm);
+    font-weight: 700;
+    color: var(--rose-800);
+    background-color: var(--rose-50);
+    border: 1px solid var(--rose-600);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+  }
+
+  .remove-link-btn:hover:not(:disabled),
+  .remove-link-btn:focus-visible:not(:disabled) {
+    background-color: var(--rose-100, #ffe4e6);
+    outline: 3px solid var(--ring-focus);
+    outline-offset: 2px;
+  }
+
+  .remove-link-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   .incident-feed {
