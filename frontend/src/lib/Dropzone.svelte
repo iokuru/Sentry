@@ -1,9 +1,10 @@
 <script lang="ts">
   interface Props {
     onfile: (file: File) => void;
+    ontext?: (text: string) => void;
     hasFile?: boolean;
   }
-  let { onfile, hasFile = false }: Props = $props();
+  let { onfile, ontext, hasFile = false }: Props = $props();
 
   let isDragging = $state(false);
   let fileInput: HTMLInputElement;
@@ -13,6 +14,11 @@
     isDragging = false;
     if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
       onfile(e.dataTransfer.files[0]);
+    } else if (e.dataTransfer) {
+      const text = e.dataTransfer.getData('text/plain');
+      if (text && ontext) {
+        ontext(text);
+      }
     }
   }
 

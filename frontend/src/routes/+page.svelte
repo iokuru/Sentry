@@ -147,7 +147,11 @@
   {:else if !result || !result.output}
     <section class="intake-section">
       {#if !previewUrl}
-        <Dropzone onfile={handleFileSelected} hasFile={false} />
+        <Dropzone
+          onfile={handleFileSelected}
+          ontext={(txt) => { contextText = txt; }}
+          hasFile={false}
+        />
       {:else}
         <ImagePreview src={previewUrl} onremove={handleRemoveFile} />
       {/if}
