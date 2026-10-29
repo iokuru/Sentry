@@ -162,6 +162,7 @@ resource "aws_lambda_function" "caregiver_list" {
     variables = {
       INCIDENTS_TABLE = var.incidents_table
       LINKS_TABLE     = var.links_table
+      UPLOADS_BUCKET  = var.uploads_bucket
     }
   }
 }
@@ -196,6 +197,7 @@ resource "aws_lambda_function" "caregiver_status" {
     variables = {
       INCIDENTS_TABLE = var.incidents_table
       LINKS_TABLE     = var.links_table
+      UPLOADS_BUCKET  = var.uploads_bucket
     }
   }
 }
@@ -265,6 +267,7 @@ resource "aws_lambda_function" "caregiver_invite" {
     variables = {
       INCIDENTS_TABLE = var.incidents_table
       LINKS_TABLE     = var.links_table
+      UPLOADS_BUCKET  = var.uploads_bucket
     }
   }
 }
@@ -299,6 +302,7 @@ resource "aws_lambda_function" "senior_pair" {
     variables = {
       INCIDENTS_TABLE = var.incidents_table
       LINKS_TABLE     = var.links_table
+      UPLOADS_BUCKET  = var.uploads_bucket
     }
   }
 }

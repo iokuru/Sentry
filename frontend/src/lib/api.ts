@@ -63,6 +63,7 @@ export interface Incident {
   signals?: DetectedSignal[];
   output?: SeniorOutput;
   status: 'pending' | 'analyzed' | 'acknowledged' | 'resolved';
+  thumbnail_url?: string;
   country?: string;
   created_at: string;
   updated_at: string;

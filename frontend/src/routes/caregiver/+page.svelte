@@ -359,11 +359,33 @@
             {#each group.items as inc (inc.id)}
               <article class="incident-card" class:high-border={inc.risk_level === 'high'}>
                 <div class="card-top">
-                  <SeverityChip level={inc.risk_level} score={inc.score} />
+                  <div class="card-badges">
+                    <SeverityChip level={inc.risk_level} score={inc.score} />
+                    <span class="category-chip">{inc.category}</span>
+                  </div>
                   <time class="incident-time" datetime={inc.created_at}>
                     {formatTime(inc.created_at)}
                   </time>
                 </div>
+
+                {#if inc.signals && inc.signals.length > 0}
+                  <div class="signals-wrap">
+                    {#each inc.signals as sig}
+                      <span class="signal-chip">{sig.name}</span>
+                    {/each}
+                  </div>
+                {/if}
+
+                {#if inc.thumbnail_url}
+                  <div class="thumbnail-container">
+                    <img
+                      src={inc.thumbnail_url}
+                      alt="Screenshot thumbnail"
+                      class="screenshot-thumbnail"
+                      loading="lazy"
+                    />
+                  </div>
+                {/if}
 
                 <p class="incident-text">
                   {inc.user_context || inc.extracted_text || `Suspicious ${inc.category} message`}
@@ -747,6 +769,62 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .card-badges {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .category-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    font-size: var(--font-xs);
+    font-weight: 700;
+    text-transform: capitalize;
+    color: var(--text-primary);
+    background-color: var(--bg-hover);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+  }
+
+  .signals-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .signal-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    font-size: var(--font-xs);
+    font-weight: 600;
+    color: var(--text-secondary);
+    background-color: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+  }
+
+  .thumbnail-container {
+    max-width: 240px;
+    max-height: 160px;
+    overflow: hidden;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-subtle);
+  }
+
+  .screenshot-thumbnail {
+    width: 100%;
+    height: auto;
+    max-height: 160px;
+    object-fit: cover;
+    display: block;
   }
 
   .incident-time {

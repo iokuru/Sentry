@@ -71,6 +71,7 @@ type Incident struct {
 	CreatedAt     string         `json:"created_at" dynamodbav:"created_at"`
 	UpdatedAt     string         `json:"updated_at" dynamodbav:"updated_at"`
 	TTL           int64          `json:"ttl,omitempty" dynamodbav:"ttl,omitempty"`
+	ThumbnailURL  string         `json:"thumbnail_url,omitempty" dynamodbav:"thumbnail_url,omitempty"`
 }
 
 type CaregiverLink struct {

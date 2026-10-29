@@ -497,6 +497,9 @@ func (s *Server) handleGetIncident(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "incident not found", http.StatusNotFound)
 		return
 	}
+	if inc.ImageKey != "" {
+		inc.ThumbnailURL = "/upload/" + inc.ImageKey
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(inc)
@@ -504,6 +507,11 @@ func (s *Server) handleGetIncident(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleCaregiverList(w http.ResponseWriter, r *http.Request) {
 	list := s.store.List()
+	for _, inc := range list {
+		if inc.ImageKey != "" {
+			inc.ThumbnailURL = "/upload/" + inc.ImageKey
+		}
+	}
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(list)
 }
