@@ -10,6 +10,39 @@ data "aws_s3_bucket" "frontend" {
   bucket = var.frontend_bucket_id
 }
 
+resource "aws_cloudfront_response_headers_policy" "security" {
+  name    = "${var.name_prefix}-security-headers"
+  comment = "security headers for sentry web application"
+
+  security_headers_config {
+    content_type_options {
+      override = true
+    }
+
+    frame_options {
+      frame_option = "DENY"
+      override     = true
+    }
+
+    referrer_policy {
+      referrer_policy = "strict-origin-when-cross-origin"
+      override        = true
+    }
+
+    strict_transport_security {
+      access_control_max_age_sec = 31536000
+      include_subdomains         = true
+      preload                    = true
+      override                   = true
+    }
+
+    content_security_policy {
+      content_security_policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https:; font-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self';"
+      override                = true
+    }
+  }
+}
+
 resource "aws_cloudfront_distribution" "frontend" {
   enabled             = true
   is_ipv6_enabled     = true
@@ -22,11 +55,12 @@ resource "aws_cloudfront_distribution" "frontend" {
   }
 
   default_cache_behavior {
-    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
-    cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = "frontend-s3"
-    viewer_protocol_policy = "redirect-to-https"
-    compress               = true
+    allowed_methods            = ["GET", "HEAD", "OPTIONS"]
+    cached_methods             = ["GET", "HEAD"]
+    target_origin_id           = "frontend-s3"
+    viewer_protocol_policy     = "redirect-to-https"
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
+    compress                   = true
 
     forwarded_values {
       query_string = false
@@ -41,12 +75,13 @@ resource "aws_cloudfront_distribution" "frontend" {
   }
 
   ordered_cache_behavior {
-    path_pattern           = "/_app/*"
-    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
-    cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = "frontend-s3"
-    viewer_protocol_policy = "redirect-to-https"
-    compress               = true
+    path_pattern               = "/_app/*"
+    allowed_methods            = ["GET", "HEAD", "OPTIONS"]
+    cached_methods             = ["GET", "HEAD"]
+    target_origin_id           = "frontend-s3"
+    viewer_protocol_policy     = "redirect-to-https"
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
+    compress                   = true
 
     forwarded_values {
       query_string = false
