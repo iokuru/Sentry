@@ -262,10 +262,10 @@ func (s *Server) routes() http.Handler {
 func (s *Server) handleConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]string{
-		"api_url":               "",
-		"user_pool_id":          "local_user_pool",
-		"user_pool_client_id":   "local_client_id",
-		"region":                "local",
+		"api_url":             "",
+		"user_pool_id":        "local_user_pool",
+		"user_pool_client_id": "local_client_id",
+		"region":              "local",
 	})
 }
 

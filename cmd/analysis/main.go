@@ -41,18 +41,18 @@ type AnalysisQueueMessage struct {
 }
 
 var (
-	textractClient   *textractsvc.Client
-	comprehendClient *comprehendsvc.Client
-	snsClient        *sns.Client
-	sqsClient        *sqs.Client
-	s3Client         *s3.Client
-	telegramClient   *telegram.Client
-	telegramCfg      *telegram.Config
-	incidentStore    *store.Store
-	rateLimiter      *quota.Limiter
-	uploadBucket     string
-	alertsTopicArn   string
-	analysisDLQURL   string
+	textractClient     *textractsvc.Client
+	comprehendClient   *comprehendsvc.Client
+	snsClient          *sns.Client
+	sqsClient          *sqs.Client
+	s3Client           *s3.Client
+	telegramClient     *telegram.Client
+	telegramCfg        *telegram.Config
+	incidentStore      *store.Store
+	rateLimiter        *quota.Limiter
+	uploadBucket       string
+	alertsTopicArn     string
+	analysisDLQURL     string
 	useComprehend      string
 	comprehendDisabled bool
 	comprehendLogOnce  sync.Once
