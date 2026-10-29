@@ -23,8 +23,9 @@ import (
 )
 
 type PresignRequest struct {
-	ContentType string `json:"content_type"`
-	Filename    string `json:"filename"`
+	ContentType   string `json:"content_type"`
+	Filename      string `json:"filename"`
+	ContentLength int64  `json:"content_length,omitempty"`
 }
 
 type PresignResponse struct {
@@ -58,9 +59,37 @@ func handlePresign(ctx context.Context, req events.APIGatewayV2HTTPRequest) (eve
 		_ = json.Unmarshal([]byte(req.Body), &input)
 	}
 
-	contentType := input.ContentType
+	contentType := strings.ToLower(strings.TrimSpace(input.ContentType))
 	if contentType == "" {
 		contentType = "image/png"
+	}
+
+	validTypes := map[string]bool{
+		"image/png":  true,
+		"image/jpeg": true,
+		"image/jpg":  true,
+		"image/webp": true,
+	}
+	if !validTypes[contentType] {
+		return events.APIGatewayV2HTTPResponse{
+			StatusCode: http.StatusBadRequest,
+			Headers: map[string]string{
+				"Content-Type":                "application/json",
+				"Access-Control-Allow-Origin": "*",
+			},
+			Body: `{"error":"unsupported content type: allowed types are image/png, image/jpeg, image/webp"}`,
+		}, nil
+	}
+
+	if input.ContentLength > 5*1024*1024 {
+		return events.APIGatewayV2HTTPResponse{
+			StatusCode: http.StatusBadRequest,
+			Headers: map[string]string{
+				"Content-Type":                "application/json",
+				"Access-Control-Allow-Origin": "*",
+			},
+			Body: `{"error":"image size exceeds 5mb limit"}`,
+		}, nil
 	}
 
 	ext := ".png"
@@ -86,7 +115,7 @@ func handlePresign(ctx context.Context, req events.APIGatewayV2HTTPRequest) (eve
 		Bucket:      aws.String(uploadBucket),
 		Key:         aws.String(key),
 		ContentType: aws.String(contentType),
-	}, s3.WithPresignExpires(15*time.Minute))
+	}, s3.WithPresignExpires(5*time.Minute))
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to presign put object", slog.String("error", err.Error()))
 		return events.APIGatewayV2HTTPResponse{

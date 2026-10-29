@@ -83,6 +83,10 @@ func handleIntake(ctx context.Context, req events.APIGatewayV2HTTPRequest) (even
 		}
 	}
 
+	if strings.TrimSpace(input.SeniorID) == "" {
+		return errorResponse(http.StatusBadRequest, "device id is required"), nil
+	}
+
 	if strings.TrimSpace(input.ImageKey) == "" && strings.TrimSpace(input.UserContext) == "" {
 		return errorResponse(http.StatusBadRequest, "either screenshot or context message is required"), nil
 	}
