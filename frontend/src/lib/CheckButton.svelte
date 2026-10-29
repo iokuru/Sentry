@@ -1,10 +1,11 @@
 <script lang="ts">
   interface Props {
     busy?: boolean;
+    busyLabel?: string;
     disabled?: boolean;
     onclick: () => void;
   }
-  let { busy = false, disabled = false, onclick }: Props = $props();
+  let { busy = false, busyLabel = '', disabled = false, onclick }: Props = $props();
 </script>
 
 <button
@@ -17,7 +18,7 @@
 >
   {#if busy}
     <span class="spinner" aria-hidden="true"></span>
-    <span>Checking...</span>
+    <span>{busyLabel || 'Checking...'}</span>
   {:else}
     <span>Check message</span>
   {/if}

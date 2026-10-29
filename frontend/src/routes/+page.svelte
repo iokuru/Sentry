@@ -26,6 +26,10 @@
   let previewUrl = $state('');
   let contextText = $state('');
   let busy = $state(false);
+  let isUploading = $state(false);
+  let isAnalyzing = $state(false);
+  let isOffline = $state(false);
+  let isFailed = $state(false);
   let errorMessage = $state('');
   let result = $state<Incident | null>(null);
   let paired = $state(false);
@@ -40,6 +44,13 @@
     if (!paired && !skipped) {
       showPairing = true;
     }
+
+    const updateOnline = () => {
+      isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
+    };
+    window.addEventListener('online', updateOnline);
+    window.addEventListener('offline', updateOnline);
+    updateOnline();
 
     const handlePaste = (e: ClipboardEvent) => {
       if (!e.clipboardData) return;
@@ -71,6 +82,8 @@
     window.addEventListener('paste', handlePaste);
     return () => {
       window.removeEventListener('paste', handlePaste);
+      window.removeEventListener('online', updateOnline);
+      window.removeEventListener('offline', updateOnline);
     };
   });
 
@@ -126,13 +139,20 @@
       return;
     }
 
+    if (isOffline) {
+      errorMessage = 'Connect to the internet to check message';
+      return;
+    }
+
     busy = true;
+    isFailed = false;
     errorMessage = '';
 
     try {
       let imageKey = '';
 
       if (processedBlob) {
+        isUploading = true;
         const contentType = processedBlob.type || 'image/png';
         const filename = selectedFile?.name || 'screenshot.png';
 
@@ -140,8 +160,10 @@
         imageKey = presignData.image_key;
 
         await uploadScreenshot(presignData.upload_url, processedBlob, contentType);
+        isUploading = false;
       }
 
+      isAnalyzing = true;
       const intakeData = await submitIntake({
         image_key: imageKey,
         user_context: contextText.trim(),
@@ -150,9 +172,12 @@
 
       result = await pollIncident(intakeData.incident_id);
     } catch (err: unknown) {
-      errorMessage = err instanceof Error ? err.message : 'Something went wrong';
+      isFailed = true;
+      errorMessage = err instanceof Error ? err.message : 'Analysis failed';
     } finally {
       busy = false;
+      isUploading = false;
+      isAnalyzing = false;
     }
   }
 
@@ -161,6 +186,7 @@
     contextText = '';
     result = null;
     errorMessage = '';
+    isFailed = false;
   }
 </script>
 
@@ -196,7 +222,22 @@
 
       <ContextField bind:value={contextText} />
 
-      {#if errorMessage}
+      {#if isOffline}
+        <div class="state-card offline-card" role="alert">
+          <h2 class="state-title">Offline</h2>
+          <p class="state-desc">Connect to the internet to check suspicious messages</p>
+        </div>
+      {/if}
+
+      {#if isFailed && !busy}
+        <div class="state-card failed-card" role="alert">
+          <h2 class="state-title">Check Failed</h2>
+          <p class="state-desc">{errorMessage || 'Analysis failed, please try again'}</p>
+          <button type="button" class="retry-btn" onclick={handleCheck}>
+            Try again
+          </button>
+        </div>
+      {:else if errorMessage && !isFailed}
         <div class="error-banner" role="alert">
           {errorMessage}
         </div>
@@ -204,7 +245,8 @@
 
       <CheckButton
         {busy}
-        disabled={!processedBlob && !contextText.trim()}
+        busyLabel={isUploading ? 'Uploading screenshot...' : (isAnalyzing ? 'Analyzing message...' : 'Checking...')}
+        disabled={!processedBlob && !contextText.trim() || isOffline}
         onclick={handleCheck}
       />
     </section>
@@ -326,6 +368,63 @@
     font-size: var(--font-base);
     font-weight: 700;
     border-radius: var(--radius-sm);
+  }
+
+  .state-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 20px 24px;
+    border-radius: var(--radius-md);
+    border: 2px solid;
+  }
+
+  .offline-card {
+    background-color: var(--amber-50, #fffbeb);
+    border-color: var(--amber-600, #d97706);
+    color: var(--amber-900, #78350f);
+  }
+
+  .failed-card {
+    background-color: var(--rose-50);
+    border-color: var(--rose-600);
+    color: var(--rose-900, #881337);
+  }
+
+  .state-title {
+    font-size: var(--font-lg);
+    font-weight: 800;
+    margin: 0;
+  }
+
+  .state-desc {
+    font-size: var(--font-base);
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .retry-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: flex-start;
+    min-height: var(--touch-min);
+    padding: 0 20px;
+    margin-top: 8px;
+    font-size: var(--font-base);
+    font-weight: 700;
+    color: var(--text-primary);
+    background-color: var(--bg-surface);
+    border: 2px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+  }
+
+  .retry-btn:hover,
+  .retry-btn:focus-visible {
+    background-color: var(--bg-hover);
+    outline: 3px solid var(--ring-focus);
+    outline-offset: 2px;
   }
 
   .reset-btn {
