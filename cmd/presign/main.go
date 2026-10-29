@@ -75,7 +75,7 @@ func handlePresign(ctx context.Context, req events.APIGatewayV2HTTPRequest) (eve
 			StatusCode: http.StatusBadRequest,
 			Headers: map[string]string{
 				"Content-Type":                "application/json",
-				"Access-Control-Allow-Origin": "*",
+				"Access-Control-Allow-Origin": getCorsOrigin(),
 			},
 			Body: `{"error":"unsupported content type: allowed types are image/png, image/jpeg, image/webp"}`,
 		}, nil
@@ -86,7 +86,7 @@ func handlePresign(ctx context.Context, req events.APIGatewayV2HTTPRequest) (eve
 			StatusCode: http.StatusBadRequest,
 			Headers: map[string]string{
 				"Content-Type":                "application/json",
-				"Access-Control-Allow-Origin": "*",
+				"Access-Control-Allow-Origin": getCorsOrigin(),
 			},
 			Body: `{"error":"image size exceeds 5mb limit"}`,
 		}, nil
@@ -136,12 +136,19 @@ func handlePresign(ctx context.Context, req events.APIGatewayV2HTTPRequest) (eve
 		StatusCode: http.StatusOK,
 		Headers: map[string]string{
 			"Content-Type":                 "application/json",
-			"Access-Control-Allow-Origin":  "*",
+			"Access-Control-Allow-Origin":  getCorsOrigin(),
 			"Access-Control-Allow-Headers": "Content-Type,Authorization",
 			"Access-Control-Allow-Methods": "POST,OPTIONS",
 		},
 		Body: string(body),
 	}, nil
+}
+
+func getCorsOrigin() string {
+	if o := os.Getenv("CORS_ORIGIN"); o != "" {
+		return o
+	}
+	return "*"
 }
 
 func main() {

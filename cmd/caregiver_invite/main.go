@@ -142,12 +142,19 @@ func handleCaregiverInvite(ctx context.Context, req events.APIGatewayV2HTTPReque
 	}
 }
 
+func getCorsOrigin() string {
+	if o := os.Getenv("CORS_ORIGIN"); o != "" {
+		return o
+	}
+	return "*"
+}
+
 func jsonResponse(status int, body []byte) events.APIGatewayV2HTTPResponse {
 	return events.APIGatewayV2HTTPResponse{
 		StatusCode: status,
 		Headers: map[string]string{
 			"Content-Type":                 "application/json",
-			"Access-Control-Allow-Origin":  "*",
+			"Access-Control-Allow-Origin":  getCorsOrigin(),
 			"Access-Control-Allow-Headers": "Content-Type,Authorization",
 		},
 		Body: string(body),

@@ -118,7 +118,7 @@ func handleIntake(ctx context.Context, req events.APIGatewayV2HTTPRequest) (even
 				StatusCode: http.StatusOK,
 				Headers: map[string]string{
 					"Content-Type":                 "application/json",
-					"Access-Control-Allow-Origin":  "*",
+					"Access-Control-Allow-Origin":  getCorsOrigin(),
 					"Access-Control-Allow-Headers": "Content-Type,Authorization",
 					"Access-Control-Allow-Methods": "POST,OPTIONS",
 				},
@@ -176,12 +176,19 @@ func handleIntake(ctx context.Context, req events.APIGatewayV2HTTPRequest) (even
 		StatusCode: http.StatusAccepted,
 		Headers: map[string]string{
 			"Content-Type":                 "application/json",
-			"Access-Control-Allow-Origin":  "*",
+			"Access-Control-Allow-Origin":  getCorsOrigin(),
 			"Access-Control-Allow-Headers": "Content-Type,Authorization",
 			"Access-Control-Allow-Methods": "POST,OPTIONS",
 		},
 		Body: string(resBody),
 	}, nil
+}
+
+func getCorsOrigin() string {
+	if o := os.Getenv("CORS_ORIGIN"); o != "" {
+		return o
+	}
+	return "*"
 }
 
 func errorResponse(code int, msg string) events.APIGatewayV2HTTPResponse {
@@ -190,7 +197,7 @@ func errorResponse(code int, msg string) events.APIGatewayV2HTTPResponse {
 		StatusCode: code,
 		Headers: map[string]string{
 			"Content-Type":                "application/json",
-			"Access-Control-Allow-Origin": "*",
+			"Access-Control-Allow-Origin": getCorsOrigin(),
 		},
 		Body: string(body),
 	}

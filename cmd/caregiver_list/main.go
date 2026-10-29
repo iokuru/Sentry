@@ -140,12 +140,19 @@ func handleList(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events
 	return jsonResponse(http.StatusOK, body), nil
 }
 
+func getCorsOrigin() string {
+	if o := os.Getenv("CORS_ORIGIN"); o != "" {
+		return o
+	}
+	return "*"
+}
+
 func jsonResponse(code int, body []byte) events.APIGatewayV2HTTPResponse {
 	return events.APIGatewayV2HTTPResponse{
 		StatusCode: code,
 		Headers: map[string]string{
 			"Content-Type":                 "application/json",
-			"Access-Control-Allow-Origin":  "*",
+			"Access-Control-Allow-Origin":  getCorsOrigin(),
 			"Access-Control-Allow-Headers": "Content-Type,Authorization",
 			"Access-Control-Allow-Methods": "GET,OPTIONS",
 		},

@@ -93,6 +93,7 @@ resource "aws_lambda_function" "presign" {
   environment {
     variables = {
       UPLOADS_BUCKET = var.uploads_bucket
+      CORS_ORIGIN    = "https://${aws_cloudfront_distribution.frontend.domain_name}"
     }
   }
 }
@@ -128,6 +129,7 @@ resource "aws_lambda_function" "intake" {
       ANALYSIS_QUEUE_URL = var.analysis_queue_url
       INCIDENTS_TABLE    = var.incidents_table
       LINKS_TABLE        = var.links_table
+      CORS_ORIGIN        = "https://${aws_cloudfront_distribution.frontend.domain_name}"
     }
   }
 }
@@ -163,6 +165,7 @@ resource "aws_lambda_function" "caregiver_list" {
       INCIDENTS_TABLE = var.incidents_table
       LINKS_TABLE     = var.links_table
       UPLOADS_BUCKET  = var.uploads_bucket
+      CORS_ORIGIN    = "https://${aws_cloudfront_distribution.frontend.domain_name}"
     }
   }
 }
@@ -198,6 +201,7 @@ resource "aws_lambda_function" "caregiver_status" {
       INCIDENTS_TABLE = var.incidents_table
       LINKS_TABLE     = var.links_table
       UPLOADS_BUCKET  = var.uploads_bucket
+      CORS_ORIGIN    = "https://${aws_cloudfront_distribution.frontend.domain_name}"
     }
   }
 }
@@ -268,6 +272,7 @@ resource "aws_lambda_function" "caregiver_invite" {
       INCIDENTS_TABLE = var.incidents_table
       LINKS_TABLE     = var.links_table
       UPLOADS_BUCKET  = var.uploads_bucket
+      CORS_ORIGIN    = "https://${aws_cloudfront_distribution.frontend.domain_name}"
     }
   }
 }
@@ -303,6 +308,7 @@ resource "aws_lambda_function" "senior_pair" {
       INCIDENTS_TABLE = var.incidents_table
       LINKS_TABLE     = var.links_table
       UPLOADS_BUCKET  = var.uploads_bucket
+      CORS_ORIGIN    = "https://${aws_cloudfront_distribution.frontend.domain_name}"
     }
   }
 }
