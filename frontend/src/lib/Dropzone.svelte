@@ -50,7 +50,7 @@
   <input
     bind:this={fileInput}
     type="file"
-    accept="image/*"
+    accept="image/png,image/jpeg,image/webp,image/heic,image/heif,.heic,.heif"
     class="file-input"
     onchange={handleFileChange}
   />

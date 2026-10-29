@@ -52,6 +52,12 @@
   async function handleFileSelected(file: File) {
     errorMessage = '';
 
+    const isHeic = file.type === 'image/heic' || file.type === 'image/heif' || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif');
+    if (isHeic) {
+      errorMessage = 'Please take a screenshot or use a standard photo format';
+      return;
+    }
+
     const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
     if (!validTypes.includes(file.type)) {
       errorMessage = 'Only PNG, JPG, and WebP images are supported';
