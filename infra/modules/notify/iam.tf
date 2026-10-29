@@ -30,6 +30,17 @@ locals {
     }
   ] : []
 
+  textract_statement = var.ocr_mode != "browser" ? [
+    {
+      Sid    = "TextractDetectText"
+      Effect = "Allow"
+      Action = [
+        "textract:DetectDocumentText"
+      ]
+      Resource = "*"
+    }
+  ] : []
+
   analysis_statements = concat([
     {
       Sid    = "CloudWatchLogs"
@@ -62,16 +73,9 @@ locals {
         "s3:DeleteObject"
       ]
       Resource = "${var.uploads_bucket_arn}/*"
-    },
-    {
-      Sid    = "TextractDetectText"
-      Effect = "Allow"
-      Action = [
-        "textract:DetectDocumentText"
-      ]
-      Resource = "*"
     }
   ],
+  local.textract_statement,
   local.comprehend_statement,
   [
     {

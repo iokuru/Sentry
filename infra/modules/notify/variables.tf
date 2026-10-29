@@ -15,6 +15,12 @@ variable "use_comprehend" {
   default     = "auto"
 }
 
+variable "ocr_mode" {
+  type        = string
+  description = "ocr processing mode: auto, textract, or browser"
+  default     = "auto"
+}
+
 variable "uploads_bucket" {
   type        = string
   description = "s3 uploads bucket name"

@@ -25,6 +25,7 @@ type Inputs struct {
 	ProjectName   string `json:"project_name"`
 	Environment   string `json:"environment"`
 	UseComprehend string `json:"use_comprehend"`
+	OcrMode       string `json:"ocr_mode"`
 }
 
 type StatusItem struct {

@@ -22,6 +22,7 @@ module "notify" {
   name_prefix         = local.name_prefix
   budget_alert_email  = var.budget_alert_email
   use_comprehend      = var.use_comprehend
+  ocr_mode            = var.ocr_mode
   uploads_bucket      = module.storage.uploads_bucket_id
   uploads_bucket_arn  = module.storage.uploads_bucket_arn
   incidents_table     = module.data.incidents_table_name
@@ -33,6 +34,7 @@ module "notify" {
 module "api" {
   source                     = "./modules/api"
   name_prefix                = local.name_prefix
+  ocr_mode                   = var.ocr_mode
   frontend_bucket_id         = module.storage.frontend_bucket_id
   frontend_bucket_arn        = module.storage.frontend_bucket_arn
   cognito_user_pool_endpoint = module.auth.user_pool_endpoint

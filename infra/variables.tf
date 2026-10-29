@@ -27,3 +27,9 @@ variable "use_comprehend" {
   description = "comprehend mode: auto, on, or off"
   default     = "auto"
 }
+
+variable "ocr_mode" {
+  type        = string
+  description = "ocr processing mode: auto, textract, or browser"
+  default     = "auto"
+}

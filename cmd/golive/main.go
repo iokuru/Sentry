@@ -31,6 +31,7 @@ type Inputs struct {
 	TelegramBotToken string `json:"telegram_bot_token"`
 	TelegramChatID   string `json:"telegram_chat_id"`
 	UseComprehend    string `json:"use_comprehend"`
+	OcrMode          string `json:"ocr_mode"`
 }
 
 type Outputs struct {
@@ -76,12 +77,17 @@ func main() {
 	if compMode == "" {
 		compMode = "auto"
 	}
+	ocrMode := strings.ToLower(strings.TrimSpace(inputs.OcrMode))
+	if ocrMode == "" {
+		ocrMode = "auto"
+	}
 	tfvars := map[string]interface{}{
 		"aws_region":         inputs.AWSRegion,
 		"environment":        inputs.Environment,
 		"project_name":       inputs.ProjectName,
 		"budget_alert_email": inputs.BudgetAlertEmail,
 		"use_comprehend":     compMode,
+		"ocr_mode":           ocrMode,
 	}
 	tfvarsBytes, _ := json.MarshalIndent(tfvars, "", "  ")
 	_ = os.WriteFile(filepath.Join("infra", "terraform.tfvars.json"), tfvarsBytes, 0644)
@@ -159,6 +165,7 @@ func main() {
 		"user_pool_id":        outputs.UserPoolID,
 		"user_pool_client_id": outputs.UserPoolClientID,
 		"region":              outputs.Region,
+		"ocr_mode":            ocrMode,
 	}
 	cfgBytes, _ := json.MarshalIndent(runtimeConfig, "", "  ")
 	cfgPath := filepath.Join("frontend", "build", "config.json")

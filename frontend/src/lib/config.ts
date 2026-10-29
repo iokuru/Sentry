@@ -3,6 +3,7 @@ export interface AppConfig {
   user_pool_id: string;
   user_pool_client_id: string;
   region: string;
+  ocr_mode?: string;
 }
 
 let cachedConfig: AppConfig | null = null;

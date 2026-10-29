@@ -27,6 +27,7 @@ type Inputs struct {
 	TelegramBotToken string `json:"telegram_bot_token"`
 	TelegramChatID   string `json:"telegram_chat_id"`
 	UseComprehend    string `json:"use_comprehend"`
+	OcrMode          string `json:"ocr_mode"`
 }
 
 func main() {
@@ -75,6 +76,14 @@ func main() {
 	}
 	if compMode != "auto" && compMode != "on" && compMode != "off" {
 		failures = append(failures, "use_comprehend must be auto, on, or off")
+	}
+
+	ocrMode := strings.ToLower(strings.TrimSpace(inputs.OcrMode))
+	if ocrMode == "" {
+		ocrMode = "auto"
+	}
+	if ocrMode != "auto" && ocrMode != "textract" && ocrMode != "browser" {
+		failures = append(failures, "ocr_mode must be auto, textract, or browser")
 	}
 
 	if len(failures) == 0 {

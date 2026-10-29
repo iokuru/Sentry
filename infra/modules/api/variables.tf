@@ -3,6 +3,12 @@ variable "name_prefix" {
   description = "naming prefix"
 }
 
+variable "ocr_mode" {
+  type        = string
+  description = "ocr processing mode: auto, textract, or browser"
+  default     = "auto"
+}
+
 variable "frontend_bucket_id" {
   type        = string
   description = "id of frontend s3 bucket"

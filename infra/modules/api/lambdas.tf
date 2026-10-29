@@ -135,6 +135,7 @@ resource "aws_lambda_function" "intake" {
       INCIDENTS_TABLE    = var.incidents_table
       LINKS_TABLE        = var.links_table
       CORS_ORIGIN        = "https://${aws_cloudfront_distribution.frontend.domain_name}"
+      OCR_MODE           = var.ocr_mode
     }
   }
 }
