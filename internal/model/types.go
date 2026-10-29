@@ -74,8 +74,19 @@ type Incident struct {
 }
 
 type CaregiverLink struct {
-	CaregiverID string    `json:"caregiver_id" dynamodbav:"caregiver_id"`
-	SeniorID    string    `json:"senior_id" dynamodbav:"senior_id"`
-	SeniorName  string    `json:"senior_name" dynamodbav:"senior_name"`
-	LinkedAt    time.Time `json:"linked_at" dynamodbav:"linked_at"`
+	CaregiverID    string    `json:"caregiver_id" dynamodbav:"caregiver_id"`
+	SeniorID       string    `json:"senior_id" dynamodbav:"senior_id"`
+	SeniorName     string    `json:"senior_name" dynamodbav:"senior_name"`
+	TelegramChatID string    `json:"telegram_chat_id,omitempty" dynamodbav:"telegram_chat_id,omitempty"`
+	LinkedAt       time.Time `json:"linked_at" dynamodbav:"linked_at"`
+}
+
+type Invite struct {
+	Code        string `json:"code" dynamodbav:"code"`
+	CaregiverID string `json:"caregiver_id" dynamodbav:"caregiver_id_real"`
+	SeniorName  string `json:"senior_name,omitempty" dynamodbav:"senior_name,omitempty"`
+	CreatedAt   int64  `json:"created_at" dynamodbav:"created_at"`
+	ExpiresAt   int64  `json:"expires_at" dynamodbav:"expires_at"`
+	TTL         int64  `json:"ttl,omitempty" dynamodbav:"ttl,omitempty"`
+	Used        bool   `json:"used" dynamodbav:"used"`
 }

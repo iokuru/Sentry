@@ -21,6 +21,11 @@ resource "aws_dynamodb_table" "links" {
     projection_type = "ALL"
   }
 
+  ttl {
+    attribute_name = "ttl"
+    enabled        = true
+  }
+
   server_side_encryption {
     enabled = true
   }
