@@ -9,6 +9,7 @@
   import HotlineButton from '$lib/HotlineButton.svelte';
   import CountrySwitch from '$lib/CountrySwitch.svelte';
   import PairingCard from '$lib/PairingCard.svelte';
+  import CheckHistory from '$lib/CheckHistory.svelte';
   import { detectCountry } from '$lib/locale';
   import { downscaleImage } from '$lib/downscale';
   import { isPaired, getSeniorName } from '$lib/device';
@@ -34,6 +35,7 @@
   let isQuotaReached = $state(false);
   let errorMessage = $state('');
   let result = $state<Incident | null>(null);
+  let historyItems = $state<Incident[]>([]);
   let paired = $state(false);
   let seniorName = $state('');
   let showPairing = $state(false);
@@ -53,6 +55,15 @@
         result = JSON.parse(savedResult);
       } catch {
         localStorage.removeItem('sentry_last_result');
+      }
+    }
+
+    const savedHistory = localStorage.getItem('sentry_check_history');
+    if (savedHistory) {
+      try {
+        historyItems = JSON.parse(savedHistory);
+      } catch {
+        localStorage.removeItem('sentry_check_history');
       }
     }
 
@@ -181,10 +192,13 @@
         country: country
       });
 
-      result = await pollIncident(intakeData.incident_id);
-      if (result) {
+      const finishedResult = await pollIncident(intakeData.incident_id);
+      result = finishedResult;
+      if (finishedResult) {
         try {
-          localStorage.setItem('sentry_last_result', JSON.stringify(result));
+          localStorage.setItem('sentry_last_result', JSON.stringify(finishedResult));
+          historyItems = [finishedResult, ...historyItems.filter((h) => h.id !== finishedResult.id)].slice(0, 10);
+          localStorage.setItem('sentry_check_history', JSON.stringify(historyItems));
         } catch {
           // ignore storage quota error
         }
@@ -212,6 +226,20 @@
     isQuotaReached = false;
     try {
       localStorage.removeItem('sentry_last_result');
+    } catch {
+      // quiet fail
+    }
+  }
+  function handleSelectHistory(item: Incident) {
+    result = item;
+    errorMessage = '';
+    isFailed = false;
+  }
+
+  function handleClearHistory() {
+    historyItems = [];
+    try {
+      localStorage.removeItem('sentry_check_history');
     } catch {
       // quiet fail
     }
@@ -299,6 +327,12 @@
       </button>
     </section>
   {/if}
+
+  <CheckHistory
+    items={historyItems}
+    onselect={handleSelectHistory}
+    onclear={handleClearHistory}
+  />
 </main>
 
 <style>
