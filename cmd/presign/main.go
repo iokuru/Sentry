@@ -17,8 +17,8 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/iokuru/sentry/internal/awsconfig"
 	"github.com/iokuru/sentry/internal/logging"
 )
 
@@ -45,7 +45,7 @@ func init() {
 		uploadBucket = "sentry-uploads"
 	}
 
-	cfg, err := config.LoadDefaultConfig(context.Background())
+	cfg, err := awsconfig.Load(context.Background())
 	if err == nil {
 		s3Client := s3.NewFromConfig(cfg)
 		presignClient = s3.NewPresignClient(s3Client)

@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
 	comprehendsvc "github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -22,6 +21,7 @@ import (
 	sqstypes "github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	textractsvc "github.com/aws/aws-sdk-go-v2/service/textract"
+	"github.com/iokuru/sentry/internal/awsconfig"
 	"github.com/iokuru/sentry/internal/comprehend"
 	"github.com/iokuru/sentry/internal/logging"
 	"github.com/iokuru/sentry/internal/model"
@@ -76,7 +76,7 @@ func init() {
 	rateLimiter = quota.NewLimiter()
 	telegramClient = telegram.NewClient()
 
-	cfg, err := config.LoadDefaultConfig(context.Background())
+	cfg, err := awsconfig.Load(context.Background())
 	if err == nil {
 		textractClient = textractsvc.NewFromConfig(cfg)
 		comprehendClient = comprehendsvc.NewFromConfig(cfg)
