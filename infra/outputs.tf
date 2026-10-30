@@ -1,6 +1,6 @@
 output "cloudfront_url" {
   description = "cloudfront domain url serving the sentry frontend"
-  value       = "https://${module.api.cloudfront_domain_name}"
+  value       = module.api.cloudfront_domain_name != "" ? "https://${module.api.cloudfront_domain_name}" : ""
 }
 
 output "api_url" {

@@ -7,9 +7,9 @@ output "api_id" {
 }
 
 output "cloudfront_distribution_id" {
-  value = aws_cloudfront_distribution.frontend.id
+  value = var.enable_cloudfront && length(aws_cloudfront_distribution.frontend) > 0 ? aws_cloudfront_distribution.frontend[0].id : ""
 }
 
 output "cloudfront_domain_name" {
-  value = aws_cloudfront_distribution.frontend.domain_name
+  value = var.enable_cloudfront && length(aws_cloudfront_distribution.frontend) > 0 ? aws_cloudfront_distribution.frontend[0].domain_name : ""
 }

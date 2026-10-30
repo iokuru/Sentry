@@ -1,13 +1,25 @@
+locals {
+  cf_domain = var.enable_cloudfront && length(aws_cloudfront_distribution.frontend) > 0 ? aws_cloudfront_distribution.frontend[0].domain_name : ""
+  cors_origin = local.cf_domain != "" ? "https://${local.cf_domain}" : "*"
+  allowed_cors_origins = local.cf_domain != "" ? [
+    "https://${local.cf_domain}",
+    "http://localhost:5173",
+    "http://localhost:8080",
+    "http://localhost:3000"
+  ] : [
+    "http://localhost:5173",
+    "http://localhost:8080",
+    "http://localhost:3000",
+    "*"
+  ]
+}
+
 resource "aws_apigatewayv2_api" "http" {
   name          = "${var.name_prefix}-http-api"
   protocol_type = "HTTP"
 
   cors_configuration {
-    allow_origins = [
-      "https://${aws_cloudfront_distribution.frontend.domain_name}",
-      "http://localhost:5173",
-      "http://localhost:8080"
-    ]
+    allow_origins = local.allowed_cors_origins
     allow_methods = ["GET", "POST", "PATCH", "OPTIONS"]
     allow_headers = ["Content-Type", "Authorization"]
     max_age       = 3600

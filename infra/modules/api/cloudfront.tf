@@ -63,6 +63,7 @@ EOF
 }
 
 resource "aws_cloudfront_distribution" "frontend" {
+  count               = var.enable_cloudfront ? 1 : 0
   enabled             = true
   is_ipv6_enabled     = true
   default_root_object = "index.html"
@@ -145,6 +146,7 @@ resource "aws_cloudfront_distribution" "frontend" {
 }
 
 resource "aws_s3_bucket_policy" "frontend" {
+  count  = var.enable_cloudfront ? 1 : 0
   bucket = var.frontend_bucket_id
 
   policy = jsonencode({
@@ -160,7 +162,7 @@ resource "aws_s3_bucket_policy" "frontend" {
         Resource = "${var.frontend_bucket_arn}/*"
         Condition = {
           StringEquals = {
-            "AWS:SourceArn" = aws_cloudfront_distribution.frontend.arn
+            "AWS:SourceArn" = aws_cloudfront_distribution.frontend[0].arn
           }
         }
       }

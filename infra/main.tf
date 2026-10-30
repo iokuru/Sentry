@@ -34,6 +34,7 @@ module "notify" {
 module "api" {
   source                     = "./modules/api"
   name_prefix                = local.name_prefix
+  enable_cloudfront          = var.enable_cloudfront
   ocr_mode                   = var.ocr_mode
   frontend_bucket_id         = module.storage.frontend_bucket_id
   frontend_bucket_arn        = module.storage.frontend_bucket_arn

@@ -3,6 +3,12 @@ variable "name_prefix" {
   description = "naming prefix"
 }
 
+variable "enable_cloudfront" {
+  type        = bool
+  description = "whether to provision cloudfront distribution"
+  default     = true
+}
+
 variable "ocr_mode" {
   type        = string
   description = "ocr processing mode: auto, textract, or browser"
