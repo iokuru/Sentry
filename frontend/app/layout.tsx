@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "../styles/globals.css";
 
 export const metadata: Metadata = {
-  title: "Sentry - Senior Scam Checker",
-  description: "Check suspicious screenshots and messages for scams with immediate safety guidance.",
+  title: "Sentry — Scam Protection for Older Adults",
+  description: "A calm, private way to check a suspicious screenshot or message before you reply.",
 };
 
 export default function RootLayout({
@@ -12,7 +12,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="dark">
       <body>{children}</body>
     </html>
   );
