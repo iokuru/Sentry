@@ -24,7 +24,7 @@ sentry helps older adults check suspicious screenshots or messages for fraud.
   - internal/costguard: resource inspection against non-free infrastructure
   - internal/logging: structured json logging with request id extraction
   - internal/awsconfig: retry and timeout wrappers for aws clients
-- frontend/: sveltekit static client with wcag aaa accessibility
+- frontend/: nextjs static export client with wcag aaa accessibility
 - infra/: terraform modules (storage, api, data, auth, notify)
 - fixtures/: generated scam screenshot images across all categories
 - openapi.yaml: typed api contract
@@ -45,7 +45,7 @@ sentry helps older adults check suspicious screenshots or messages for fraud.
 - go standard library first, no web frameworks, no orms
 - aws sdk go v2 only, errors wrapped with fmt.Errorf
 - pure functions for scoring signals with individual table tests
-- sveltekit hand-written css with custom properties, minimum 60px touch targets
+- nextjs hand-written css with custom properties, minimum 60px touch targets
 - zero dollar target: serverless pay-per-request and free tier only
 - modes: auto (probe and fallback), on (cloud only), off/browser (zero subscription)
 - comments explain why, single line, lowercase, no full stop
