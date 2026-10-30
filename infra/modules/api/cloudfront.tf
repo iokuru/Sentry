@@ -43,6 +43,25 @@ resource "aws_cloudfront_response_headers_policy" "security" {
   }
 }
 
+resource "aws_cloudfront_function" "router" {
+  name    = "${var.name_prefix}-router"
+  runtime = "cloudfront-js-2.0"
+  comment = "rewrites directory and extensionless uris for static nextjs export"
+  publish = true
+  code    = <<-EOF
+function handler(event) {
+    var request = event.request;
+    var uri = request.uri;
+    if (uri.endsWith('/')) {
+        request.uri += 'index.html';
+    } else if (!uri.includes('.')) {
+        request.uri += '.html';
+    }
+    return request;
+}
+EOF
+}
+
 resource "aws_cloudfront_distribution" "frontend" {
   enabled             = true
   is_ipv6_enabled     = true
@@ -62,6 +81,11 @@ resource "aws_cloudfront_distribution" "frontend" {
     response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
     compress                   = true
 
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.router.arn
+    }
+
     forwarded_values {
       query_string = false
       cookies {
@@ -75,7 +99,7 @@ resource "aws_cloudfront_distribution" "frontend" {
   }
 
   ordered_cache_behavior {
-    path_pattern               = "/_app/*"
+    path_pattern               = "/_next/*"
     allowed_methods            = ["GET", "HEAD", "OPTIONS"]
     cached_methods             = ["GET", "HEAD"]
     target_origin_id           = "frontend-s3"
