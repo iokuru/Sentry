@@ -8,5 +8,8 @@
   "telegram_bot_token": "",
   "telegram_chat_id": "",
   "use_comprehend": "auto",
-  "ocr_mode": "auto"
+  "ocr_mode": "auto",
+  "frontend_host": "netlify",
+  "netlify_site_name": "sentry-security-example",
+  "allowed_origin": "https://sentry-security-example.netlify.app"
 }
