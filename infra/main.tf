@@ -3,8 +3,9 @@ locals {
 }
 
 module "storage" {
-  source      = "./modules/storage"
-  name_prefix = local.name_prefix
+  source         = "./modules/storage"
+  name_prefix    = local.name_prefix
+  allowed_origin = var.allowed_origin
 }
 
 module "data" {
@@ -34,7 +35,8 @@ module "notify" {
 module "api" {
   source                     = "./modules/api"
   name_prefix                = local.name_prefix
-  enable_cloudfront          = var.enable_cloudfront
+  enable_cloudfront          = var.enable_cloudfront && var.frontend_host == "cloudfront"
+  allowed_origin             = var.allowed_origin
   ocr_mode                   = var.ocr_mode
   frontend_bucket_id         = module.storage.frontend_bucket_id
   frontend_bucket_arn        = module.storage.frontend_bucket_arn

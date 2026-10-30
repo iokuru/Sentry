@@ -9,6 +9,12 @@ variable "enable_cloudfront" {
   default     = true
 }
 
+variable "allowed_origin" {
+  type        = string
+  description = "allowed origin for cors headers"
+  default     = ""
+}
+
 variable "ocr_mode" {
   type        = string
   description = "ocr processing mode: auto, textract, or browser"

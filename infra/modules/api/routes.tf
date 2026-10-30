@@ -1,17 +1,22 @@
 locals {
   cf_domain = var.enable_cloudfront && length(aws_cloudfront_distribution.frontend) > 0 ? aws_cloudfront_distribution.frontend[0].domain_name : ""
-  cors_origin = local.cf_domain != "" ? "https://${local.cf_domain}" : "*"
-  allowed_cors_origins = local.cf_domain != "" ? [
-    "https://${local.cf_domain}",
-    "http://localhost:5173",
-    "http://localhost:8080",
-    "http://localhost:3000"
-  ] : [
-    "http://localhost:5173",
-    "http://localhost:8080",
-    "http://localhost:3000",
-    "*"
-  ]
+  effective_origin = var.allowed_origin != "" ? lower(trimspace(var.allowed_origin)) : (
+    local.cf_domain != "" ? "https://${local.cf_domain}" : "*"
+  )
+  cors_origin = local.effective_origin
+  allowed_cors_origins = var.allowed_origin != "" ? [lower(trimspace(var.allowed_origin))] : (
+    local.cf_domain != "" ? [
+      "https://${local.cf_domain}",
+      "http://localhost:5173",
+      "http://localhost:8080",
+      "http://localhost:3000"
+    ] : [
+      "http://localhost:5173",
+      "http://localhost:8080",
+      "http://localhost:3000",
+      "*"
+    ]
+  )
 }
 
 resource "aws_apigatewayv2_api" "http" {

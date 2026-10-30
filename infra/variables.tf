@@ -39,3 +39,21 @@ variable "ocr_mode" {
   description = "ocr processing mode: auto, textract, or browser"
   default     = "auto"
 }
+
+variable "frontend_host" {
+  type        = string
+  description = "frontend host mode: cloudfront or netlify"
+  default     = "cloudfront"
+}
+
+variable "allowed_origin" {
+  type        = string
+  description = "allowed origin for cors headers"
+  default     = ""
+}
+
+variable "netlify_site_name" {
+  type        = string
+  description = "netlify site name if hosted on netlify"
+  default     = ""
+}

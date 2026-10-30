@@ -50,7 +50,7 @@ resource "aws_s3_bucket_cors_configuration" "uploads" {
   cors_rule {
     allowed_headers = ["*"]
     allowed_methods = ["PUT"]
-    allowed_origins = ["*"]
+    allowed_origins = [var.allowed_origin != "" ? lower(trimspace(var.allowed_origin)) : "*"]
     max_age_seconds = 3000
   }
 }
