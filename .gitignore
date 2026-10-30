@@ -12,6 +12,7 @@ dist/
 frontend/build/
 frontend/.next/
 .svelte-kit/
+*.tsbuildinfo
 node_modules/
 *.zip
 
