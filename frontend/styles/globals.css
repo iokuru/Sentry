@@ -7,18 +7,26 @@
   padding: 0;
 }
 
+html {
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
 body {
   min-height: 100vh;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
+  background-color: var(--bg-page);
+  color: var(--text-main);
+  transition: background-color 0.25s ease, color 0.25s ease;
+  overflow-x: hidden;
 }
 
 a {
   color: var(--color-primary);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  text-decoration: none;
+  transition: color 0.15s ease;
 }
 
 a:hover {
@@ -32,7 +40,7 @@ button, input, select, textarea {
 
 /* high contrast accessibility focus styles */
 :focus-visible {
-  outline: 3px solid var(--border-focus);
+  outline: 2px solid var(--border-focus);
   outline-offset: 3px;
 }
 
