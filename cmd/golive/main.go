@@ -45,6 +45,7 @@ type Outputs struct {
 }
 
 func main() {
+	fixSSOCacheTimestamps()
 	fmt.Println("================================================================")
 	fmt.Println("SENTRY GO-LIVE DEPLOYMENT")
 	fmt.Println("================================================================")
@@ -318,4 +319,26 @@ func runCmd(name string, args ...string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
+}
+
+func fixSSOCacheTimestamps() {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return
+	}
+	cacheDir := filepath.Join(home, ".aws", "sso", "cache")
+	entries, err := os.ReadDir(cacheDir)
+	if err != nil {
+		return
+	}
+	for _, entry := range entries {
+		if strings.HasSuffix(entry.Name(), ".json") {
+			p := filepath.Join(cacheDir, entry.Name())
+			data, err := os.ReadFile(p)
+			if err == nil && strings.Contains(string(data), `UTC"`) {
+				fixed := strings.ReplaceAll(string(data), `UTC"`, `Z"`)
+				_ = os.WriteFile(p, []byte(fixed), 0644)
+			}
+		}
+	}
 }

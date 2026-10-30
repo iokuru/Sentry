@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -33,6 +34,7 @@ type Inputs struct {
 }
 
 func main() {
+	fixSSOCacheTimestamps()
 	fmt.Println("================================================================")
 	fmt.Println("SENTRY PREFLIGHT CHECK")
 	fmt.Println("================================================================")
@@ -228,4 +230,26 @@ func printSummaryAndExit(failures, warnings []string) {
 
 	fmt.Println("Preflight passed. Ready for deployment.")
 	fmt.Println("================================================================")
+}
+
+func fixSSOCacheTimestamps() {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return
+	}
+	cacheDir := filepath.Join(home, ".aws", "sso", "cache")
+	entries, err := os.ReadDir(cacheDir)
+	if err != nil {
+		return
+	}
+	for _, entry := range entries {
+		if strings.HasSuffix(entry.Name(), ".json") {
+			p := filepath.Join(cacheDir, entry.Name())
+			data, err := os.ReadFile(p)
+			if err == nil && strings.Contains(string(data), `UTC"`) {
+				fixed := strings.ReplaceAll(string(data), `UTC"`, `Z"`)
+				_ = os.WriteFile(p, []byte(fixed), 0644)
+			}
+		}
+	}
 }
