@@ -1,0 +1,51 @@
+/* typography scale optimized for senior readability */
+html {
+  font-size: 18px;
+  line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--text-main);
+  background-color: var(--bg-page);
+  letter-spacing: -0.01em;
+}
+
+h1, .text-h1 {
+  font-size: 2rem;
+  line-height: 1.25;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+}
+
+h2, .text-h2 {
+  font-size: 1.5rem;
+  line-height: 1.3;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+h3, .text-h3 {
+  font-size: 1.25rem;
+  line-height: 1.4;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+p, .text-body {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--text-main);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-subtle {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
