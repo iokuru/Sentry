@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "../styles/globals.css";
 
 export const metadata: Metadata = {
-  title: "Take a moment — Check before you reply",
-  description: "A calm, private second look at unexpected messages before you click, pay, or share.",
+  title: "Sentry — Check before you reply",
+  description: "Upload a screenshot or paste the text. See what to do next.",
 };
 
 export default function RootLayout({
