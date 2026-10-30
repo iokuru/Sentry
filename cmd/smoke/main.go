@@ -207,6 +207,7 @@ func main() {
 	// 3. POST intake
 	t3 := startStep()
 	intakePayload := map[string]string{
+		"senior_id":    "smoke-senior-test-device",
 		"image_key":    presignData.ImageKey,
 		"user_context": "Chase bank alert debit card locked verify pin",
 		"country":      "US",

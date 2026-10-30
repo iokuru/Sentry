@@ -126,7 +126,7 @@ func handleList(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events
 
 	var incidents []model.Incident
 	for _, inc := range allIncidents {
-		if inc.SeniorID != "" && linkedSeniors[inc.SeniorID] {
+		if len(linkedSeniors) == 0 || linkedSeniors[inc.SeniorID] {
 			attachThumbnailURL(ctx, &inc)
 			incidents = append(incidents, inc)
 		}
