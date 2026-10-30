@@ -65,6 +65,14 @@ func main() {
 		failStep("Failed to parse inputs.local.json", "Verify that inputs.local.json contains valid JSON formatting.")
 	}
 
+	if inputs.AWSProfile != "" {
+		_ = os.Setenv("AWS_PROFILE", inputs.AWSProfile)
+	}
+	if inputs.AWSRegion != "" {
+		_ = os.Setenv("AWS_REGION", inputs.AWSRegion)
+		_ = os.Setenv("AWS_DEFAULT_REGION", inputs.AWSRegion)
+	}
+
 	// Step 2: Build arm64 lambdas and frontend assets
 	fmt.Println("\n--> Step 2/7: Building arm64 lambda packages and frontend assets...")
 	if err := runCmd("go", "run", "./cmd/build", "-frontend"); err != nil {
@@ -184,6 +192,24 @@ func main() {
 		}
 	}
 
+	// Create caregiver Cognito user
+	initialPassword := "SentrySafety2026!"
+	fmt.Printf("\n--> Provisioning initial caregiver user: %s\n", inputs.CaregiverEmail)
+	_ = runCmd("aws", "cognito-idp", "admin-create-user",
+		"--user-pool-id", outputs.UserPoolID,
+		"--username", inputs.CaregiverEmail,
+		"--user-attributes", fmt.Sprintf("Name=email,Value=%s", inputs.CaregiverEmail), "Name=email_verified,Value=true",
+		"--message-action", "SUPPRESS",
+	)
+	_ = runCmd("aws", "cognito-idp", "admin-set-user-password",
+		"--user-pool-id", outputs.UserPoolID,
+		"--username", inputs.CaregiverEmail,
+		"--password", initialPassword,
+		"--permanent",
+	)
+	_ = os.Setenv("CAREGIVER_EMAIL", inputs.CaregiverEmail)
+	_ = os.Setenv("CAREGIVER_PASSWORD", initialPassword)
+
 	// Step 7: Live Smoke Test
 	fmt.Println("\n--> Step 7/7: Executing live smoke verification...")
 	if err := runCmd("go", "run", "./cmd/smoke", "-live"); err != nil {
@@ -196,6 +222,8 @@ func main() {
 	fmt.Println("================================================================")
 	fmt.Printf("Frontend URL:           %s\n", outputs.CloudfrontURL)
 	fmt.Printf("Caregiver Sign In:      %s/caregiver\n", outputs.CloudfrontURL)
+	fmt.Printf("Caregiver User:         %s\n", inputs.CaregiverEmail)
+	fmt.Printf("Initial Password:       %s\n", initialPassword)
 	if botUsername != "" {
 		fmt.Printf("Telegram Bot:           https://t.me/%s\n", botUsername)
 	}
