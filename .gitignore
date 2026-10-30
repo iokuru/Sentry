@@ -10,6 +10,7 @@ bin/
 dist/
 /build/
 frontend/build/
+frontend/.next/
 .svelte-kit/
 node_modules/
 *.zip
