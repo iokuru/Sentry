@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "@/components/button";
-import { ShieldCheck } from "lucide-react";
+import { ArrowRight, LoaderCircle } from "lucide-react";
 
 export interface CheckButtonProps {
   onClick: () => void;
@@ -24,11 +24,11 @@ export function CheckButton({
         loading={loading}
         disabled={disabled || !hasInput}
         onClick={onClick}
-        aria-label={loading ? "Checking screenshot for scams" : "Check this screenshot now"}
+        aria-label={loading ? "Checking this message" : "Check this message"}
       >
         <span className="check-btn-inner">
-          {!loading ? <ShieldCheck size={26} strokeWidth={2.4} aria-hidden="true" /> : null}
-          <span>{loading ? "Checking your message safely..." : "Check this now"}</span>
+          {!loading ? <ArrowRight size={20} strokeWidth={2.1} aria-hidden="true" /> : <LoaderCircle size={20} className="checking-icon" aria-hidden="true" />}
+          <span>{loading ? "Checking your message…" : "Check this message"}</span>
         </span>
       </Button>
 
@@ -43,6 +43,10 @@ export function CheckButton({
           gap: 12px;
           font-weight: 700;
         }
+
+        .checking-icon { animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (prefers-reduced-motion: reduce) { .checking-icon { animation: none; } }
       `}</style>
     </div>
   );

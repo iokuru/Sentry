@@ -38,11 +38,11 @@ export function Button({
           align-items: center;
           justify-content: center;
           gap: 10px;
-          border-radius: var(--radius-md);
-          font-weight: 600;
+          border-radius: var(--radius-full);
+          font-weight: 650;
           cursor: pointer;
-          transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
-          border: 2px solid transparent;
+          transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.08s ease, box-shadow 0.15s ease;
+          border: 1px solid transparent;
           text-align: center;
           text-decoration: none;
           touch-action: manipulation;
@@ -53,27 +53,27 @@ export function Button({
         }
 
         .btn-root:disabled {
-          opacity: 0.6;
+          opacity: 0.65;
           cursor: not-allowed;
+          box-shadow: none !important;
         }
 
         .btn-default {
-          min-height: 52px;
-          padding: 12px 24px;
-          font-size: 1.05rem;
+          min-height: 48px;
+          padding: 10px 22px;
+          font-size: 0.98rem;
         }
 
         .btn-large {
-          min-height: 62px;
-          padding: 16px 32px;
-          font-size: 1.2rem;
-          border-radius: var(--radius-lg);
+          min-height: 56px;
+          padding: 14px 28px;
+          font-size: 1.1rem;
         }
 
         .btn-small {
-          min-height: 44px;
-          padding: 8px 16px;
-          font-size: 0.95rem;
+          min-height: 38px;
+          padding: 6px 14px;
+          font-size: 0.88rem;
         }
 
         .btn-full {
@@ -82,44 +82,53 @@ export function Button({
 
         .btn-primary {
           background-color: var(--color-primary);
-          color: var(--text-inverse);
+          color: #ffffff;
           border-color: var(--color-primary);
+          box-shadow: 0 2px 10px rgba(16, 185, 129, 0.25);
         }
 
         .btn-primary:hover:not(:disabled) {
           background-color: var(--color-primary-hover);
           border-color: var(--color-primary-hover);
+          box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
+        }
+
+        .btn-primary:disabled {
+          background-color: var(--button-disabled-bg);
+          border-color: var(--button-disabled-border);
+          color: var(--button-disabled-text);
         }
 
         .btn-secondary {
-          background-color: var(--bg-secondary);
-          color: var(--color-primary);
-          border-color: var(--bg-secondary);
+          background-color: var(--surface-raised);
+          color: var(--text-main);
+          border-color: var(--border-light);
         }
 
         .btn-secondary:hover:not(:disabled) {
-          background-color: #d8e7dc;
+          background-color: var(--bg-muted);
+          border-color: var(--text-muted);
         }
 
         .btn-outline {
           background-color: transparent;
           color: var(--text-main);
-          border-color: var(--border-light);
+          border-color: var(--border-medium);
         }
 
         .btn-outline:hover:not(:disabled) {
-          background-color: var(--bg-secondary);
+          background-color: var(--surface-raised);
           border-color: var(--color-primary);
         }
 
         .btn-danger {
           background-color: var(--color-danger);
-          color: var(--text-inverse);
+          color: #ffffff;
           border-color: var(--color-danger);
         }
 
         .btn-danger:hover:not(:disabled) {
-          background-color: #991b1b;
+          background-color: #b91c1c;
         }
 
         .btn-ghost {
@@ -134,9 +143,9 @@ export function Button({
         }
 
         .btn-spinner {
-          width: 20px;
-          height: 20px;
-          border: 3px solid currentColor;
+          width: 18px;
+          height: 18px;
+          border: 2px solid currentColor;
           border-right-color: transparent;
           border-radius: 50%;
           animation: spin 0.75s linear infinite;
