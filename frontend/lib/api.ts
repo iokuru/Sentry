@@ -121,3 +121,23 @@ export async function fetchIncident(incidentId: string): Promise<IncidentResult>
 
   return res.json();
 }
+
+export async function pollIncidentResult(
+  incidentId: string,
+  maxAttempts = 15,
+  intervalMs = 1000
+): Promise<IncidentResult> {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      const result = await fetchIncident(incidentId);
+      if (result.status !== "ANALYZING" && (result.hold_off || result.safe_alternative)) {
+        return result;
+      }
+    } catch {
+      // transient network blip, continue polling
+    }
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
+
+  throw new Error("Analysis took longer than usual. Please check your connection or try again.");
+}
