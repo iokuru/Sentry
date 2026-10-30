@@ -31,6 +31,8 @@ type Inputs struct {
 	TelegramChatID   string `json:"telegram_chat_id"`
 	UseComprehend    string `json:"use_comprehend"`
 	OcrMode          string `json:"ocr_mode"`
+	FrontendHost     string `json:"frontend_host"`
+	EnableCloudfront *bool  `json:"enable_cloudfront"`
 }
 
 func main() {

@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"os/exec"
@@ -32,6 +33,8 @@ type Inputs struct {
 	TelegramChatID   string `json:"telegram_chat_id"`
 	UseComprehend    string `json:"use_comprehend"`
 	OcrMode          string `json:"ocr_mode"`
+	FrontendHost     string `json:"frontend_host"`
+	EnableCloudfront *bool  `json:"enable_cloudfront"`
 }
 
 type Outputs struct {
@@ -90,6 +93,12 @@ func main() {
 	if ocrMode == "" {
 		ocrMode = "auto"
 	}
+	enableCF := true
+	if inputs.EnableCloudfront != nil {
+		enableCF = *inputs.EnableCloudfront
+	} else if strings.EqualFold(inputs.FrontendHost, "s3") {
+		enableCF = false
+	}
 	tfvars := map[string]interface{}{
 		"aws_region":         inputs.AWSRegion,
 		"environment":        inputs.Environment,
@@ -97,11 +106,12 @@ func main() {
 		"budget_alert_email": inputs.BudgetAlertEmail,
 		"use_comprehend":     compMode,
 		"ocr_mode":           ocrMode,
+		"enable_cloudfront":  enableCF,
 	}
 	tfvarsBytes, _ := json.MarshalIndent(tfvars, "", "  ")
 	_ = os.WriteFile(filepath.Join("infra", "terraform.tfvars.json"), tfvarsBytes, 0644)
 
-	if err := runCmd("terraform", "-chdir=infra", "apply", "-auto-approve"); err != nil {
+	if err := runTerraformWithFallback(tfvars); err != nil {
 		failStep("Terraform apply failed", "Inspect the Terraform error output above, verify your AWS IAM permissions, and retry.")
 	}
 
@@ -217,6 +227,13 @@ func main() {
 		fmt.Printf("Notice: smoke test encountered an issue: %v\n", err)
 	}
 
+	// Write evidence/aws-resources.txt
+	_ = os.MkdirAll("evidence", 0755)
+	stateCmd := exec.Command("terraform", "-chdir=infra", "state", "list")
+	if stateList, err := stateCmd.Output(); err == nil {
+		_ = os.WriteFile(filepath.Join("evidence", "aws-resources.txt"), stateList, 0644)
+	}
+
 	// Print final summary
 	fmt.Println("\n================================================================")
 	fmt.Println("SENTRY GO-LIVE SUCCESSFUL")
@@ -312,6 +329,32 @@ func getOutput(name string) (string, error) {
 		return "", fmt.Errorf("terraform output %s: %w", name, err)
 	}
 	return strings.TrimSpace(string(res)), nil
+}
+
+func runTerraformWithFallback(tfvars map[string]interface{}) error {
+	var buf bytes.Buffer
+	multiOut := io.MultiWriter(os.Stdout, &buf)
+	multiErr := io.MultiWriter(os.Stderr, &buf)
+
+	cmd := exec.Command("terraform", "-chdir=infra", "apply", "-auto-approve")
+	cmd.Stdout = multiOut
+	cmd.Stderr = multiErr
+	err := cmd.Run()
+	if err == nil {
+		return nil
+	}
+
+	outStr := buf.String()
+	if strings.Contains(outStr, "Your account must be verified before you can add new CloudFront resources") {
+		fmt.Println("\n[NOTICE] CloudFront distribution creation requires AWS Support verification for this account.")
+		fmt.Println("[NOTICE] Proceeding with deployment of API Gateway, Lambdas, Auth, and Storage...")
+		tfvars["enable_cloudfront"] = false
+		tfvarsBytes, _ := json.MarshalIndent(tfvars, "", "  ")
+		_ = os.WriteFile(filepath.Join("infra", "terraform.tfvars.json"), tfvarsBytes, 0644)
+		return runCmd("terraform", "-chdir=infra", "apply", "-auto-approve")
+	}
+
+	return err
 }
 
 func runCmd(name string, args ...string) error {
