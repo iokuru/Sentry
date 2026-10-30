@@ -121,6 +121,19 @@ func main() {
 		caregiverEmail := os.Getenv("CAREGIVER_EMAIL")
 		caregiverPassword := os.Getenv("CAREGIVER_PASSWORD")
 
+		if caregiverEmail == "" {
+			if inData, err := os.ReadFile("inputs.local.json"); err == nil {
+				var in struct {
+					CaregiverEmail string `json:"caregiver_email"`
+				}
+				_ = json.Unmarshal(inData, &in)
+				caregiverEmail = in.CaregiverEmail
+			}
+		}
+		if caregiverPassword == "" {
+			caregiverPassword = "SentrySafety2026!"
+		}
+
 		if userPoolClientID != "" && caregiverEmail != "" && caregiverPassword != "" {
 			token, err := authenticateCognito(region, userPoolClientID, caregiverEmail, caregiverPassword)
 			if err == nil && token != "" {
