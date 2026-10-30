@@ -6,7 +6,7 @@ import { Button } from "@/components/button";
 import { InputField } from "@/components/field";
 import { IncidentCard, type IncidentItem } from "@/components/incident-card";
 import { InviteModal } from "@/components/invite-modal";
-import { Plus, LogOut, Search, Image as ImageIcon, ShieldAlert } from "lucide-react";
+import { Plus, LogOut, Search, Image as ImageIcon, Users } from "lucide-react";
 import { getStoredSession, signInCaregiver, signOutCaregiver, type AuthSession } from "@/lib/auth";
 import { loadAppConfig } from "@/lib/config";
 
@@ -66,7 +66,7 @@ export default function CaregiverPage() {
 
   useEffect(() => {
     if (typeof document !== "undefined") {
-      document.title = openCount > 0 ? `(${openCount}) Caregiver Feed - Sentry` : "Caregiver Feed - Sentry";
+      document.title = openCount > 0 ? `(${openCount}) Caregiver Feed — Sentry` : "Caregiver Feed — Sentry";
     }
   }, [openCount]);
 
@@ -93,7 +93,6 @@ export default function CaregiverPage() {
   };
 
   const handleUpdateStatus = async (id: string, newStatus: "ACKNOWLEDGED" | "RESOLVED") => {
-    // optimistic update
     setIncidents((prev) =>
       prev.map((inc) => (inc.incident_id === id ? { ...inc, status: newStatus } : inc))
     );
@@ -135,11 +134,13 @@ export default function CaregiverPage() {
         {!session ? (
           <div className="login-card">
             <div className="login-header">
-              <span className="login-shield" aria-hidden="true">
-                <ShieldAlert size={32} />
+              <span className="login-icon-pill" aria-hidden="true">
+                <Users size={24} />
               </span>
-              <h1 className="login-title">Caregiver Sign In</h1>
-              <p className="login-sub">Sign in to view alerts from your linked family members.</p>
+              <h1 className="login-title">Caregiver Portal</h1>
+              <p className="login-sub">
+                Sign in to view real-time scam alerts and manage linked family members.
+              </p>
             </div>
 
             <form onSubmit={handleLogin} className="login-form">
@@ -180,11 +181,11 @@ export default function CaregiverPage() {
 
               <div className="caregiver-header-actions">
                 <Button variant="primary" size="default" onClick={() => setShowInviteModal(true)}>
-                  <Plus size={18} aria-hidden="true" />
+                  <Plus size={16} aria-hidden="true" />
                   <span>Create invite</span>
                 </Button>
                 <Button variant="ghost" size="default" onClick={handleSignOut}>
-                  <LogOut size={18} aria-hidden="true" />
+                  <LogOut size={16} aria-hidden="true" />
                   <span>Sign out</span>
                 </Button>
               </div>
@@ -208,7 +209,7 @@ export default function CaregiverPage() {
 
               <div className="search-and-toggles">
                 <div className="search-box">
-                  <Search size={18} className="search-icon" aria-hidden="true" />
+                  <Search size={16} className="search-icon" aria-hidden="true" />
                   <input
                     type="search"
                     placeholder="Search incidents or signals..."
@@ -225,7 +226,7 @@ export default function CaregiverPage() {
                   onClick={() => setShowThumbnails(!showThumbnails)}
                   aria-label="Toggle screenshot thumbnails"
                 >
-                  <ImageIcon size={18} />
+                  <ImageIcon size={16} />
                   <span>Thumbnails</span>
                 </button>
               </div>
@@ -235,7 +236,7 @@ export default function CaregiverPage() {
               {filteredIncidents.length === 0 ? (
                 <div className="empty-feed">
                   <p className="empty-title">No incidents match this filter.</p>
-                  <p className="empty-sub">When your linked seniors check suspicious messages, they will appear here.</p>
+                  <p className="empty-sub">When your linked family members check suspicious messages, high-risk alerts appear here.</p>
                 </div>
               ) : (
                 filteredIncidents.map((inc) => (
@@ -260,21 +261,25 @@ export default function CaregiverPage() {
         .caregiver-layout {
           display: flex;
           flex-direction: column;
-          gap: 24px;
+          gap: 28px;
+          max-width: 900px;
+          margin: 0 auto;
+          width: 100%;
         }
 
         .login-card {
-          max-width: 460px;
+          max-width: 440px;
           margin: 40px auto;
           width: 100%;
           background-color: var(--bg-card);
-          border: 1.5px solid var(--border-light);
-          border-radius: var(--radius-lg);
-          padding: 32px 28px;
+          border: 1px solid var(--border-light);
+          border-radius: var(--radius-xl);
+          padding: 36px 32px;
           display: flex;
           flex-direction: column;
           gap: 24px;
-          box-shadow: var(--shadow-sm);
+          box-shadow: var(--shadow-lg);
+          backdrop-filter: blur(12px);
         }
 
         .login-header {
@@ -285,27 +290,30 @@ export default function CaregiverPage() {
           gap: 8px;
         }
 
-        .login-shield {
+        .login-icon-pill {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 56px;
-          height: 56px;
+          width: 48px;
+          height: 48px;
           border-radius: var(--radius-full);
-          background-color: var(--bg-secondary);
+          background-color: var(--surface-raised);
+          border: 1px solid var(--border-light);
           color: var(--color-primary);
-          margin-bottom: 8px;
+          margin-bottom: 4px;
         }
 
         .login-title {
-          font-size: 1.8rem;
-          font-weight: 800;
+          font-size: 1.65rem;
+          font-weight: 850;
+          letter-spacing: -0.03em;
           color: var(--text-main);
         }
 
         .login-sub {
-          font-size: 1rem;
+          font-size: 0.94rem;
           color: var(--text-muted);
+          line-height: 1.45;
         }
 
         .login-form {
@@ -316,7 +324,7 @@ export default function CaregiverPage() {
 
         .login-error {
           color: var(--color-danger);
-          font-size: 0.92rem;
+          font-size: 0.88rem;
           font-weight: 600;
         }
 
@@ -331,8 +339,9 @@ export default function CaregiverPage() {
         }
 
         .caregiver-title {
-          font-size: 2rem;
-          font-weight: 800;
+          font-size: 1.85rem;
+          font-weight: 850;
+          letter-spacing: -0.03em;
           color: var(--text-main);
           display: flex;
           align-items: center;
@@ -340,16 +349,17 @@ export default function CaregiverPage() {
         }
 
         .open-badge {
-          font-size: 0.88rem;
-          background-color: var(--color-danger-subtle);
-          color: var(--color-danger);
+          font-size: 0.82rem;
+          font-weight: 750;
+          background-color: var(--danger-bg);
+          color: var(--danger-title);
           padding: 3px 10px;
           border-radius: var(--radius-full);
-          border: 1px solid rgba(185, 28, 28, 0.2);
+          border: 1px solid rgba(239, 68, 68, 0.3);
         }
 
         .caregiver-subtitle {
-          font-size: 1rem;
+          font-size: 0.92rem;
           color: var(--text-muted);
           margin-top: 4px;
         }
@@ -357,7 +367,7 @@ export default function CaregiverPage() {
         .caregiver-header-actions {
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 10px;
         }
 
         .filter-bar {
@@ -369,34 +379,40 @@ export default function CaregiverPage() {
         }
 
         .status-tabs {
-          display: flex;
-          background-color: var(--bg-muted);
-          padding: 4px;
-          border-radius: var(--radius-md);
-          gap: 4px;
+          display: inline-flex;
+          background: var(--surface-raised);
+          border: 1px solid var(--border-light);
+          border-radius: var(--radius-full);
+          padding: 3px;
+          gap: 3px;
         }
 
         .tab-btn {
-          padding: 8px 14px;
-          border-radius: var(--radius-sm);
-          font-size: 0.88rem;
-          font-weight: 700;
+          padding: 6px 14px;
+          border-radius: var(--radius-full);
+          font-size: 0.84rem;
+          font-weight: 650;
           border: none;
           background: transparent;
           color: var(--text-muted);
           cursor: pointer;
+          transition: color 140ms ease, background-color 140ms ease;
+        }
+
+        .tab-btn:hover {
+          color: var(--text-main);
         }
 
         .tab-active {
           background-color: var(--bg-card);
-          color: var(--color-primary);
+          color: var(--text-main);
           box-shadow: var(--shadow-sm);
         }
 
         .search-and-toggles {
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 10px;
           flex-wrap: wrap;
         }
 
@@ -404,10 +420,10 @@ export default function CaregiverPage() {
           display: flex;
           align-items: center;
           gap: 8px;
-          background-color: var(--bg-card);
+          background: var(--surface-raised);
           border: 1px solid var(--border-light);
-          padding: 8px 12px;
-          border-radius: var(--radius-md);
+          padding: 6px 12px;
+          border-radius: var(--radius-full);
         }
 
         .search-icon {
@@ -417,29 +433,34 @@ export default function CaregiverPage() {
         .search-input {
           border: none;
           outline: none;
-          font-size: 0.95rem;
+          font-size: 0.88rem;
           color: var(--text-main);
-          width: 200px;
+          background: transparent;
+          width: 180px;
         }
 
         .thumb-toggle {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          padding: 8px 14px;
-          border-radius: var(--radius-md);
+          padding: 6px 12px;
+          border-radius: var(--radius-full);
           border: 1px solid var(--border-light);
-          background-color: var(--bg-card);
+          background-color: var(--surface-raised);
           color: var(--text-muted);
-          font-size: 0.9rem;
+          font-size: 0.86rem;
           font-weight: 600;
           cursor: pointer;
+          transition: border-color 140ms ease, color 140ms ease;
+        }
+
+        .thumb-toggle:hover {
+          color: var(--text-main);
         }
 
         .thumb-active {
           border-color: var(--color-primary);
           color: var(--color-primary);
-          background-color: var(--bg-secondary);
         }
 
         .incidents-feed {
@@ -450,22 +471,39 @@ export default function CaregiverPage() {
 
         .empty-feed {
           background-color: var(--bg-card);
-          border: 1.5px dashed var(--border-light);
+          border: 1px dashed var(--border-medium);
           border-radius: var(--radius-lg);
           padding: 48px 24px;
           text-align: center;
         }
 
         .empty-title {
-          font-size: 1.2rem;
+          font-size: 1.15rem;
           font-weight: 700;
           color: var(--text-main);
           margin-bottom: 6px;
         }
 
         .empty-sub {
-          font-size: 1rem;
+          font-size: 0.94rem;
           color: var(--text-muted);
+        }
+
+        @media (max-width: 600px) {
+          .caregiver-header {
+            flex-direction: column;
+            align-items: stretch;
+          }
+          .filter-bar {
+            flex-direction: column;
+            align-items: stretch;
+          }
+          .search-box {
+            width: 100%;
+          }
+          .search-input {
+            width: 100%;
+          }
         }
       `}</style>
     </Shell>

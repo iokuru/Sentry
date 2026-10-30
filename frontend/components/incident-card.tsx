@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Chip } from "@/components/chip";
-import { Clock, User, Image as ImageIcon } from "lucide-react";
+import { Clock, User } from "lucide-react";
 
 export interface IncidentItem {
   incident_id: string;
@@ -75,7 +75,7 @@ export function IncidentCard({
         </div>
 
         <div className="incident-time">
-          <Clock size={16} aria-hidden="true" />
+          <Clock size={15} aria-hidden="true" />
           <span>{formatTimeAgo(incident.created_at)}</span>
         </div>
       </div>
@@ -143,13 +143,18 @@ export function IncidentCard({
       <style jsx>{`
         .incident-card-root {
           background-color: var(--bg-card);
-          border: 1.5px solid var(--border-light);
+          border: 1px solid var(--border-light);
           border-radius: var(--radius-lg);
-          padding: 20px;
+          padding: 22px;
           display: flex;
           flex-direction: column;
           gap: 16px;
           box-shadow: var(--shadow-sm);
+          transition: border-color 160ms ease;
+        }
+
+        .incident-card-root:hover {
+          border-color: var(--border-medium);
         }
 
         .incident-header {
@@ -167,33 +172,37 @@ export function IncidentCard({
         }
 
         .status-pill {
-          font-size: 0.82rem;
-          font-weight: 700;
+          font-size: 0.78rem;
+          font-weight: 750;
+          letter-spacing: 0.04em;
           padding: 3px 10px;
           border-radius: var(--radius-full);
           text-transform: uppercase;
         }
 
         .status-new {
-          background-color: #fee2e2;
-          color: #991b1b;
+          background-color: var(--danger-bg);
+          color: var(--danger-title);
+          border: 1px solid rgba(239, 68, 68, 0.25);
         }
 
         .status-acknowledged {
-          background-color: #fef3c7;
-          color: #92400e;
+          background-color: var(--warning-bg);
+          color: var(--warning-title);
+          border: 1px solid rgba(245, 158, 11, 0.25);
         }
 
         .status-resolved {
-          background-color: #dcfce7;
-          color: #166534;
+          background-color: var(--safe-bg);
+          color: var(--safe-title);
+          border: 1px solid rgba(16, 185, 129, 0.25);
         }
 
         .incident-time {
           display: flex;
           align-items: center;
           gap: 6px;
-          font-size: 0.9rem;
+          font-size: 0.86rem;
           color: var(--text-muted);
         }
 
@@ -229,16 +238,16 @@ export function IncidentCard({
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          font-size: 0.88rem;
-          font-weight: 600;
+          font-size: 0.86rem;
+          font-weight: 650;
           color: var(--color-primary);
         }
 
         .incident-hold-off {
           font-size: 1.05rem;
-          font-weight: 600;
+          font-weight: 650;
           color: var(--text-main);
-          line-height: 1.45;
+          line-height: 1.5;
         }
 
         .incident-signals {
@@ -248,12 +257,13 @@ export function IncidentCard({
         }
 
         .signal-tag {
-          font-size: 0.82rem;
+          font-size: 0.78rem;
           font-weight: 600;
           color: var(--text-muted);
-          background-color: var(--bg-muted);
+          background-color: var(--surface-raised);
+          border: 1px solid var(--border-light);
           padding: 2px 8px;
-          border-radius: var(--radius-sm);
+          border-radius: var(--radius-full);
         }
 
         .incident-actions {
@@ -266,36 +276,40 @@ export function IncidentCard({
 
         .action-btn {
           padding: 8px 16px;
-          border-radius: var(--radius-sm);
-          font-size: 0.95rem;
-          font-weight: 600;
+          border-radius: var(--radius-full);
+          font-size: 0.88rem;
+          font-weight: 650;
           cursor: pointer;
-          border: none;
-          min-height: 40px;
+          border: 1px solid transparent;
+          min-height: 38px;
+          transition: background-color 140ms ease;
         }
 
         .ack-btn {
-          background-color: #fef3c7;
-          color: #92400e;
+          background-color: var(--warning-bg);
+          color: var(--warning-title);
+          border-color: var(--warning-border);
         }
 
         .ack-btn:hover:not(:disabled) {
-          background-color: #fde68a;
+          background-color: var(--surface-raised);
         }
 
         .resolve-btn {
-          background-color: var(--bg-secondary);
-          color: var(--color-primary);
+          background-color: var(--surface-raised);
+          color: var(--text-main);
+          border-color: var(--border-light);
         }
 
         .resolve-btn:hover:not(:disabled) {
-          background-color: #dbebe0;
+          background-color: var(--bg-muted);
+          border-color: var(--text-muted);
         }
 
         .resolved-notice {
-          font-size: 0.95rem;
-          font-weight: 600;
-          color: var(--color-safe);
+          font-size: 0.9rem;
+          font-weight: 700;
+          color: var(--color-primary);
         }
       `}</style>
     </div>
