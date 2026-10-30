@@ -10,8 +10,9 @@ when risk is high, linked caregivers receive an immediate alert by email and opt
 ## design decisions
 
 - **why no bedrock:** bedrock charges per input and output token with zero free tier allowance. llms can also hallucinate phone numbers or panic older adults. sentry uses a deterministic scoring engine with weighted regex signals, ensuring zero cost, reproducible results, and sub-second classification.
-- **why no react:** react packages bring large client bundles and component library bloat. sentry uses sveltekit with adapter-static and hand-written css custom properties, producing minimal vanilla javascript, high contrast wcag aaa accessibility, and minimum 60px touch targets.
 - **why no orm:** orms add reflection overhead, memory overhead, and cold start latency to lambda binaries. sentry uses the official aws sdk go v2 dynamodb attributevalue marshaler directly.
+
+interface design is adapted from asksafe home (https://github.com/v0-community/asksafe-home).
 
 ## exact free tier allowances
 
