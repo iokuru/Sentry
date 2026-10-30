@@ -34,6 +34,8 @@ type Inputs struct {
 	UseComprehend    string `json:"use_comprehend"`
 	OcrMode          string `json:"ocr_mode"`
 	FrontendHost     string `json:"frontend_host"`
+	NetlifySiteName  string `json:"netlify_site_name"`
+	AllowedOrigin    string `json:"allowed_origin"`
 	EnableCloudfront *bool  `json:"enable_cloudfront"`
 }
 
@@ -45,6 +47,7 @@ type Outputs struct {
 	CloudfrontURL          string
 	FrontendBucket         string
 	CloudfrontDistribution string
+	UploadsBucket          string
 }
 
 func main() {
@@ -96,7 +99,7 @@ func main() {
 	enableCF := true
 	if inputs.EnableCloudfront != nil {
 		enableCF = *inputs.EnableCloudfront
-	} else if strings.EqualFold(inputs.FrontendHost, "s3") {
+	} else if strings.EqualFold(inputs.FrontendHost, "s3") || strings.EqualFold(inputs.FrontendHost, "netlify") {
 		enableCF = false
 	}
 	tfvars := map[string]interface{}{
@@ -107,6 +110,9 @@ func main() {
 		"use_comprehend":     compMode,
 		"ocr_mode":           ocrMode,
 		"enable_cloudfront":  enableCF,
+		"frontend_host":      strings.ToLower(strings.TrimSpace(inputs.FrontendHost)),
+		"allowed_origin":     strings.ToLower(strings.TrimSpace(inputs.AllowedOrigin)),
+		"netlify_site_name":  strings.TrimSpace(inputs.NetlifySiteName),
 	}
 	tfvarsBytes, _ := json.MarshalIndent(tfvars, "", "  ")
 	_ = os.WriteFile(filepath.Join("infra", "terraform.tfvars.json"), tfvarsBytes, 0644)
@@ -177,8 +183,12 @@ func main() {
 		fmt.Println("\n--> Step 5/7: Telegram skipped (no bot token provided)")
 	}
 
-	// Step 6: Generate /config.json, sync frontend to S3, invalidate CloudFront
-	fmt.Println("\n--> Step 6/7: Deploying frontend bundle and invalidating CloudFront cache...")
+	// Step 6: Generate /config.json and deploy frontend
+	frontendHost := strings.ToLower(strings.TrimSpace(inputs.FrontendHost))
+	if frontendHost == "" {
+		frontendHost = "cloudfront"
+	}
+
 	runtimeConfig := map[string]string{
 		"api_url":             outputs.ApiURL,
 		"user_pool_id":        outputs.UserPoolID,
@@ -192,14 +202,35 @@ func main() {
 		failStep(fmt.Sprintf("Failed to write runtime config.json: %v", err), "Ensure frontend/build directory exists.")
 	}
 
-	s3Target := fmt.Sprintf("s3://%s", outputs.FrontendBucket)
-	if err := runCmd("aws", "s3", "sync", filepath.Join("frontend", "build"), s3Target, "--delete"); err != nil {
-		failStep(fmt.Sprintf("Failed to sync frontend to S3: %v", err), "Ensure AWS CLI is configured with S3 write access.")
-	}
+	if frontendHost == "netlify" {
+		fmt.Println("\n--> Step 6/7: Deploying frontend bundle to Netlify...")
+		uploadsHost := fmt.Sprintf("https://%s.s3.%s.amazonaws.com", outputs.UploadsBucket, outputs.Region)
+		cspHeader := fmt.Sprintf("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' %s %s; font-src 'self'; worker-src 'self' blob:; frame-ancestors 'none'; object-src 'none'; base-uri 'self';", outputs.ApiURL, uploadsHost)
+		headersContent := fmt.Sprintf("/*\n  X-Content-Type-Options: nosniff\n  X-Frame-Options: DENY\n  Referrer-Policy: strict-origin-when-cross-origin\n  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload\n  %s\n", cspHeader)
+		_ = os.WriteFile(filepath.Join("frontend", "build", "_headers"), []byte(headersContent), 0644)
 
-	if outputs.CloudfrontDistribution != "" {
-		if err := runCmd("aws", "cloudfront", "create-invalidation", "--distribution-id", outputs.CloudfrontDistribution, "--paths", "/*"); err != nil {
-			fmt.Printf("Warning: cloudfront invalidation returned: %v\n", err)
+		netPath, err := exec.LookPath("netlify")
+		if err != nil {
+			failStep("Netlify CLI not found", "Ensure netlify-cli is installed and on PATH.")
+		}
+		deployArgs := []string{"deploy", "--prod", "--dir=" + filepath.Join("frontend", "build")}
+		if inputs.NetlifySiteName != "" {
+			deployArgs = append(deployArgs, "--site="+inputs.NetlifySiteName)
+		}
+		if err := runCmd(netPath, deployArgs...); err != nil {
+			failStep(fmt.Sprintf("Netlify deploy failed: %v", err), "Check Netlify CLI authentication and site settings.")
+		}
+	} else {
+		fmt.Println("\n--> Step 6/7: Deploying frontend bundle to S3 and invalidating CloudFront cache...")
+		s3Target := fmt.Sprintf("s3://%s", outputs.FrontendBucket)
+		if err := runCmd("aws", "s3", "sync", filepath.Join("frontend", "build"), s3Target, "--delete"); err != nil {
+			failStep(fmt.Sprintf("Failed to sync frontend to S3: %v", err), "Ensure AWS CLI is configured with S3 write access.")
+		}
+
+		if outputs.CloudfrontDistribution != "" {
+			if err := runCmd("aws", "cloudfront", "create-invalidation", "--distribution-id", outputs.CloudfrontDistribution, "--paths", "/*"); err != nil {
+				fmt.Printf("Warning: cloudfront invalidation returned: %v\n", err)
+			}
 		}
 	}
 
@@ -235,11 +266,20 @@ func main() {
 	}
 
 	// Print final summary
+	frontendURL := outputs.CloudfrontURL
+	if frontendHost == "netlify" {
+		if inputs.AllowedOrigin != "" {
+			frontendURL = strings.ToLower(strings.TrimSpace(inputs.AllowedOrigin))
+		} else if inputs.NetlifySiteName != "" {
+			frontendURL = fmt.Sprintf("https://%s.netlify.app", inputs.NetlifySiteName)
+		}
+	}
+
 	fmt.Println("\n================================================================")
 	fmt.Println("SENTRY GO-LIVE SUCCESSFUL")
 	fmt.Println("================================================================")
-	fmt.Printf("Frontend URL:           %s\n", outputs.CloudfrontURL)
-	fmt.Printf("Caregiver Sign In:      %s/caregiver\n", outputs.CloudfrontURL)
+	fmt.Printf("Frontend URL:           %s\n", frontendURL)
+	fmt.Printf("Caregiver Sign In:      %s/caregiver\n", frontendURL)
 	fmt.Printf("Caregiver User:         %s\n", inputs.CaregiverEmail)
 	fmt.Printf("Initial Password:       %s\n", initialPassword)
 	if botUsername != "" {
@@ -319,6 +359,7 @@ func readTerraformOutputs() (*Outputs, error) {
 	out.CloudfrontURL, _ = getOutput("cloudfront_url")
 	out.FrontendBucket, _ = getOutput("frontend_bucket")
 	out.CloudfrontDistribution, _ = getOutput("cloudfront_distribution_id")
+	out.UploadsBucket, _ = getOutput("uploads_bucket")
 	return out, nil
 }
 

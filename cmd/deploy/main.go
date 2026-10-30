@@ -19,6 +19,7 @@ type DeploymentOutputs struct {
 	CloudfrontUrl          string
 	FrontendBucket         string
 	CloudfrontDistribution string
+	UploadsBucket          string
 }
 
 func main() {
@@ -66,23 +67,66 @@ func main() {
 		log.Fatalf("write config.json: %v", err)
 	}
 
-	log.Println("Step 6/6: Uploading frontend to S3 and invalidating CloudFront cache...")
-	if outputs.FrontendBucket != "" {
-		s3Target := fmt.Sprintf("s3://%s", outputs.FrontendBucket)
-		if err := runCmd("aws", "s3", "sync", filepath.Join("frontend", "build"), s3Target, "--delete"); err != nil {
-			log.Printf("warning: aws s3 sync: %v", err)
+	var frontendHost, netlifySite, allowedOrigin string
+	if data, err := os.ReadFile("inputs.local.json"); err == nil {
+		var in struct {
+			FrontendHost    string `json:"frontend_host"`
+			NetlifySiteName string `json:"netlify_site_name"`
+			AllowedOrigin   string `json:"allowed_origin"`
+		}
+		if err := json.Unmarshal(data, &in); err == nil {
+			frontendHost = strings.ToLower(strings.TrimSpace(in.FrontendHost))
+			netlifySite = in.NetlifySiteName
+			allowedOrigin = strings.ToLower(strings.TrimSpace(in.AllowedOrigin))
 		}
 	}
 
-	if outputs.CloudfrontDistribution != "" {
-		if err := runCmd("aws", "cloudfront", "create-invalidation", "--distribution-id", outputs.CloudfrontDistribution, "--paths", "/*"); err != nil {
-			log.Printf("warning: cloudfront invalidation: %v", err)
+	if frontendHost == "netlify" {
+		log.Println("Step 6/6: Deploying frontend bundle to Netlify...")
+		uploadsHost := fmt.Sprintf("https://%s.s3.%s.amazonaws.com", outputs.UploadsBucket, outputs.Region)
+		cspHeader := fmt.Sprintf("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' %s %s; font-src 'self'; worker-src 'self' blob:; frame-ancestors 'none'; object-src 'none'; base-uri 'self';", outputs.ApiUrl, uploadsHost)
+		headersContent := fmt.Sprintf("/*\n  X-Content-Type-Options: nosniff\n  X-Frame-Options: DENY\n  Referrer-Policy: strict-origin-when-cross-origin\n  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload\n  %s\n", cspHeader)
+		_ = os.WriteFile(filepath.Join("frontend", "build", "_headers"), []byte(headersContent), 0644)
+
+		netPath, err := exec.LookPath("netlify")
+		if err != nil {
+			log.Fatalf("netlify cli not found on PATH: %v", err)
+		}
+		deployArgs := []string{"deploy", "--prod", "--dir=" + filepath.Join("frontend", "build")}
+		if netlifySite != "" {
+			deployArgs = append(deployArgs, "--site="+netlifySite)
+		}
+		if err := runCmd(netPath, deployArgs...); err != nil {
+			log.Fatalf("netlify deploy failed: %v", err)
+		}
+	} else {
+		log.Println("Step 6/6: Uploading frontend to S3 and invalidating CloudFront cache...")
+		if outputs.FrontendBucket != "" {
+			s3Target := fmt.Sprintf("s3://%s", outputs.FrontendBucket)
+			if err := runCmd("aws", "s3", "sync", filepath.Join("frontend", "build"), s3Target, "--delete"); err != nil {
+				log.Printf("warning: aws s3 sync: %v", err)
+			}
+		}
+
+		if outputs.CloudfrontDistribution != "" {
+			if err := runCmd("aws", "cloudfront", "create-invalidation", "--distribution-id", outputs.CloudfrontDistribution, "--paths", "/*"); err != nil {
+				log.Printf("warning: cloudfront invalidation: %v", err)
+			}
+		}
+	}
+
+	frontendUrl := outputs.CloudfrontUrl
+	if frontendHost == "netlify" {
+		if allowedOrigin != "" {
+			frontendUrl = allowedOrigin
+		} else if netlifySite != "" {
+			frontendUrl = fmt.Sprintf("https://%s.netlify.app", netlifySite)
 		}
 	}
 
 	fmt.Println("\n=======================================================")
 	fmt.Println("Sentry deployment successfully completed!")
-	fmt.Printf("Frontend URL: %s\n", outputs.CloudfrontUrl)
+	fmt.Printf("Frontend URL: %s\n", frontendUrl)
 	fmt.Printf("API URL:      %s\n", outputs.ApiUrl)
 	fmt.Printf("User Pool:    %s\n", outputs.UserPoolId)
 	fmt.Printf("App Client:   %s\n", outputs.UserPoolClientId)
@@ -104,6 +148,7 @@ func readOutputs() (*DeploymentOutputs, error) {
 	out.CloudfrontUrl, _ = getOutput("cloudfront_url")
 	out.FrontendBucket, _ = getOutput("frontend_bucket")
 	out.CloudfrontDistribution, _ = getOutput("cloudfront_distribution_id")
+	out.UploadsBucket, _ = getOutput("uploads_bucket")
 
 	return out, nil
 }
