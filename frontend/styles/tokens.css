@@ -17,13 +17,13 @@
   --color-primary-active: #104230;
 
   /* accessible high contrast tokens */
-  --color-accent: #92400e;
+  --color-accent: #78350f;
   --color-accent-subtle: #fef3c7;
 
-  --color-danger: #991b1b;
+  --color-danger: #7f1d1d;
   --color-danger-subtle: #fee2e2;
 
-  --color-safe: #166534;
+  --color-safe: #14532d;
   --color-safe-subtle: #dcfce7;
 
   --border-light: #dcd7cc;
