@@ -51,7 +51,7 @@ export function normalizeIncident(raw: any, fallbackId = ""): IncidentResult {
 
   return {
     incident_id: raw.incident_id || raw.id || fallbackId,
-    status: rawStatus === "ANALYZED" || rawStatus === "PENDING" || rawStatus === "NEW"
+    status: rawStatus === "ANALYZED" || rawStatus === "NEW"
       ? "NEW"
       : rawStatus === "ACKNOWLEDGED" || rawStatus === "RESOLVED"
         ? rawStatus
@@ -169,13 +169,16 @@ export async function fetchIncident(incidentId: string): Promise<IncidentResult>
 
 export async function pollIncidentResult(
   incidentId: string,
-  maxAttempts = 15,
+  maxAttempts = 35,
   intervalMs = 1000
 ): Promise<IncidentResult> {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
       const result = await fetchIncident(incidentId);
-      if (result.status !== "ANALYZING" && (result.hold_off || result.safe_alternative)) {
+      if (
+        result.status !== "ANALYZING" &&
+        (result.hold_off || result.safe_alternative || result.signals.length > 0)
+      ) {
         return result;
       }
     } catch {

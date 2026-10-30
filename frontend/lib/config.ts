@@ -7,11 +7,11 @@ export interface AppConfig {
 }
 
 const defaultConfig: AppConfig = {
-  apiUrl: process.env.NEXT_PUBLIC_API_URL || "https://ni3bvlk951.execute-api.ap-south-1.amazonaws.com",
-  region: "ap-south-1",
-  userPoolId: "ap-south-1_NRUTetHDH",
-  userPoolClientId: "4oo2js9m64ql6qbumihklgg4kv",
-  ocrMode: "browser",
+  apiUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080",
+  region: "us-east-1",
+  userPoolId: "",
+  userPoolClientId: "",
+  ocrMode: "auto",
 };
 
 let cachedConfig: AppConfig | null = null;
