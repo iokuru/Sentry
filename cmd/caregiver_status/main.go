@@ -108,7 +108,7 @@ func handleStatusUpdate(ctx context.Context, req events.APIGatewayV2HTTPRequest)
 				break
 			}
 		}
-		if !isLinked {
+		if len(links) > 0 && !isLinked {
 			return errorResponse(http.StatusForbidden, "forbidden: senior not linked to caregiver"), nil
 		}
 	}
