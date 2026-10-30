@@ -29,44 +29,43 @@ export async function signInCaregiver(
 ): Promise<{ success: boolean; session?: AuthSession; error?: string }> {
   const config = await loadAppConfig();
 
-  // In local development or mock server, negotiate auth token via dev backend
   try {
-    const res = await fetch(`${config.apiUrl}/api/caregiver/login`, {
+    const authUrl = new URL("/", config.apiUrl);
+    const res = await fetch(authUrl.toString(), {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: email.trim(), password: pass }),
+      headers: {
+        "Content-Type": "application/x-amz-json-1.1",
+        "X-Amz-Target": "AWSCognitoIdentityProviderService.InitiateAuth",
+      },
+      body: JSON.stringify({
+        AuthFlow: "USER_PASSWORD_AUTH",
+        ClientId: config.userPoolClientId,
+        AuthParameters: { USERNAME: email.trim(), PASSWORD: pass },
+      }),
     });
 
-    if (res.ok) {
-      const data = await res.json();
-      const session: AuthSession = {
-        token: data.token || "dev-caregiver-jwt",
-        email: email.trim(),
-      };
-      localStorage.setItem(TOKEN_KEY, session.token);
-      localStorage.setItem(USER_KEY, session.email);
-      return { success: true, session };
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { success: false, error: data.message || data.Message || "Sign in failed. Check your email and password." };
     }
-  } catch {
-    // fallback for local testing without mock login route
-  }
 
-  // Fallback demo auth for mock environment
-  if (pass.length >= 6) {
+    const token = data.AuthenticationResult?.IdToken;
+    if (!token) return { success: false, error: "The sign-in service did not return a valid session." };
+
     const session: AuthSession = {
-      token: "mock-jwt-" + btoa(email.trim()),
+      token,
       email: email.trim(),
     };
     try {
       localStorage.setItem(TOKEN_KEY, session.token);
       localStorage.setItem(USER_KEY, session.email);
     } catch {
-      // ignore
+      return { success: false, error: "This browser could not save your sign-in. Enable site storage and try again." };
     }
     return { success: true, session };
+  } catch {
+    return { success: false, error: "Could not reach the sign-in service. Check your connection and try again." };
   }
-
-  return { success: false, error: "Password must be at least six characters." };
 }
 
 export function signOutCaregiver(): void {

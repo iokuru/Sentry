@@ -9,6 +9,7 @@ import { InviteModal } from "@/components/invite-modal";
 import { Plus, LogOut, Search, Image as ImageIcon, Users } from "lucide-react";
 import { getStoredSession, signInCaregiver, signOutCaregiver, type AuthSession } from "@/lib/auth";
 import { loadAppConfig } from "@/lib/config";
+import { normalizeIncident } from "@/lib/api";
 
 export default function CaregiverPage() {
   const [session, setSession] = useState<AuthSession | null>(null);
@@ -22,6 +23,7 @@ export default function CaregiverPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showThumbnails, setShowThumbnails] = useState(true);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [feedError, setFeedError] = useState<string | null>(null);
 
   useEffect(() => {
     const s = getStoredSession();
@@ -43,12 +45,24 @@ export default function CaregiverPage() {
           },
         });
 
-        if (res.ok && !isCancelled) {
+        if (!res.ok) throw new Error("Could not load family alerts.");
+        if (!isCancelled) {
           const data = await res.json();
-          setIncidents(data.incidents || []);
+          const rows = Array.isArray(data) ? data : data.incidents || [];
+          setIncidents(rows.map((raw: any) => {
+            const incident = normalizeIncident(raw);
+            return {
+              ...incident,
+              status: incident.status === "ANALYZING" ? "NEW" : incident.status,
+              senior_id: raw.senior_id,
+              senior_name: raw.senior_name || raw.senior_id,
+              thumbnail_url: raw.thumbnail_url ? new URL(raw.thumbnail_url, config.apiUrl).toString() : undefined,
+            };
+          }));
+          setFeedError(null);
         }
       } catch {
-        // network or mock
+        if (!isCancelled) setFeedError("Family alerts could not be loaded. Check your connection and try again.");
       }
     };
 
@@ -90,27 +104,29 @@ export default function CaregiverPage() {
   const handleSignOut = () => {
     signOutCaregiver();
     setSession(null);
+    setLoginEmail("");
+    setLoginPassword("");
+    setLoginError(null);
   };
 
   const handleUpdateStatus = async (id: string, newStatus: "ACKNOWLEDGED" | "RESOLVED") => {
-    setIncidents((prev) =>
-      prev.map((inc) => (inc.incident_id === id ? { ...inc, status: newStatus } : inc))
-    );
-
     if (!session) return;
 
     try {
       const config = await loadAppConfig();
-      await fetch(`${config.apiUrl}/api/caregiver/incidents/${id}/status`, {
+      const res = await fetch(`${config.apiUrl}/api/caregiver/status`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.token}`,
         },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ incident_id: id, status: newStatus.toLowerCase() }),
       });
+      if (!res.ok) throw new Error("Could not update alert status.");
+      setIncidents((prev) => prev.map((inc) => (inc.incident_id === id ? { ...inc, status: newStatus } : inc)));
+      setFeedError(null);
     } catch {
-      // transient failure
+      setFeedError("That alert could not be updated. Please try again.");
     }
   };
 
@@ -232,6 +248,7 @@ export default function CaregiverPage() {
               </div>
             </div>
 
+            {feedError ? <p className="feed-error" role="status">{feedError}</p> : null}
             <div className="incidents-feed">
               {filteredIncidents.length === 0 ? (
                 <div className="empty-feed">
@@ -468,6 +485,8 @@ export default function CaregiverPage() {
           flex-direction: column;
           gap: 16px;
         }
+
+        .feed-error { color:var(--color-danger); font-size:0.9rem; }
 
         .empty-feed {
           background-color: var(--bg-card);

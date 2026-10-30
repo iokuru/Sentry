@@ -13,6 +13,7 @@ export function InviteModal({ token, onClose }: InviteModalProps) {
   const [seniorName, setSeniorName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleGenerate = async () => {
@@ -32,30 +33,28 @@ export function InviteModal({ token, onClose }: InviteModalProps) {
         }),
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to generate invite code.");
-      }
+      if (!res.ok) throw new Error("Failed to generate an invite code. Please try again.");
 
       const data = await res.json();
+      if (!data.code) throw new Error("The service did not return an invite code. Please try again.");
       setCode(data.code);
-    } catch {
-      // In dev mock fallback if backend route is unavailable
-      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ";
-      let mockCode = "";
-      for (let i = 0; i < 6; i++) {
-        mockCode += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      setCode(mockCode);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not reach the invite service. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleCopy = () => {
+  const handleCopy = async () => {
     if (!code) return;
-    navigator.clipboard.writeText(code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopyError(null);
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopyError("Could not copy the code. Select it and copy it manually.");
+    }
   };
 
   return (
@@ -110,6 +109,8 @@ export function InviteModal({ token, onClose }: InviteModalProps) {
                 <span>{copied ? "Copied" : "Copy"}</span>
               </button>
             </div>
+
+            {copyError ? <p className="error-text" role="status">{copyError}</p> : null}
 
             <p className="code-expiry">Expires in 24 hours. Single use.</p>
 
