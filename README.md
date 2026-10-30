@@ -20,7 +20,9 @@ everything runs at zero usd on aws free tier or always-free allowances. textract
 
 ### operational modes
 
-sentry supports three operational modes configured in `inputs.local.json`:
+sentry supports three operational modes and two frontend hosting options in `inputs.local.json`:
+
+- **frontend host:** `frontend_host: "netlify"` publishes directly to netlify with exact origin cors restrictions on api gateway and uploads storage. `frontend_host: "cloudfront"` deploys to s3 behind cloudfront.
 
 1. **auto mode (default):** `use_comprehend: "auto"`, `ocr_mode: "auto"`. probes textract and comprehend. uses cloud services when available; automatically falls back to deterministic rules if comprehend throws subscription errors, and automatically hands off to client-side browser ocr worker if textract is blocked. services used: s3, cloudfront, api gateway, lambda, dynamodb, sqs, sns, cognito, eventbridge scheduler, cloudwatch, ssm, plus textract and comprehend when accessible.
 2. **cloud mode:** `use_comprehend: "on"`, `ocr_mode: "textract"`. enforces cloud textract ocr and comprehend analysis. preflight checks fail if your aws account lacks active subscriptions. services used: all thirteen services including textract and comprehend.

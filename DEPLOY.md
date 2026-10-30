@@ -34,9 +34,17 @@ edit `inputs.local.json` with your configuration:
   "telegram_bot_token": "",
   "telegram_chat_id": "",
   "use_comprehend": "auto",
-  "ocr_mode": "auto"
+  "ocr_mode": "auto",
+  "frontend_host": "netlify",
+  "netlify_site_name": "sentry-security-krisnakk",
+  "allowed_origin": "https://sentry-security-krisnakk.netlify.app"
 }
 ```
+
+### frontend hosting modes
+
+- **netlify (recommended):** `frontend_host: "netlify"`. builds the static frontend and publishes it to netlify via the netlify cli. skips cloudfront distribution, configures strict csp and security headers in `_headers`, and restricts api gateway and uploads bucket cors to `allowed_origin`.
+- **cloudfront:** `frontend_host: "cloudfront"`. syncs the frontend build to an s3 bucket and serves it through an aws cloudfront distribution with origin access control.
 
 ### selecting operational modes
 
