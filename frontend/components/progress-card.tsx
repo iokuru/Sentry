@@ -33,18 +33,22 @@ export function ProgressCard({ phase }: ProgressCardProps) {
       <style jsx>{`
         .progress-card {
           background-color: var(--bg-card);
-          border: 2px solid var(--border-light);
+          border: 1px solid var(--border-light);
           border-radius: var(--radius-lg);
-          padding: 40px 24px;
+          padding: 48px 24px;
           display: flex;
           flex-direction: column;
           align-items: center;
           text-align: center;
           gap: 20px;
           box-shadow: var(--shadow-sm);
+          max-width: 580px;
+          margin: 30px auto;
         }
 
         .progress-spinner {
+          display: grid;
+          place-items: center;
           color: var(--color-primary);
           animation: spin 1s linear infinite;
         }

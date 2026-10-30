@@ -99,7 +99,7 @@ export default function SeniorPage() {
     const activeFile = inputMode === "image" && !textOverride ? selectedFile : null;
     const activeText = textOverride !== undefined
       ? textOverride.trim()
-      : (inputMode === "text" ? pastedMessage.trim() : contextText.trim());
+      : (pastedMessage.trim() || contextText.trim());
     if (!activeFile && !activeText) return;
 
     setErrorMessage(null);
@@ -110,6 +110,7 @@ export default function SeniorPage() {
 
       if (activeFile) {
         setFlowState("uploading");
+        window.scrollTo({ top: 0, behavior: "smooth" });
         const { blob } = await downscaleImage(activeFile);
         preparedBlob = blob;
         const presign = await requestPresignedUrl(blob.type || "image/jpeg", activeFile.name);
@@ -118,6 +119,7 @@ export default function SeniorPage() {
       }
 
       setFlowState("analyzing");
+      window.scrollTo({ top: 0, behavior: "smooth" });
 
       let intakeRes;
       try {
@@ -173,8 +175,8 @@ export default function SeniorPage() {
 
   const hasInput =
     inputMode === "image"
-      ? Boolean(selectedFile || contextText.trim())
-      : Boolean(pastedMessage.trim());
+      ? Boolean(selectedFile || contextText.trim() || pastedMessage.trim())
+      : Boolean(pastedMessage.trim() || contextText.trim());
 
   return (
     <Shell activeSection="senior">
@@ -219,7 +221,7 @@ export default function SeniorPage() {
                 {inputMode === "image" && <div className="input-pane">{!selectedFile ? <Dropzone onFileSelect={handleFileSelect} onTextPaste={handleTextPaste} /> : previewUrl && <PreviewCard file={selectedFile} previewUrl={previewUrl} onClear={handleClearFile} />}<ContextNote mode="context" value={contextText} onChange={setContextText} /></div>}
                 {inputMode === "text" && <div className="input-pane"><ContextNote mode="paste" value={pastedMessage} onChange={setPastedMessage} /></div>}
                 {inputMode === "practice" && <div className="input-pane"><PracticeScenarios onSelectScenario={handleSelectScenario} /></div>}
-                {inputMode !== "practice" && <div className="workspace-submit"><CheckButton onClick={handleCheck} hasInput={hasInput} loading={false} /></div>}
+                {inputMode !== "practice" && <div className="workspace-submit"><CheckButton onClick={handleCheck} hasInput={hasInput} loading={flowState === "analyzing" || flowState === "uploading"} /></div>}
               </div>
             </section>
             <div className="privacy-line"><span className="privacy-dot" /> No account needed <span className="privacy-separator">·</span> Your screenshot is deleted after its check</div>
