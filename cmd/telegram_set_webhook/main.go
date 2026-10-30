@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -17,13 +18,20 @@ import (
 	"github.com/iokuru/sentry/internal/telegram"
 )
 
+type Inputs struct {
+	AWSProfile       string `json:"aws_profile"`
+	AWSRegion        string `json:"aws_region"`
+	TelegramBotToken string `json:"telegram_bot_token"`
+}
+
 func main() {
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	fixSSOCacheTimestamps()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
 	apiUrl := os.Getenv("API_URL")
 	if apiUrl == "" {
-		// retrieve deployed api url from terraform output
 		cmd := exec.Command("terraform", "-chdir=infra", "output", "-raw", "api_url")
 		out, err := cmd.Output()
 		if err == nil {
@@ -38,7 +46,20 @@ func main() {
 
 	webhookUrl := strings.TrimSuffix(apiUrl, "/") + "/telegram/hook"
 
-	cfg, err := config.LoadDefaultConfig(ctx)
+	var inputs Inputs
+	if data, err := os.ReadFile("inputs.local.json"); err == nil {
+		_ = json.Unmarshal(data, &inputs)
+	}
+
+	var optFns []func(*config.LoadOptions) error
+	if inputs.AWSRegion != "" {
+		optFns = append(optFns, config.WithRegion(inputs.AWSRegion))
+	}
+	if inputs.AWSProfile != "" && inputs.AWSProfile != "default" {
+		optFns = append(optFns, config.WithSharedConfigProfile(inputs.AWSProfile))
+	}
+
+	cfg, err := config.LoadDefaultConfig(ctx, optFns...)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "load aws config: %v\n", err)
 		os.Exit(1)
@@ -47,18 +68,25 @@ func main() {
 	ssmClient := ssm.NewFromConfig(cfg)
 	tgCfg := telegram.LoadConfigFromSSM(ctx, ssmClient)
 
-	if !tgCfg.Enabled {
-		fmt.Fprintf(os.Stderr, "telegram is not configured in SSM /sentry/telegram_*. Set token, chat_id, and webhook_secret in SSM first.\n")
+	token := tgCfg.Token
+	if token == "" && inputs.TelegramBotToken != "" {
+		token = inputs.TelegramBotToken
+	}
+
+	if token == "" {
+		fmt.Fprintf(os.Stderr, "telegram bot token not found in SSM or inputs.local.json.\n")
 		os.Exit(1)
 	}
 
+	secret := tgCfg.WebhookSecret
+
 	reqPayload := map[string]string{
 		"url":          webhookUrl,
-		"secret_token": tgCfg.WebhookSecret,
+		"secret_token": secret,
 	}
 	body, _ := json.Marshal(reqPayload)
 
-	tgEndpoint := fmt.Sprintf("https://api.telegram.org/bot%s/setWebhook", tgCfg.Token)
+	tgEndpoint := fmt.Sprintf("https://api.telegram.org/bot%s/setWebhook", token)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, tgEndpoint, bytes.NewReader(body))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "create request: %v\n", err)
@@ -75,4 +103,26 @@ func main() {
 
 	respBytes, _ := io.ReadAll(resp.Body)
 	fmt.Printf("Telegram setWebhook response: %s\n", string(respBytes))
+}
+
+func fixSSOCacheTimestamps() {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return
+	}
+	cacheDir := filepath.Join(home, ".aws", "sso", "cache")
+	entries, err := os.ReadDir(cacheDir)
+	if err != nil {
+		return
+	}
+	for _, entry := range entries {
+		if strings.HasSuffix(entry.Name(), ".json") {
+			p := filepath.Join(cacheDir, entry.Name())
+			data, err := os.ReadFile(p)
+			if err == nil && strings.Contains(string(data), `UTC"`) {
+				fixed := strings.ReplaceAll(string(data), `UTC"`, `Z"`)
+				_ = os.WriteFile(p, []byte(fixed), 0644)
+			}
+		}
+	}
 }
