@@ -39,8 +39,8 @@ export function CountryPicker({
   return (
     <div className="country-wrapper">
       <label htmlFor="country-select" className="country-label">
-        <Globe size={18} aria-hidden="true" />
-        <span>Country:</span>
+        <Globe size={15} aria-hidden="true" />
+        <span className="sr-only">Country:</span>
       </label>
 
       <select
@@ -48,7 +48,7 @@ export function CountryPicker({
         value={selectedCountry}
         onChange={(e) => onCountryChange(e.target.value)}
         className="country-select"
-        aria-label="Select your country for local hotline"
+        aria-label="Select your country for local fraud hotline"
       >
         {supportedCountries.map((c) => (
           <option key={c.code} value={c.code}>
@@ -61,34 +61,37 @@ export function CountryPicker({
         .country-wrapper {
           display: inline-flex;
           align-items: center;
-          gap: 8px;
-          background-color: var(--bg-card);
+          gap: 6px;
+          background: var(--surface-raised);
           border: 1px solid var(--border-light);
-          padding: 6px 12px;
-          border-radius: var(--radius-md);
+          min-height: 38px;
+          padding: 4px 12px;
+          border-radius: var(--radius-full);
+          transition: border-color 140ms ease;
+        }
+
+        .country-wrapper:hover {
+          border-color: var(--text-muted);
         }
 
         .country-label {
           display: inline-flex;
           align-items: center;
-          gap: 6px;
-          font-size: 0.95rem;
-          font-weight: 600;
           color: var(--text-muted);
         }
 
         .country-select {
           background: transparent;
           border: none;
-          font-size: 0.95rem;
-          font-weight: 700;
+          font-size: 0.86rem;
+          font-weight: 650;
           color: var(--text-main);
           cursor: pointer;
           outline: none;
         }
 
         .country-select:focus-visible {
-          outline: 2px solid var(--color-primary);
+          outline: none;
         }
       `}</style>
     </div>
