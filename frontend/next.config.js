@@ -1,7 +1,9 @@
 /** @type {import('next').NextConfig} */
+const isProd = process.env.NODE_ENV === "production";
+
 const nextConfig = {
-  output: 'export',
-  distDir: 'build',
+  output: isProd ? "export" : undefined,
+  distDir: isProd ? "build" : ".next",
   images: {
     unoptimized: true,
   },
