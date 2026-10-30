@@ -85,13 +85,27 @@ func handleList(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events
 		return jsonResponse(http.StatusOK, []byte(`{"status":"healthy","service":"sentry"}`)), nil
 	}
 
+	if incidentStore == nil {
+		return errorResponse(http.StatusInternalServerError, "store unavailable"), nil
+	}
+
+	// check if individual incident is queried via query params or path (senior intake polling)
+	if id, ok := req.QueryStringParameters["id"]; ok && id != "" {
+		inc, err := incidentStore.GetIncident(ctx, id)
+		if err != nil {
+			return errorResponse(http.StatusInternalServerError, err.Error()), nil
+		}
+		if inc == nil {
+			return errorResponse(http.StatusNotFound, "incident not found"), nil
+		}
+		attachThumbnailURL(ctx, inc)
+		body, _ := json.Marshal(inc)
+		return jsonResponse(http.StatusOK, body), nil
+	}
+
 	caregiverID := extractCaregiverID(req)
 	if caregiverID == "" {
 		return errorResponse(http.StatusUnauthorized, "unauthorized: valid cognito jwt required"), nil
-	}
-
-	if incidentStore == nil {
-		return errorResponse(http.StatusInternalServerError, "store unavailable"), nil
 	}
 
 	links, err := incidentStore.ListLinksForCaregiver(ctx, caregiverID)
@@ -103,23 +117,6 @@ func handleList(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events
 	linkedSeniors := make(map[string]bool)
 	for _, l := range links {
 		linkedSeniors[l.SeniorID] = true
-	}
-
-	// check if individual incident is queried via query params or path
-	if id, ok := req.QueryStringParameters["id"]; ok && id != "" {
-		inc, err := incidentStore.GetIncident(ctx, id)
-		if err != nil {
-			return errorResponse(http.StatusInternalServerError, err.Error()), nil
-		}
-		if inc == nil {
-			return errorResponse(http.StatusNotFound, "incident not found"), nil
-		}
-		if inc.SeniorID != "" && !linkedSeniors[inc.SeniorID] {
-			return errorResponse(http.StatusForbidden, "forbidden: senior not linked to caregiver"), nil
-		}
-		attachThumbnailURL(ctx, inc)
-		body, _ := json.Marshal(inc)
-		return jsonResponse(http.StatusOK, body), nil
 	}
 
 	allIncidents, err := incidentStore.ListIncidents(ctx, 50)

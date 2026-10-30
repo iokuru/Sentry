@@ -2,13 +2,13 @@ import { loadAppConfig } from "./config";
 
 export interface PresignResponse {
   upload_url: string;
-  object_key: string;
+  image_key: string;
 }
 
 export interface IntakePayload {
-  object_key?: string;
-  context_text?: string;
-  ocr_text?: string;
+  image_key?: string;
+  user_context?: string;
+  locale?: string;
   senior_id?: string;
   country?: string;
 }
@@ -33,6 +33,42 @@ export interface IncidentResult {
   error?: string;
 }
 
+export function normalizeIncident(raw: any, fallbackId = ""): IncidentResult {
+  const output = raw.output || {};
+  const hotline = output.hotline || {};
+  const rawStatus = String(raw.status || "ANALYZING").toUpperCase();
+  const risk = String(raw.severity || raw.risk_level || "LOW").toUpperCase();
+  const signals = Array.isArray(raw.signals)
+    ? raw.signals.map((signal: string | { description?: string; name?: string; id?: string }) =>
+        typeof signal === "string" ? signal : signal.description || signal.name || signal.id || ""
+      ).filter(Boolean)
+    : [];
+  const backendHoldOff = raw.hold_off || output.hold_off || "";
+  const holdOff = signals.length > 0 && /nothing urgent found/i.test(backendHoldOff)
+    ? `A warning sign was found: ${signals[0]}. Pause before clicking or paying, and verify the request through the organization’s official website or phone number.`
+    : backendHoldOff;
+
+  return {
+    incident_id: raw.incident_id || raw.id || fallbackId,
+    status: rawStatus === "ANALYZED" || rawStatus === "PENDING" || rawStatus === "NEW"
+      ? "NEW"
+      : rawStatus === "ACKNOWLEDGED" || rawStatus === "RESOLVED"
+        ? rawStatus
+        : "ANALYZING",
+    severity: risk === "HIGH" || risk === "MEDIUM" ? risk : "LOW",
+    signals,
+    hold_off: holdOff,
+    safe_alternative: raw.safe_alternative || output.safe_alternative || "",
+    hotline: raw.hotline || hotline.number || "",
+    hotline_name: raw.hotline_name || hotline.name,
+    hotline_phone: raw.hotline_phone || hotline.number,
+    hotline_url: raw.hotline_url || hotline.url,
+    country: raw.country || hotline.country || "",
+    created_at: raw.created_at || "",
+    error: raw.error,
+  };
+}
+
 export class ApiError extends Error {
   status: number;
   code?: string;
@@ -46,7 +82,7 @@ export class ApiError extends Error {
 
 export async function requestPresignedUrl(
   contentType: string,
-  seniorId?: string
+  filename?: string
 ): Promise<PresignResponse> {
   const config = await loadAppConfig();
   const url = new URL("/api/presign", config.apiUrl);
@@ -56,7 +92,7 @@ export async function requestPresignedUrl(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       content_type: contentType,
-      senior_id: seniorId,
+      filename,
     }),
   });
 
@@ -69,7 +105,9 @@ export async function requestPresignedUrl(
 }
 
 export async function uploadImageToS3(uploadUrl: string, blob: Blob): Promise<void> {
-  const res = await fetch(uploadUrl, {
+  const config = await loadAppConfig();
+  const resolvedUploadUrl = new URL(uploadUrl, config.apiUrl).toString();
+  const res = await fetch(resolvedUploadUrl, {
     method: "PUT",
     headers: { "Content-Type": blob.type || "image/jpeg" },
     body: blob,
@@ -108,7 +146,8 @@ export async function submitIntake(payload: IntakePayload): Promise<IntakeRespon
 
 export async function fetchIncident(incidentId: string): Promise<IncidentResult> {
   const config = await loadAppConfig();
-  const url = new URL(`/api/incidents/${incidentId}`, config.apiUrl);
+  const url = new URL("/api/incidents", config.apiUrl);
+  url.searchParams.set("id", incidentId);
 
   const res = await fetch(url.toString(), {
     headers: { Accept: "application/json" },
@@ -119,7 +158,7 @@ export async function fetchIncident(incidentId: string): Promise<IncidentResult>
     throw new ApiError("Failed to fetch incident result", res.status);
   }
 
-  return res.json();
+  return normalizeIncident(await res.json(), incidentId);
 }
 
 export async function pollIncidentResult(
