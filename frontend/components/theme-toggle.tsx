@@ -41,37 +41,19 @@ export function ThemeToggle() {
   }
 
   return (
-    <button
-      type="button"
-      onClick={toggleTheme}
-      className="theme-toggle-btn"
-      aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-      title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-    >
-      <span className="theme-icon-box">
-        {theme === "dark" ? (
-          <Sun size={17} strokeWidth={2.2} className="theme-icon sun-icon" />
-        ) : (
-          <Moon size={17} strokeWidth={2.2} className="theme-icon moon-icon" />
-        )}
-      </span>
-      <span className="theme-text">{theme === "dark" ? "Light" : "Dark"}</span>
-
+    <>
+      <button type="button" onClick={toggleTheme} className="theme-toggle-btn" aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`} title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}>
+        {theme === "dark" ? <Sun size={17} strokeWidth={1.8} /> : <Moon size={17} strokeWidth={1.8} />}
+      </button>
       <style jsx>{`
         .theme-toggle-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 7px;
-          background-color: var(--bg-muted);
+          display:grid; place-items:center; width:38px; height:38px;
+          background-color:var(--bg-muted);
           border: 1px solid var(--border-light);
-          padding: 6px 12px;
-          border-radius: var(--radius-full);
+          padding:0; border-radius:7px;
           color: var(--text-muted);
-          font-size: 0.88rem;
-          font-weight: 600;
           cursor: pointer;
           transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-          min-height: 38px;
         }
 
         .theme-toggle-btn:hover {
@@ -80,21 +62,7 @@ export function ThemeToggle() {
           border-color: var(--border-focus);
         }
 
-        .theme-icon-box {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .theme-text {
-          letter-spacing: 0.01em;
-        }
-
-        .theme-toggle-placeholder {
-          width: 78px;
-          height: 38px;
-        }
       `}</style>
-    </button>
+    </>
   );
 }

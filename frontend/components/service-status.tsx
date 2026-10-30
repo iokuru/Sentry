@@ -74,9 +74,8 @@ export function ServiceStatus() {
         onClick={() => setExpanded((value) => !value)}
       >
         <span className="ready-dot" aria-hidden="true">
-          <Icon size={10} strokeWidth={3.5} />
+          <Icon size={15} strokeWidth={2.4} />
         </span>
-        <span className="ready-text">{stateCopy[state].label}</span>
       </button>
 
       {expanded && (
@@ -95,20 +94,15 @@ export function ServiceStatus() {
         }
 
         .ready-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          background: var(--bg-card);
+          display:grid; place-items:center; width:38px; height:38px;
+          background:var(--bg-muted);
           border: 1px solid var(--border-light);
-          padding: 4px 10px;
-          border-radius: var(--radius-full);
-          box-shadow: var(--shadow-sm);
+          padding:0; border-radius:7px;
           cursor: pointer;
           transition: transform 140ms ease, border-color 140ms ease;
         }
 
         .ready-pill:hover {
-          transform: translateY(-1px);
           border-color: var(--text-muted);
         }
 
@@ -116,19 +110,12 @@ export function ServiceStatus() {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 16px;
-          height: 16px;
+          width: 24px;
+          height: 24px;
           border-radius: var(--radius-full);
           background-color: var(--status-color);
           color: #ffffff;
-          box-shadow: 0 0 8px var(--status-glow);
-        }
-
-        .ready-text {
-          font-size: 0.84rem;
-          font-weight: 700;
-          color: var(--text-main);
-          letter-spacing: 0.01em;
+          box-shadow:none;
         }
 
         .status-ready {

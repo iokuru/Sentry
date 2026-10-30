@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "../styles/globals.css";
 
 export const metadata: Metadata = {
-  title: "Sentry — Scam Protection for Older Adults",
-  description: "A calm, private way to check a suspicious screenshot or message before you reply.",
+  title: "Take a moment — Check before you reply",
+  description: "A calm, private second look at unexpected messages before you click, pay, or share.",
 };
 
 export default function RootLayout({

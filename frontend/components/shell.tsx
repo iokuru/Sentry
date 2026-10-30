@@ -1,352 +1,79 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
-import { ServiceStatus } from "@/components/service-status";
+import { MessageSquareText, UsersRound } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Users, Shield, Menu, X, PhoneCall } from "lucide-react";
 
 interface ShellProps {
   children: React.ReactNode;
-  activeSection?: "senior" | "caregiver";
+  activeSection?: "landing" | "senior" | "caregiver";
 }
 
 export function Shell({ children, activeSection = "senior" }: ShellProps) {
+  const isLanding = activeSection === "landing";
   const isSenior = activeSection === "senior";
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isCaregiver = activeSection === "caregiver";
 
   return (
-    <div className="shell-root">
-      <header className="shell-header">
-        <div className="shell-header-inner">
-          <div className="shell-brand-group">
-            <Link href="/" className="shell-brand">
-              <span className="brand-name">Sentry</span>
-            </Link>
-            <div className="brand-status">
-              <ServiceStatus />
-            </div>
-          </div>
+    <div className="app-shell">
+      <aside className="app-rail">
+        <Link href="/" className="rail-brand">Take a moment</Link>
+        <nav className="rail-nav" aria-label="Main navigation">
+          <h2 className="rail-heading">Workspace</h2>
+          <Link href="/check" className={isSenior ? "rail-link rail-link-active" : "rail-link"} aria-current={isSenior ? "page" : undefined}>
+            <MessageSquareText size={19} aria-hidden="true" />
+            <span>Message check</span>
+          </Link>
+          <Link href="/caregiver" className={isCaregiver ? "rail-link rail-link-active" : "rail-link"} aria-current={isCaregiver ? "page" : undefined}>
+            <UsersRound size={19} aria-hidden="true" />
+            <span>For family</span>
+          </Link>
+        </nav>
+        <div className="rail-bottom">
+          <p>Need another pair of eyes?</p>
+          <Link href={isSenior ? "/caregiver" : "/check"} className="rail-help-link">
+            {isSenior ? "Open the family space" : "Open message check"}
+          </Link>
+        </div>
+      </aside>
 
-          <nav className="shell-nav-desktop" aria-label="Main navigation">
-            <Link
-              href="/"
-              className={`nav-link ${isSenior ? "nav-link-active" : ""}`}
-              aria-current={isSenior ? "page" : undefined}
-            >
-              <span>Check a message</span>
-            </Link>
-            <Link
-              href="/caregiver"
-              className={`nav-link ${!isSenior ? "nav-link-active" : ""}`}
-              aria-current={!isSenior ? "page" : undefined}
-            >
-              <Users size={16} />
-              <span>Caregiver Circle</span>
-            </Link>
-          </nav>
-
-          <div className="shell-header-actions">
+      <div className="app-main-column">
+        <header className="app-topbar">
+          <div className="topbar-title">{isLanding ? "Overview" : isSenior ? "Message check" : "Family space"}</div>
+          <div className="topbar-controls">
             <ThemeToggle />
-            <button
-              type="button"
-              className="mobile-menu-toggle"
-              aria-label="Toggle navigation menu"
-              aria-expanded={mobileMenuOpen}
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
           </div>
-        </div>
-
-        {mobileMenuOpen && (
-          <div className="mobile-nav-drawer">
-            <Link
-              href="/"
-              className={`mobile-nav-link ${isSenior ? "mobile-nav-active" : ""}`}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <span>Check a message</span>
-            </Link>
-            <Link
-              href="/caregiver"
-              className={`mobile-nav-link ${!isSenior ? "mobile-nav-active" : ""}`}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <Users size={18} />
-              <span>Caregiver Circle</span>
-            </Link>
-          </div>
-        )}
-      </header>
-
-      <main className="shell-main" id="main-content">
-        <div className="shell-container">{children}</div>
-      </main>
-
-      <footer className="shell-footer">
-        <div className="footer-inner">
-          <div className="footer-col">
-            <div className="footer-brand">Sentry</div>
-            <p className="footer-desc">
-              Immediate, calm guidance before you reply to unexpected messages. Built to protect seniors and families at zero personal cost.
-            </p>
-          </div>
-          <div className="footer-links">
-            <div className="footer-link-group">
-              <span className="footer-group-title">Official Hotlines</span>
-              <a href="https://reportfraud.ftc.gov" target="_blank" rel="noopener noreferrer">US FTC Fraud Line</a>
-              <a href="https://www.actionfraud.police.uk" target="_blank" rel="noopener noreferrer">UK Action Fraud</a>
-              <a href="https://cybercrime.gov.in" target="_blank" rel="noopener noreferrer">India 1930 Cyber</a>
-              <a href="https://www.scamwatch.gov.au" target="_blank" rel="noopener noreferrer">Australia Scamwatch</a>
-            </div>
-            <div className="footer-link-group">
-              <span className="footer-group-title">Family Circle</span>
-              <Link href="/caregiver">Caregiver Portal</Link>
-              <Link href="/">Check Screenshot</Link>
-            </div>
-          </div>
-        </div>
-        <div className="footer-bottom">
-          <span>Sentry Security &middot; Zero storage of your screenshots after safety analysis.</span>
-        </div>
-      </footer>
+        </header>
+        <main className="app-main" id="main-content">
+          <div className="shell-container">{children}</div>
+        </main>
+      </div>
 
       <style jsx>{`
-        .shell-root {
-          min-height: 100vh;
-          display: flex;
-          flex-direction: column;
-          background-color: var(--bg-page);
-          color: var(--text-main);
-        }
-
-        .shell-header {
-          position: sticky;
-          top: 0;
-          z-index: 100;
-          background: var(--chrome-bg);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          border-bottom: 1px solid var(--border-light);
-          transition: background-color 150ms ease, border-color 150ms ease;
-        }
-
-        .shell-header-inner {
-          max-width: 1200px;
-          margin: 0 auto;
-          height: 64px;
-          padding: 0 24px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 20px;
-        }
-
-        .shell-brand-group {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
-
-        .shell-brand {
-          display: inline-flex;
-          align-items: center;
-          text-decoration: none;
-          color: var(--text-main);
-        }
-
-        .brand-name {
-          font-size: 1.35rem;
-          font-weight: 850;
-          letter-spacing: -0.04em;
-          background: linear-gradient(135deg, var(--text-main) 30%, var(--text-muted));
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .shell-nav-desktop {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .nav-link {
-          display: inline-flex;
-          align-items: center;
-          gap: 7px;
-          padding: 8px 16px;
-          border-radius: var(--radius-full);
-          font-size: 0.92rem;
-          font-weight: 600;
-          color: var(--text-muted);
-          text-decoration: none;
-          transition: color 140ms ease, background-color 140ms ease;
-        }
-
-        .nav-link:hover {
-          color: var(--text-main);
-          background-color: var(--bg-muted);
-        }
-
-        .nav-link-active {
-          color: var(--text-main);
-          background-color: var(--surface-raised);
-          box-shadow: var(--shadow-sm);
-        }
-
-        .shell-header-actions {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .mobile-menu-toggle {
-          display: none;
-          align-items: center;
-          justify-content: center;
-          width: 38px;
-          height: 38px;
-          border-radius: var(--radius-md);
-          background: transparent;
-          border: 1px solid var(--border-light);
-          color: var(--text-main);
-          cursor: pointer;
-        }
-
-        .mobile-nav-drawer {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          padding: 16px 24px 20px;
-          background: var(--bg-card);
-          border-bottom: 1px solid var(--border-light);
-        }
-
-        .mobile-nav-link {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 12px 16px;
-          border-radius: var(--radius-md);
-          font-size: 1rem;
-          font-weight: 600;
-          color: var(--text-muted);
-          text-decoration: none;
-        }
-
-        .mobile-nav-active {
-          color: var(--text-main);
-          background: var(--surface-raised);
-        }
-
-        .shell-main {
-          flex: 1;
-        }
-
-        .shell-container {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 40px 24px 80px;
-        }
-
-        .shell-footer {
-          border-top: 1px solid var(--border-light);
-          background: var(--bg-card);
-          margin-top: auto;
-        }
-
-        .footer-inner {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 48px 24px 32px;
-          display: grid;
-          grid-template-columns: 1.4fr 1fr;
-          gap: 40px;
-        }
-
-        .footer-brand {
-          font-size: 1.25rem;
-          font-weight: 800;
-          letter-spacing: -0.03em;
-          color: var(--text-main);
-          margin-bottom: 10px;
-        }
-
-        .footer-desc {
-          font-size: 0.92rem;
-          line-height: 1.55;
-          color: var(--text-muted);
-          max-width: 440px;
-        }
-
-        .footer-links {
-          display: flex;
-          gap: 48px;
-          justify-content: flex-end;
-        }
-
-        .footer-link-group {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-
-        .footer-group-title {
-          font-size: 0.8rem;
-          font-weight: 750;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: var(--text-main);
-          margin-bottom: 4px;
-        }
-
-        .footer-link-group a {
-          font-size: 0.88rem;
-          color: var(--text-muted);
-          text-decoration: none;
-          transition: color 140ms ease;
-        }
-
-        .footer-link-group a:hover {
-          color: var(--text-main);
-        }
-
-        .footer-bottom {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 20px 24px;
-          border-top: 1px solid var(--border-light);
-          font-size: 0.84rem;
-          color: var(--text-muted);
-          text-align: center;
-        }
-
-        @media (max-width: 768px) {
-          .shell-nav-desktop {
-            display: none;
-          }
-
-          .mobile-menu-toggle {
-            display: flex;
-          }
-
-          .footer-inner {
-            grid-template-columns: 1fr;
-            gap: 32px;
-          }
-
-          .footer-links {
-            justify-content: flex-start;
-            flex-wrap: wrap;
-            gap: 32px;
-          }
-
-          .shell-container {
-            padding: 24px 16px 60px;
-          }
-        }
+        .app-shell { min-height:100vh; display:grid; grid-template-columns:258px minmax(0,1fr); background:var(--bg-page); color:var(--text-main); }
+        .app-rail { position:sticky; top:0; display:flex; flex-direction:column; width:258px; height:100vh; padding:27px 16px 20px; background:var(--chrome-bg); border-right:1px solid var(--border-light); }
+        :global(.rail-brand) { display:block; margin:0 10px 39px; color:var(--text-main)!important; font-size:17px; font-weight:650; letter-spacing:-.025em; text-decoration:none; }
+        .rail-nav { display:grid; gap:5px; }
+        .rail-heading { margin:0 10px 9px; color:var(--text-main); font-size:15px; font-weight:650; }
+        :global(.rail-link) { display:flex; align-items:center; gap:12px; min-height:43px; padding:0 12px; border:1px solid transparent; border-radius:7px; color:var(--text-muted)!important; font-size:14px; font-weight:540; text-decoration:none; transition:background 140ms ease,color 140ms ease,border-color 140ms ease; }
+        :global(.rail-link svg) { flex:none; }
+        :global(.rail-link:hover) { background:var(--bg-muted); color:var(--text-main)!important; }
+        :global(.rail-link-active) { background:var(--bg-muted); border-color:var(--border-light); color:var(--text-main)!important; }
+        :global(.rail-link-active svg) { color:var(--color-primary); }
+        .rail-bottom { margin-top:auto; padding:16px 10px 2px; border-top:1px solid var(--border-light); }
+        .rail-bottom p { color:var(--text-muted); font-size:14px; line-height:1.4; }
+        :global(.rail-help-link) { display:inline-block; margin-top:8px; color:var(--color-primary); font-size:14px; font-weight:600; text-decoration:none; }
+        :global(.rail-help-link:hover) { text-decoration:underline; }
+        .app-main-column { min-width:0; }
+        .app-topbar { position:sticky; top:0; z-index:30; display:flex; align-items:center; justify-content:space-between; min-height:62px; padding:0 clamp(23px,3vw,48px); border-bottom:1px solid var(--border-light); background:var(--bg-page); }
+        .topbar-title { color:var(--text-main); font-size:14px; font-weight:560; }
+        .topbar-controls { display:flex; align-items:center; gap:12px; }
+        .app-main { min-width:0; }
+        .shell-container { width:100%; max-width:1500px; margin:0 auto; padding:38px clamp(24px,3.2vw,48px) 64px; }
+        @media(max-width:900px) { .app-shell { grid-template-columns:220px minmax(0,1fr); } .app-rail { width:220px; padding-inline:12px; } .shell-container { padding:30px 24px 52px; } }
+        @media(max-width:700px) { .app-shell { display:flex; flex-direction:column; } .app-rail { position:static; width:100%; height:auto; padding:12px 16px 9px; border-right:0; border-bottom:1px solid var(--border-light); } :global(.rail-brand) { margin:0 3px 10px; font-size:17px; } .rail-nav { display:flex; align-items:center; gap:6px; } .rail-heading { display:none; } :global(.rail-link) { min-height:40px; padding:0 10px; font-size:14px; } :global(.rail-link svg) { width:17px; height:17px; } .rail-bottom { display:none; } .app-topbar { position:static; min-height:60px; padding:0 18px; } .topbar-title { font-size:15px; } .topbar-controls { gap:8px; } .shell-container { padding:23px 17px 40px; } }
+        @media(max-width:400px) { :global(.rail-link) { gap:7px; padding:0 8px; font-size:13px; } }
       `}</style>
     </div>
   );
