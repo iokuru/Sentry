@@ -15,7 +15,7 @@ import { OfflineBanner } from "@/components/offline-banner";
 import { FailureCard } from "@/components/failure-card";
 import { QuotaCard } from "@/components/quota-card";
 import { Button } from "@/components/button";
-import { PracticeScenarios } from "@/components/practice-scenarios";
+import { PracticeScenarios, sampleScenarios } from "@/components/practice-scenarios";
 import { downscaleImage } from "@/lib/downscale";
 import {
   requestPresignedUrl,
@@ -49,9 +49,18 @@ export default function SeniorPage() {
 
   useEffect(() => {
     setSelectedCountry(detectBrowserCountry());
-    const requestedMode = new URLSearchParams(window.location.search).get("mode");
+    const params = new URLSearchParams(window.location.search);
+    const requestedMode = params.get("mode");
     if (requestedMode === "image" || requestedMode === "text" || requestedMode === "practice") {
       setInputMode(requestedMode);
+    }
+    const requestedScenario = params.get("scenario") || params.get("example");
+    if (requestedScenario) {
+      const match = sampleScenarios.find((s) => s.id === requestedScenario);
+      const textToRun = match ? match.message : requestedScenario;
+      setPastedMessage(textToRun);
+      setInputMode("text");
+      void executeCheck(textToRun);
     }
   }, []);
 
@@ -86,16 +95,11 @@ export default function SeniorPage() {
     setInputMode("text");
   };
 
-  const handleSelectScenario = (messageText: string) => {
-    handleClearFile();
-    setPastedMessage(messageText);
-    setInputMode("text");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const handleCheck = async () => {
-    const activeFile = inputMode === "image" ? selectedFile : null;
-    const activeText = inputMode === "text" ? pastedMessage.trim() : contextText.trim();
+  const executeCheck = async (textOverride?: string) => {
+    const activeFile = inputMode === "image" && !textOverride ? selectedFile : null;
+    const activeText = textOverride !== undefined
+      ? textOverride.trim()
+      : (inputMode === "text" ? pastedMessage.trim() : contextText.trim());
     if (!activeFile && !activeText) return;
 
     setErrorMessage(null);
@@ -153,6 +157,18 @@ export default function SeniorPage() {
       setErrorMessage(msg);
       setFlowState("error");
     }
+  };
+
+  const handleCheck = () => {
+    void executeCheck();
+  };
+
+  const handleSelectScenario = (messageText: string) => {
+    handleClearFile();
+    setPastedMessage(messageText);
+    setInputMode("text");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    void executeCheck(messageText);
   };
 
   const hasInput =
