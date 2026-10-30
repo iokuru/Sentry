@@ -15,6 +15,7 @@ import (
 	"github.com/iokuru/sentry/internal/logging"
 	"github.com/iokuru/sentry/internal/model"
 	"github.com/iokuru/sentry/internal/pairing"
+	"github.com/iokuru/sentry/internal/router"
 	"github.com/iokuru/sentry/internal/store"
 )
 
@@ -66,12 +67,12 @@ func extractCaregiverID(req events.APIGatewayV2HTTPRequest) string {
 func handleCaregiverInvite(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
 	ctx = logging.WithRequestID(ctx, req.RequestContext.RequestID)
 	if linkStore == nil {
-		return errorResponse(http.StatusInternalServerError, "store unavailable"), nil
+		return errorResponse(req, http.StatusInternalServerError, "store unavailable"), nil
 	}
 
 	caregiverID := extractCaregiverID(req)
 	if caregiverID == "" {
-		return errorResponse(http.StatusUnauthorized, "unauthorized: valid cognito jwt required"), nil
+		return errorResponse(req, http.StatusUnauthorized, "unauthorized: valid cognito jwt required"), nil
 	}
 	method := req.RequestContext.HTTP.Method
 	path := req.RequestContext.HTTP.Path
@@ -85,7 +86,7 @@ func handleCaregiverInvite(ctx context.Context, req events.APIGatewayV2HTTPReque
 
 		code, err := pairing.GenerateCode()
 		if err != nil {
-			return errorResponse(http.StatusInternalServerError, err.Error()), nil
+			return errorResponse(req, http.StatusInternalServerError, err.Error()), nil
 		}
 		inv := &model.Invite{
 			Code:        code,
@@ -94,7 +95,7 @@ func handleCaregiverInvite(ctx context.Context, req events.APIGatewayV2HTTPReque
 		}
 
 		if err := linkStore.CreateInvite(ctx, inv); err != nil {
-			return errorResponse(http.StatusInternalServerError, err.Error()), nil
+			return errorResponse(req, http.StatusInternalServerError, err.Error()), nil
 		}
 
 		slog.InfoContext(ctx, "created caregiver invite", slog.String("caregiver_id", caregiverID))
@@ -103,18 +104,18 @@ func handleCaregiverInvite(ctx context.Context, req events.APIGatewayV2HTTPReque
 			Code:      code,
 			ExpiresAt: inv.ExpiresAt,
 		})
-		return jsonResponse(http.StatusOK, body), nil
+		return jsonResponse(req, http.StatusOK, body), nil
 
 	case method == http.MethodGet && strings.HasSuffix(path, "/links"):
 		links, err := linkStore.ListLinksForCaregiver(ctx, caregiverID)
 		if err != nil {
-			return errorResponse(http.StatusInternalServerError, err.Error()), nil
+			return errorResponse(req, http.StatusInternalServerError, err.Error()), nil
 		}
 		if links == nil {
 			links = []model.CaregiverLink{}
 		}
 		body, _ := json.Marshal(links)
-		return jsonResponse(http.StatusOK, body), nil
+		return jsonResponse(req, http.StatusOK, body), nil
 
 	case method == http.MethodDelete && strings.Contains(path, "/links"):
 		seniorID := req.PathParameters["senior_id"]
@@ -129,41 +130,43 @@ func handleCaregiverInvite(ctx context.Context, req events.APIGatewayV2HTTPReque
 			seniorID = b.SeniorID
 		}
 		if seniorID == "" {
-			return errorResponse(http.StatusBadRequest, "senior_id is required"), nil
+			return errorResponse(req, http.StatusBadRequest, "senior_id is required"), nil
 		}
 
 		if err := linkStore.DeleteLink(ctx, caregiverID, seniorID); err != nil {
-			return errorResponse(http.StatusInternalServerError, err.Error()), nil
+			return errorResponse(req, http.StatusInternalServerError, err.Error()), nil
 		}
-		return jsonResponse(http.StatusOK, []byte(`{"status":"deleted"}`)), nil
+		return jsonResponse(req, http.StatusOK, []byte(`{"status":"deleted"}`)), nil
 
 	default:
-		return errorResponse(http.StatusNotFound, "route not found"), nil
+		return errorResponse(req, http.StatusNotFound, "route not found"), nil
 	}
 }
 
-func getCorsOrigin() string {
-	if o := os.Getenv("CORS_ORIGIN"); o != "" {
-		return o
+func corsHeaders(req events.APIGatewayV2HTTPRequest) map[string]string {
+	h := map[string]string{
+		"Content-Type":                 "application/json",
+		"Access-Control-Allow-Headers": "Content-Type,Authorization",
+		"Access-Control-Allow-Methods": "GET,POST,DELETE,OPTIONS",
 	}
-	return "*"
+	allowed := os.Getenv("CORS_ORIGIN")
+	if origin := router.MatchOrigin(allowed, router.RequestOrigin(req.Headers)); origin != "" {
+		h["Access-Control-Allow-Origin"] = origin
+	}
+	return h
 }
 
-func jsonResponse(status int, body []byte) events.APIGatewayV2HTTPResponse {
+func jsonResponse(req events.APIGatewayV2HTTPRequest, status int, body []byte) events.APIGatewayV2HTTPResponse {
 	return events.APIGatewayV2HTTPResponse{
 		StatusCode: status,
-		Headers: map[string]string{
-			"Content-Type":                 "application/json",
-			"Access-Control-Allow-Origin":  getCorsOrigin(),
-			"Access-Control-Allow-Headers": "Content-Type,Authorization",
-		},
-		Body: string(body),
+		Headers:    corsHeaders(req),
+		Body:       string(body),
 	}
 }
 
-func errorResponse(status int, msg string) events.APIGatewayV2HTTPResponse {
+func errorResponse(req events.APIGatewayV2HTTPRequest, status int, msg string) events.APIGatewayV2HTTPResponse {
 	body, _ := json.Marshal(map[string]string{"error": msg})
-	return jsonResponse(status, body)
+	return jsonResponse(req, status, body)
 }
 
 func main() {

@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/iokuru/sentry/internal/awsconfig"
 	"github.com/iokuru/sentry/internal/logging"
+	"github.com/iokuru/sentry/internal/router"
 	"github.com/iokuru/sentry/internal/store"
 )
 
@@ -50,13 +51,13 @@ func init() {
 func handleSeniorPair(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
 	ctx = logging.WithRequestID(ctx, req.RequestContext.RequestID)
 	if linkStore == nil {
-		return errorResponse(http.StatusInternalServerError, "store unavailable"), nil
+		return errorResponse(req, http.StatusInternalServerError, "store unavailable"), nil
 	}
 
 	var input PairRequest
 	if req.Body != "" {
 		if err := json.Unmarshal([]byte(req.Body), &input); err != nil {
-			return errorResponse(http.StatusBadRequest, "invalid request json"), nil
+			return errorResponse(req, http.StatusBadRequest, "invalid request json"), nil
 		}
 	}
 
@@ -64,20 +65,20 @@ func handleSeniorPair(ctx context.Context, req events.APIGatewayV2HTTPRequest) (
 	deviceID := strings.TrimSpace(input.DeviceID)
 
 	if code == "" || deviceID == "" {
-		return errorResponse(http.StatusBadRequest, "code and device_id are required"), nil
+		return errorResponse(req, http.StatusBadRequest, "code and device_id are required"), nil
 	}
 
 	link, err := linkStore.RedeemInvite(ctx, code, deviceID)
 	if err != nil {
 		switch {
 		case errors.Is(err, store.ErrInviteNotFound):
-			return errorResponse(http.StatusNotFound, "invite code not found"), nil
+			return errorResponse(req, http.StatusNotFound, "invite code not found"), nil
 		case errors.Is(err, store.ErrInviteExpired):
-			return errorResponse(http.StatusGone, "invite code has expired"), nil
+			return errorResponse(req, http.StatusGone, "invite code has expired"), nil
 		case errors.Is(err, store.ErrInviteUsed):
-			return errorResponse(http.StatusConflict, "invite code has already been used"), nil
+			return errorResponse(req, http.StatusConflict, "invite code has already been used"), nil
 		default:
-			return errorResponse(http.StatusInternalServerError, err.Error()), nil
+			return errorResponse(req, http.StatusInternalServerError, err.Error()), nil
 		}
 	}
 
@@ -87,31 +88,33 @@ func handleSeniorPair(ctx context.Context, req events.APIGatewayV2HTTPRequest) (
 		SeniorID:   link.SeniorID,
 		SeniorName: link.SeniorName,
 	})
-	return jsonResponse(http.StatusOK, body), nil
+	return jsonResponse(req, http.StatusOK, body), nil
 }
 
-func getCorsOrigin() string {
-	if o := os.Getenv("CORS_ORIGIN"); o != "" {
-		return o
+func corsHeaders(req events.APIGatewayV2HTTPRequest) map[string]string {
+	h := map[string]string{
+		"Content-Type":                 "application/json",
+		"Access-Control-Allow-Headers": "Content-Type,Authorization",
+		"Access-Control-Allow-Methods": "POST,OPTIONS",
 	}
-	return "*"
+	allowed := os.Getenv("CORS_ORIGIN")
+	if origin := router.MatchOrigin(allowed, router.RequestOrigin(req.Headers)); origin != "" {
+		h["Access-Control-Allow-Origin"] = origin
+	}
+	return h
 }
 
-func jsonResponse(status int, body []byte) events.APIGatewayV2HTTPResponse {
+func jsonResponse(req events.APIGatewayV2HTTPRequest, status int, body []byte) events.APIGatewayV2HTTPResponse {
 	return events.APIGatewayV2HTTPResponse{
 		StatusCode: status,
-		Headers: map[string]string{
-			"Content-Type":                 "application/json",
-			"Access-Control-Allow-Origin":  getCorsOrigin(),
-			"Access-Control-Allow-Headers": "Content-Type,Authorization",
-		},
-		Body: string(body),
+		Headers:    corsHeaders(req),
+		Body:       string(body),
 	}
 }
 
-func errorResponse(status int, msg string) events.APIGatewayV2HTTPResponse {
+func errorResponse(req events.APIGatewayV2HTTPRequest, status int, msg string) events.APIGatewayV2HTTPResponse {
 	body, _ := json.Marshal(map[string]string{"error": msg})
-	return jsonResponse(status, body)
+	return jsonResponse(req, status, body)
 }
 
 func main() {

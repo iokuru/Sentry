@@ -20,6 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/iokuru/sentry/internal/awsconfig"
 	"github.com/iokuru/sentry/internal/logging"
+	"github.com/iokuru/sentry/internal/router"
 )
 
 type PresignRequest struct {
@@ -73,22 +74,16 @@ func handlePresign(ctx context.Context, req events.APIGatewayV2HTTPRequest) (eve
 	if !validTypes[contentType] {
 		return events.APIGatewayV2HTTPResponse{
 			StatusCode: http.StatusBadRequest,
-			Headers: map[string]string{
-				"Content-Type":                "application/json",
-				"Access-Control-Allow-Origin": getCorsOrigin(),
-			},
-			Body: `{"error":"unsupported content type: allowed types are image/png, image/jpeg, image/webp"}`,
+			Headers:    corsHeaders(req),
+			Body:       `{"error":"unsupported content type: allowed types are image/png, image/jpeg, image/webp"}`,
 		}, nil
 	}
 
 	if input.ContentLength > 5*1024*1024 {
 		return events.APIGatewayV2HTTPResponse{
 			StatusCode: http.StatusBadRequest,
-			Headers: map[string]string{
-				"Content-Type":                "application/json",
-				"Access-Control-Allow-Origin": getCorsOrigin(),
-			},
-			Body: `{"error":"image size exceeds 5mb limit"}`,
+			Headers:    corsHeaders(req),
+			Body:       `{"error":"image size exceeds 5mb limit"}`,
 		}, nil
 	}
 
@@ -107,6 +102,7 @@ func handlePresign(ctx context.Context, req events.APIGatewayV2HTTPRequest) (eve
 	if presignClient == nil {
 		return events.APIGatewayV2HTTPResponse{
 			StatusCode: http.StatusInternalServerError,
+			Headers:    corsHeaders(req),
 			Body:       `{"error":"s3 client unavailable"}`,
 		}, nil
 	}
@@ -120,6 +116,7 @@ func handlePresign(ctx context.Context, req events.APIGatewayV2HTTPRequest) (eve
 		slog.ErrorContext(ctx, "failed to presign put object", slog.String("error", err.Error()))
 		return events.APIGatewayV2HTTPResponse{
 			StatusCode: http.StatusInternalServerError,
+			Headers:    corsHeaders(req),
 			Body:       fmt.Sprintf(`{"error":"failed to presign: %s"}`, err.Error()),
 		}, nil
 	}
@@ -134,21 +131,22 @@ func handlePresign(ctx context.Context, req events.APIGatewayV2HTTPRequest) (eve
 
 	return events.APIGatewayV2HTTPResponse{
 		StatusCode: http.StatusOK,
-		Headers: map[string]string{
-			"Content-Type":                 "application/json",
-			"Access-Control-Allow-Origin":  getCorsOrigin(),
-			"Access-Control-Allow-Headers": "Content-Type,Authorization",
-			"Access-Control-Allow-Methods": "POST,OPTIONS",
-		},
-		Body: string(body),
+		Headers:    corsHeaders(req),
+		Body:       string(body),
 	}, nil
 }
 
-func getCorsOrigin() string {
-	if o := os.Getenv("CORS_ORIGIN"); o != "" {
-		return o
+func corsHeaders(req events.APIGatewayV2HTTPRequest) map[string]string {
+	h := map[string]string{
+		"Content-Type":                 "application/json",
+		"Access-Control-Allow-Headers": "Content-Type,Authorization",
+		"Access-Control-Allow-Methods": "POST,OPTIONS",
 	}
-	return "*"
+	allowed := os.Getenv("CORS_ORIGIN")
+	if origin := router.MatchOrigin(allowed, router.RequestOrigin(req.Headers)); origin != "" {
+		h["Access-Control-Allow-Origin"] = origin
+	}
+	return h
 }
 
 func main() {

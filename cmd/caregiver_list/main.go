@@ -16,6 +16,7 @@ import (
 	"github.com/iokuru/sentry/internal/awsconfig"
 	"github.com/iokuru/sentry/internal/logging"
 	"github.com/iokuru/sentry/internal/model"
+	"github.com/iokuru/sentry/internal/router"
 	"github.com/iokuru/sentry/internal/store"
 )
 
@@ -82,36 +83,36 @@ func handleList(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events
 	ctx = logging.WithRequestID(ctx, req.RequestContext.RequestID)
 
 	if req.RequestContext.HTTP.Path == "/api/health" || req.RawPath == "/api/health" {
-		return jsonResponse(http.StatusOK, []byte(`{"status":"healthy","service":"sentry"}`)), nil
+		return jsonResponse(req, http.StatusOK, []byte(`{"status":"healthy","service":"sentry"}`)), nil
 	}
 
 	if incidentStore == nil {
-		return errorResponse(http.StatusInternalServerError, "store unavailable"), nil
+		return errorResponse(req, http.StatusInternalServerError, "store unavailable"), nil
 	}
 
 	// check if individual incident is queried via query params or path (senior intake polling)
 	if id, ok := req.QueryStringParameters["id"]; ok && id != "" {
 		inc, err := incidentStore.GetIncident(ctx, id)
 		if err != nil {
-			return errorResponse(http.StatusInternalServerError, err.Error()), nil
+			return errorResponse(req, http.StatusInternalServerError, err.Error()), nil
 		}
 		if inc == nil {
-			return errorResponse(http.StatusNotFound, "incident not found"), nil
+			return errorResponse(req, http.StatusNotFound, "incident not found"), nil
 		}
 		attachThumbnailURL(ctx, inc)
 		body, _ := json.Marshal(inc)
-		return jsonResponse(http.StatusOK, body), nil
+		return jsonResponse(req, http.StatusOK, body), nil
 	}
 
 	caregiverID := extractCaregiverID(req)
 	if caregiverID == "" {
-		return errorResponse(http.StatusUnauthorized, "unauthorized: valid cognito jwt required"), nil
+		return errorResponse(req, http.StatusUnauthorized, "unauthorized: valid cognito jwt required"), nil
 	}
 
 	links, err := incidentStore.ListLinksForCaregiver(ctx, caregiverID)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to query caregiver links", slog.String("error", err.Error()))
-		return errorResponse(http.StatusInternalServerError, err.Error()), nil
+		return errorResponse(req, http.StatusInternalServerError, err.Error()), nil
 	}
 
 	linkedSeniors := make(map[string]bool)
@@ -121,7 +122,7 @@ func handleList(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events
 
 	allIncidents, err := incidentStore.ListIncidents(ctx, 50)
 	if err != nil {
-		return errorResponse(http.StatusInternalServerError, err.Error()), nil
+		return errorResponse(req, http.StatusInternalServerError, err.Error()), nil
 	}
 
 	var incidents []model.Incident
@@ -138,32 +139,33 @@ func handleList(ctx context.Context, req events.APIGatewayV2HTTPRequest) (events
 	slog.InfoContext(ctx, "listed incidents for caregiver", slog.String("caregiver_id", caregiverID), slog.Int("count", len(incidents)))
 
 	body, _ := json.Marshal(incidents)
-	return jsonResponse(http.StatusOK, body), nil
+	return jsonResponse(req, http.StatusOK, body), nil
 }
 
-func getCorsOrigin() string {
-	if o := os.Getenv("CORS_ORIGIN"); o != "" {
-		return o
+func corsHeaders(req events.APIGatewayV2HTTPRequest) map[string]string {
+	h := map[string]string{
+		"Content-Type":                 "application/json",
+		"Access-Control-Allow-Headers": "Content-Type,Authorization",
+		"Access-Control-Allow-Methods": "GET,OPTIONS",
 	}
-	return "*"
+	allowed := os.Getenv("CORS_ORIGIN")
+	if origin := router.MatchOrigin(allowed, router.RequestOrigin(req.Headers)); origin != "" {
+		h["Access-Control-Allow-Origin"] = origin
+	}
+	return h
 }
 
-func jsonResponse(code int, body []byte) events.APIGatewayV2HTTPResponse {
+func jsonResponse(req events.APIGatewayV2HTTPRequest, code int, body []byte) events.APIGatewayV2HTTPResponse {
 	return events.APIGatewayV2HTTPResponse{
 		StatusCode: code,
-		Headers: map[string]string{
-			"Content-Type":                 "application/json",
-			"Access-Control-Allow-Origin":  getCorsOrigin(),
-			"Access-Control-Allow-Headers": "Content-Type,Authorization",
-			"Access-Control-Allow-Methods": "GET,OPTIONS",
-		},
-		Body: string(body),
+		Headers:    corsHeaders(req),
+		Body:       string(body),
 	}
 }
 
-func errorResponse(code int, msg string) events.APIGatewayV2HTTPResponse {
+func errorResponse(req events.APIGatewayV2HTTPRequest, code int, msg string) events.APIGatewayV2HTTPResponse {
 	body, _ := json.Marshal(map[string]string{"error": msg})
-	return jsonResponse(code, body)
+	return jsonResponse(req, code, body)
 }
 
 func main() {

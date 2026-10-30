@@ -13,6 +13,7 @@ import (
 	"github.com/iokuru/sentry/internal/awsconfig"
 	"github.com/iokuru/sentry/internal/logging"
 	"github.com/iokuru/sentry/internal/model"
+	"github.com/iokuru/sentry/internal/router"
 	"github.com/iokuru/sentry/internal/store"
 )
 
@@ -62,13 +63,13 @@ func handleStatusUpdate(ctx context.Context, req events.APIGatewayV2HTTPRequest)
 
 	caregiverID := extractCaregiverID(req)
 	if caregiverID == "" {
-		return errorResponse(http.StatusUnauthorized, "unauthorized: valid cognito jwt required"), nil
+		return errorResponse(req, http.StatusUnauthorized, "unauthorized: valid cognito jwt required"), nil
 	}
 
 	var input StatusUpdateRequest
 	if req.Body != "" {
 		if err := json.Unmarshal([]byte(req.Body), &input); err != nil {
-			return errorResponse(http.StatusBadRequest, "invalid request json"), nil
+			return errorResponse(req, http.StatusBadRequest, "invalid request json"), nil
 		}
 	}
 
@@ -77,29 +78,29 @@ func handleStatusUpdate(ctx context.Context, req events.APIGatewayV2HTTPRequest)
 	}
 
 	if input.IncidentID == "" {
-		return errorResponse(http.StatusBadRequest, "incident_id is required"), nil
+		return errorResponse(req, http.StatusBadRequest, "incident_id is required"), nil
 	}
 
 	if input.Status != model.StatusAcknowledged && input.Status != model.StatusResolved && input.Status != model.StatusAnalyzed {
-		return errorResponse(http.StatusBadRequest, "status must be acknowledged, resolved, or analyzed"), nil
+		return errorResponse(req, http.StatusBadRequest, "status must be acknowledged, resolved, or analyzed"), nil
 	}
 
 	if incidentStore == nil {
-		return errorResponse(http.StatusInternalServerError, "store unavailable"), nil
+		return errorResponse(req, http.StatusInternalServerError, "store unavailable"), nil
 	}
 
 	inc, err := incidentStore.GetIncident(ctx, input.IncidentID)
 	if err != nil {
-		return errorResponse(http.StatusInternalServerError, err.Error()), nil
+		return errorResponse(req, http.StatusInternalServerError, err.Error()), nil
 	}
 	if inc == nil {
-		return errorResponse(http.StatusNotFound, "incident not found"), nil
+		return errorResponse(req, http.StatusNotFound, "incident not found"), nil
 	}
 
 	if inc.SeniorID != "" {
 		links, err := incidentStore.ListLinksForCaregiver(ctx, caregiverID)
 		if err != nil {
-			return errorResponse(http.StatusInternalServerError, err.Error()), nil
+			return errorResponse(req, http.StatusInternalServerError, err.Error()), nil
 		}
 		isLinked := false
 		for _, l := range links {
@@ -109,13 +110,13 @@ func handleStatusUpdate(ctx context.Context, req events.APIGatewayV2HTTPRequest)
 			}
 		}
 		if len(links) > 0 && !isLinked {
-			return errorResponse(http.StatusForbidden, "forbidden: senior not linked to caregiver"), nil
+			return errorResponse(req, http.StatusForbidden, "forbidden: senior not linked to caregiver"), nil
 		}
 	}
 
 	if err := incidentStore.UpdateIncidentStatus(ctx, input.IncidentID, input.Status); err != nil {
 		slog.ErrorContext(ctx, "failed to update status", slog.String("incident_id", input.IncidentID), slog.String("error", err.Error()))
-		return errorResponse(http.StatusInternalServerError, err.Error()), nil
+		return errorResponse(req, http.StatusInternalServerError, err.Error()), nil
 	}
 
 	slog.InfoContext(ctx, "status updated", slog.String("incident_id", input.IncidentID), slog.String("status", string(input.Status)))
@@ -127,32 +128,30 @@ func handleStatusUpdate(ctx context.Context, req events.APIGatewayV2HTTPRequest)
 
 	return events.APIGatewayV2HTTPResponse{
 		StatusCode: http.StatusOK,
-		Headers: map[string]string{
-			"Content-Type":                 "application/json",
-			"Access-Control-Allow-Origin":  getCorsOrigin(),
-			"Access-Control-Allow-Headers": "Content-Type,Authorization",
-			"Access-Control-Allow-Methods": "POST,PATCH,OPTIONS",
-		},
-		Body: string(resBody),
+		Headers:    corsHeaders(req),
+		Body:       string(resBody),
 	}, nil
 }
 
-func getCorsOrigin() string {
-	if o := os.Getenv("CORS_ORIGIN"); o != "" {
-		return o
+func corsHeaders(req events.APIGatewayV2HTTPRequest) map[string]string {
+	h := map[string]string{
+		"Content-Type":                 "application/json",
+		"Access-Control-Allow-Headers": "Content-Type,Authorization",
+		"Access-Control-Allow-Methods": "POST,PATCH,OPTIONS",
 	}
-	return "*"
+	allowed := os.Getenv("CORS_ORIGIN")
+	if origin := router.MatchOrigin(allowed, router.RequestOrigin(req.Headers)); origin != "" {
+		h["Access-Control-Allow-Origin"] = origin
+	}
+	return h
 }
 
-func errorResponse(code int, msg string) events.APIGatewayV2HTTPResponse {
+func errorResponse(req events.APIGatewayV2HTTPRequest, code int, msg string) events.APIGatewayV2HTTPResponse {
 	body, _ := json.Marshal(map[string]string{"error": msg})
 	return events.APIGatewayV2HTTPResponse{
 		StatusCode: code,
-		Headers: map[string]string{
-			"Content-Type":                "application/json",
-			"Access-Control-Allow-Origin": getCorsOrigin(),
-		},
-		Body: string(body),
+		Headers:    corsHeaders(req),
+		Body:       string(body),
 	}
 }
 
