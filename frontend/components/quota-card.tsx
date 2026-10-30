@@ -1,5 +1,6 @@
 import React from "react";
-import { Clock, PhoneCall } from "lucide-react";
+import { Clock } from "lucide-react";
+import { HotlineButton } from "@/components/hotline-button";
 
 export interface QuotaCardProps {
   country: string;
@@ -25,16 +26,13 @@ export function QuotaCard({ country }: QuotaCardProps) {
           If you are worried about a message or phone call right now, official fraud specialists are available by phone.
         </p>
 
-        <a href="tel:18773824357" className="quota-call-btn">
-          <PhoneCall size={20} strokeWidth={2.4} aria-hidden="true" />
-          <span>Call official fraud hotline</span>
-        </a>
+        <HotlineButton country={country} />
       </div>
 
       <style jsx>{`
         .quota-card {
-          background-color: #fefce8;
-          border: 2px solid #ca8a04;
+          background-color: var(--warning-bg);
+          border: 1px solid var(--warning-border);
           border-radius: var(--radius-lg);
           padding: 28px 24px;
           display: flex;
@@ -55,15 +53,15 @@ export function QuotaCard({ country }: QuotaCardProps) {
           width: 48px;
           height: 48px;
           border-radius: var(--radius-md);
-          background-color: #fef08a;
-          color: #a16207;
+          background-color: var(--warning-icon-bg);
+          color: var(--warning-icon-ink);
           flex-shrink: 0;
         }
 
         .quota-title {
           font-size: 1.35rem;
           font-weight: 700;
-          color: #854d0e;
+          color: var(--warning-title);
           margin-bottom: 6px;
         }
 
@@ -74,10 +72,10 @@ export function QuotaCard({ country }: QuotaCardProps) {
         }
 
         .quota-reassurance {
-          background-color: #ffffff;
+          background-color: var(--surface-raised);
           border-radius: var(--radius-md);
           padding: 16px;
-          border: 1px solid #fde047;
+          border: 1px solid var(--warning-border);
           display: flex;
           flex-direction: column;
           gap: 12px;
@@ -88,22 +86,6 @@ export function QuotaCard({ country }: QuotaCardProps) {
           color: var(--text-muted);
         }
 
-        .quota-call-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
-          padding: 12px 20px;
-          background-color: var(--color-primary);
-          color: var(--text-inverse);
-          border-radius: var(--radius-md);
-          font-weight: 700;
-          text-decoration: none;
-          width: fit-content;
-        }
-
-        .quota-call-btn:hover {
-          background-color: var(--color-primary-hover);
-        }
       `}</style>
     </div>
   );

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { WifiOff, Phone } from "lucide-react";
+import { WifiOff } from "lucide-react";
 
 export function OfflineBanner() {
   const [isOffline, setIsOffline] = useState(false);
@@ -31,18 +31,13 @@ export function OfflineBanner() {
       </div>
 
       <p className="offline-body">
-        An internet connection is required to check screenshots. If you need urgent assistance, you can still call official phone helplines directly.
+        An internet connection is required to check this message. If you need urgent help, call your local emergency number or someone you trust.
       </p>
-
-      <a href="tel:911" className="offline-dial">
-        <Phone size={18} aria-hidden="true" />
-        <span>Call emergency services</span>
-      </a>
 
       <style jsx>{`
         .offline-card {
-          background-color: #fff7ed;
-          border: 2px solid #ea580c;
+          background-color: var(--warning-bg);
+          border: 1px solid var(--warning-border);
           border-radius: var(--radius-lg);
           padding: 20px 24px;
           display: flex;
@@ -63,14 +58,14 @@ export function OfflineBanner() {
           width: 38px;
           height: 38px;
           border-radius: var(--radius-md);
-          background-color: #ffedd5;
-          color: #ea580c;
+          background-color: var(--warning-icon-bg);
+          color: var(--warning-icon-ink);
         }
 
         .offline-title {
           font-size: 1.25rem;
           font-weight: 700;
-          color: #9a3412;
+          color: var(--warning-title);
         }
 
         .offline-body {
@@ -79,23 +74,6 @@ export function OfflineBanner() {
           line-height: 1.5;
         }
 
-        .offline-dial {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          margin-top: 4px;
-          padding: 10px 18px;
-          border-radius: var(--radius-md);
-          background-color: #ea580c;
-          color: #ffffff;
-          font-weight: 700;
-          text-decoration: none;
-          width: fit-content;
-        }
-
-        .offline-dial:hover {
-          background-color: #c2410c;
-        }
       `}</style>
     </div>
   );

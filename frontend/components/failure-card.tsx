@@ -53,7 +53,7 @@ export function FailureCard({ errorMessage, onRetry }: FailureCardProps) {
           width: 44px;
           height: 44px;
           border-radius: var(--radius-md);
-          background-color: #fee2e2;
+          background-color: var(--danger-bg);
           color: var(--color-danger);
           flex-shrink: 0;
         }
@@ -61,7 +61,7 @@ export function FailureCard({ errorMessage, onRetry }: FailureCardProps) {
         .failure-title {
           font-size: 1.3rem;
           font-weight: 700;
-          color: #991b1b;
+          color: var(--danger-title);
           margin-bottom: 4px;
         }
 
