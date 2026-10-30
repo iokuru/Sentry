@@ -741,7 +741,7 @@ func main() {
 		if err := frontendCmd.Start(); err != nil {
 			log.Printf("could not start frontend: %v (run npm run dev in frontend manually)", err)
 		} else {
-			log.Printf("sentry frontend starting via vite")
+			log.Printf("sentry frontend starting via nextjs")
 		}
 	}
 
