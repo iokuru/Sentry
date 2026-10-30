@@ -9,20 +9,21 @@
   --bg-muted: #ece8de;
 
   --text-main: #192520;
-  --text-muted: #43544c;
+  --text-muted: #3a4b43;
   --text-inverse: #ffffff;
 
   --color-primary: #1d6b4f;
   --color-primary-hover: #16543d;
   --color-primary-active: #104230;
 
-  --color-accent: #b45309;
+  /* accessible high contrast tokens */
+  --color-accent: #92400e;
   --color-accent-subtle: #fef3c7;
 
-  --color-danger: #b91c1c;
+  --color-danger: #991b1b;
   --color-danger-subtle: #fee2e2;
 
-  --color-safe: #15803d;
+  --color-safe: #166534;
   --color-safe-subtle: #dcfce7;
 
   --border-light: #dcd7cc;
