@@ -24,10 +24,18 @@ export async function loadAppConfig(): Promise<AppConfig> {
   try {
     const res = await fetch("/config.json", { cache: "no-store" });
     if (res.ok) {
-      const data = await res.json();
+      const data = await res.json() as Partial<AppConfig> & {
+        api_url?: string;
+        user_pool_id?: string;
+        user_pool_client_id?: string;
+        ocr_mode?: string;
+      };
       cachedConfig = {
-        ...defaultConfig,
-        ...data,
+        apiUrl: data.apiUrl || data.api_url || defaultConfig.apiUrl,
+        region: data.region || defaultConfig.region,
+        userPoolId: data.userPoolId || data.user_pool_id || defaultConfig.userPoolId,
+        userPoolClientId: data.userPoolClientId || data.user_pool_client_id || defaultConfig.userPoolClientId,
+        ocrMode: data.ocrMode || data.ocr_mode || defaultConfig.ocrMode,
       };
       return cachedConfig!;
     }
