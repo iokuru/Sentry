@@ -26,7 +26,7 @@
 
   --text-main: #141916;
   --text-muted: #49544e;
-  --text-subtle: #68756e;
+  --text-subtle: #47534c;
   --text-inverse: #ffffff;
 
   --color-primary: #6a8d16;
@@ -89,8 +89,8 @@
   --bg-glass: rgba(27, 30, 26, 0.92);
 
   --text-main: #f1f5f3;
-  --text-muted: #9aa49f;
-  --text-subtle: #6e7974;
+  --text-muted: #b2bcb7;
+  --text-subtle: #aeb8b3;
   --text-inverse: #080a0c;
 
   --color-primary: #a9dc35;

@@ -40,11 +40,14 @@ describe("WCAG AAA contrast verification", () => {
     const bgCard = getToken("--bg-card");
     const textMain = getToken("--text-main");
     const textMuted = getToken("--text-muted");
+    const textSubtle = getToken("--text-subtle");
 
     expect(contrastRatio(textMain, bgPage)).toBeGreaterThanOrEqual(7.0);
     expect(contrastRatio(textMain, bgCard)).toBeGreaterThanOrEqual(7.0);
     expect(contrastRatio(textMuted, bgPage)).toBeGreaterThanOrEqual(7.0);
     expect(contrastRatio(textMuted, bgCard)).toBeGreaterThanOrEqual(7.0);
+    expect(contrastRatio(textSubtle, bgPage)).toBeGreaterThanOrEqual(7.0);
+    expect(contrastRatio(textSubtle, bgCard)).toBeGreaterThanOrEqual(7.0);
   });
 
   it("status alert chip tokens meet WCAG AAA", () => {
