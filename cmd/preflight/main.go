@@ -32,6 +32,8 @@ type Inputs struct {
 	UseComprehend    string `json:"use_comprehend"`
 	OcrMode          string `json:"ocr_mode"`
 	FrontendHost     string `json:"frontend_host"`
+	NetlifySiteName  string `json:"netlify_site_name"`
+	AllowedOrigin    string `json:"allowed_origin"`
 	EnableCloudfront *bool  `json:"enable_cloudfront"`
 }
 
@@ -92,6 +94,34 @@ func main() {
 		failures = append(failures, "ocr_mode must be auto, textract, or browser")
 	}
 
+	frontendHost := strings.ToLower(strings.TrimSpace(inputs.FrontendHost))
+	if frontendHost == "" {
+		frontendHost = "cloudfront"
+	}
+	if frontendHost != "cloudfront" && frontendHost != "netlify" {
+		failures = append(failures, "frontend_host must be cloudfront or netlify")
+	}
+
+	if frontendHost == "netlify" {
+		if strings.TrimSpace(inputs.NetlifySiteName) == "" {
+			failures = append(failures, "netlify_site_name is required when frontend_host is netlify")
+		}
+		origin := inputs.AllowedOrigin
+		if strings.TrimSpace(origin) == "" {
+			failures = append(failures, "allowed_origin is required when frontend_host is netlify")
+		} else {
+			if !strings.HasPrefix(origin, "https://") {
+				failures = append(failures, "allowed_origin must begin with https://")
+			}
+			if origin != strings.ToLower(origin) {
+				failures = append(failures, "allowed_origin must be lowercase")
+			}
+			if strings.HasSuffix(origin, "/") {
+				failures = append(failures, "allowed_origin must not have a trailing slash")
+			}
+		}
+	}
+
 	if len(failures) == 0 {
 		fmt.Printf("[PASS] Configuration: inputs.local.json verified (%s / %s)\n", inputs.ProjectName, inputs.Environment)
 	}
@@ -102,6 +132,30 @@ func main() {
 		failures = append(failures, "terraform binary not found on PATH: install terraform to continue")
 	} else {
 		fmt.Printf("[PASS] Terraform: binary found at %s\n", tfPath)
+	}
+
+	// check netlify cli when in netlify mode
+	if frontendHost == "netlify" {
+		netPath, err := exec.LookPath("netlify")
+		if err != nil {
+			failures = append(failures, "netlify cli not found on PATH: install netlify cli to continue")
+		} else {
+			fmt.Printf("[PASS] Netlify: binary found at %s\n", netPath)
+			ctxNet, cancelNet := context.WithTimeout(context.Background(), 10*time.Second)
+			statusCmd := exec.CommandContext(ctxNet, netPath, "status")
+			out, err := statusCmd.CombinedOutput()
+			cancelNet()
+			if err != nil {
+				failures = append(failures, fmt.Sprintf("netlify status check failed: %v", err))
+			} else {
+				outStr := string(out)
+				if inputs.NetlifySiteName != "" && !strings.Contains(outStr, inputs.NetlifySiteName) {
+					failures = append(failures, fmt.Sprintf("netlify project mismatch: expected site %s not found in netlify status", inputs.NetlifySiteName))
+				} else {
+					fmt.Printf("[PASS] Netlify: linked project verified (%s)\n", inputs.NetlifySiteName)
+				}
+			}
+		}
 	}
 
 	// 3. check costguard zero-dollar constraints
