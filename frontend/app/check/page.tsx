@@ -221,7 +221,7 @@ export default function SeniorPage() {
                 {inputMode === "image" && <div className="input-pane">{!selectedFile ? <Dropzone onFileSelect={handleFileSelect} onTextPaste={handleTextPaste} /> : previewUrl && <PreviewCard file={selectedFile} previewUrl={previewUrl} onClear={handleClearFile} />}<ContextNote mode="context" value={contextText} onChange={setContextText} /></div>}
                 {inputMode === "text" && <div className="input-pane"><ContextNote mode="paste" value={pastedMessage} onChange={setPastedMessage} /></div>}
                 {inputMode === "practice" && <div className="input-pane"><PracticeScenarios onSelectScenario={handleSelectScenario} /></div>}
-                {inputMode !== "practice" && <div className="workspace-submit"><CheckButton onClick={handleCheck} hasInput={hasInput} loading={flowState === "analyzing" || flowState === "uploading"} /></div>}
+                {inputMode !== "practice" && <div className="workspace-submit"><CheckButton onClick={handleCheck} hasInput={hasInput} loading={false} /></div>}
               </div>
             </section>
             <div className="privacy-line"><span className="privacy-dot" /> No account needed <span className="privacy-separator">·</span> Your screenshot is deleted after its check</div>
