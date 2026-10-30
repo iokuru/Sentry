@@ -38,7 +38,7 @@ export function Button({
           align-items: center;
           justify-content: center;
           gap: 10px;
-          border-radius: var(--radius-full);
+          border-radius: var(--radius-md);
           font-weight: 650;
           cursor: pointer;
           transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.08s ease, box-shadow 0.15s ease;
