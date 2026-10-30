@@ -58,7 +58,7 @@ smoke-live:
 check:
 	gofmt -s -w .
 	go vet ./...
-	cd frontend && npx svelte-check
+	cd frontend && npm run check
 
 clean:
 	go run ./cmd/build -clean
