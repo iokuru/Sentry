@@ -149,6 +149,47 @@ func main() {
 	apiBase = strings.TrimSuffix(apiBase, "/")
 	client := &http.Client{Timeout: 15 * time.Second}
 
+	// 0. verify cors origin headers
+	if *liveFlag {
+		tCors := startStep()
+		allowedOrigin := "https://sentry-security-krisnakk.netlify.app"
+		if inData, err := os.ReadFile("inputs.local.json"); err == nil {
+			var in struct {
+				AllowedOrigin string `json:"allowed_origin"`
+			}
+			if err := json.Unmarshal(inData, &in); err == nil && in.AllowedOrigin != "" {
+				allowedOrigin = strings.ToLower(strings.TrimSpace(in.AllowedOrigin))
+			}
+		}
+
+		reqAllowed, _ := http.NewRequest(http.MethodOptions, apiBase+"/api/health", nil)
+		reqAllowed.Header.Set("Origin", allowedOrigin)
+		reqAllowed.Header.Set("Access-Control-Request-Method", "GET")
+		respAllowed, err := client.Do(reqAllowed)
+		if err != nil {
+			fail("cors check allowed origin", err)
+		}
+		respAllowed.Body.Close()
+		gotOrigin := respAllowed.Header.Get("Access-Control-Allow-Origin")
+		if strings.ToLower(strings.TrimSpace(gotOrigin)) != allowedOrigin {
+			fail("cors check allowed origin", fmt.Errorf("expected Access-Control-Allow-Origin %q, got %q", allowedOrigin, gotOrigin))
+		}
+
+		reqDisallowed, _ := http.NewRequest(http.MethodOptions, apiBase+"/api/health", nil)
+		reqDisallowed.Header.Set("Origin", "https://unauthorized.example.com")
+		reqDisallowed.Header.Set("Access-Control-Request-Method", "GET")
+		respDisallowed, err := client.Do(reqDisallowed)
+		if err != nil {
+			fail("cors check disallowed origin", err)
+		}
+		respDisallowed.Body.Close()
+		disallowedHeader := respDisallowed.Header.Get("Access-Control-Allow-Origin")
+		if disallowedHeader != "" {
+			fail("cors check disallowed origin", fmt.Errorf("expected no Access-Control-Allow-Origin header for unauthorized origin, got %q", disallowedHeader))
+		}
+		pass("verify cors origin headers", tCors.duration())
+	}
+
 	// 1. presign upload URL
 	t1 := startStep()
 	presignPayload := map[string]string{
