@@ -53,8 +53,14 @@ func LoadConfigFromSSM(ctx context.Context, ssmClient *ssm.Client) *Config {
 		}
 	}
 
-	if isValidValue(cfg.Token) && isValidValue(cfg.ChatID) && isValidValue(cfg.WebhookSecret) {
+	if isValidValue(cfg.Token) {
 		cfg.Enabled = true
+	}
+	if !isValidValue(cfg.ChatID) {
+		cfg.ChatID = ""
+	}
+	if !isValidValue(cfg.WebhookSecret) {
+		cfg.WebhookSecret = ""
 	}
 
 	return cfg
