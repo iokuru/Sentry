@@ -9,6 +9,12 @@ resource "aws_apigatewayv2_stage" "default" {
   name        = "$default"
   auto_deploy = true
 
+  depends_on = [
+    aws_apigatewayv2_route.intake,
+    aws_apigatewayv2_route.presign,
+    aws_apigatewayv2_route.senior_pair
+  ]
+
   route_settings {
     route_key              = "POST /api/intake"
     throttling_burst_limit = 5
