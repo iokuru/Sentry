@@ -1,19 +1,28 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import { UploadCloud, Camera } from "lucide-react";
 
 export interface DropzoneProps {
   onFileSelect: (file: File) => void;
+  onTextPaste?: (text: string) => void;
   disabled?: boolean;
 }
 
-export function Dropzone({ onFileSelect, disabled = false }: DropzoneProps) {
+export function Dropzone({ onFileSelect, onTextPaste, disabled = false }: DropzoneProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
+  const handleFile = useCallback(
+    (file: File) => {
+      if (disabled) return;
+      onFileSelect(file);
+    },
+    [disabled, onFileSelect]
+  );
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      onFileSelect(e.target.files[0]);
+      handleFile(e.target.files[0]);
     }
   };
 
@@ -46,9 +55,40 @@ export function Dropzone({ onFileSelect, disabled = false }: DropzoneProps) {
     e.preventDefault();
     setIsDragging(false);
     if (!disabled && e.dataTransfer.files && e.dataTransfer.files[0]) {
-      onFileSelect(e.dataTransfer.files[0]);
+      handleFile(e.dataTransfer.files[0]);
     }
   };
+
+  useEffect(() => {
+    const handleGlobalPaste = (e: ClipboardEvent) => {
+      if (disabled) return;
+      if (!e.clipboardData) return;
+
+      const items = e.clipboardData.items;
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.indexOf("image") !== -1) {
+          const file = item.getAsFile();
+          if (file) {
+            handleFile(file);
+            return;
+          }
+        }
+      }
+
+      if (onTextPaste) {
+        const text = e.clipboardData.getData("text");
+        if (text && text.trim().length > 0) {
+          onTextPaste(text);
+        }
+      }
+    };
+
+    window.addEventListener("paste", handleGlobalPaste);
+    return () => {
+      window.removeEventListener("paste", handleGlobalPaste);
+    };
+  }, [disabled, handleFile, onTextPaste]);
 
   return (
     <div
@@ -97,7 +137,7 @@ export function Dropzone({ onFileSelect, disabled = false }: DropzoneProps) {
           <p className="dropzone-primary-text">
             {isDragging ? "Drop your image now" : "Tap here to choose a screenshot or photo"}
           </p>
-          <p className="dropzone-secondary-text">or drag and drop it anywhere on this card</p>
+          <p className="dropzone-secondary-text">or paste with Ctrl+V / Cmd+V</p>
         </div>
 
         <div className="dropzone-actions">
