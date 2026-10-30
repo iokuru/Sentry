@@ -88,6 +88,7 @@ export function PreviewCard({
           display: flex;
           align-items: center;
           justify-content: space-between;
+          gap: 12px;
           padding: 0 4px;
         }
 
@@ -95,6 +96,12 @@ export function PreviewCard({
           display: flex;
           align-items: center;
           gap: 12px;
+          min-width: 0;
+          flex: 1;
+        }
+
+        .preview-details {
+          min-width: 0;
         }
 
         .preview-icon {
@@ -106,13 +113,13 @@ export function PreviewCard({
           border-radius: var(--radius-sm);
           background-color: var(--bg-secondary);
           color: var(--color-primary);
+          flex-shrink: 0;
         }
 
         .preview-filename {
           font-size: 1rem;
           font-weight: 600;
           color: var(--text-main);
-          max-width: 300px;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -128,6 +135,7 @@ export function PreviewCard({
           align-items: center;
           gap: 6px;
           padding: 8px 14px;
+          min-height: 44px;
           border-radius: var(--radius-sm);
           background-color: var(--bg-muted);
           color: var(--color-danger);
@@ -135,10 +143,27 @@ export function PreviewCard({
           font-weight: 600;
           border: none;
           cursor: pointer;
+          flex-shrink: 0;
         }
 
         .preview-clear-btn:hover:not(:disabled) {
           background-color: #fee2e2;
+        }
+
+        @media (max-width: 480px) {
+          .preview-root {
+            padding: 12px;
+            gap: 12px;
+          }
+          .preview-image-box {
+            max-height: 260px;
+          }
+          .preview-img {
+            max-height: 260px;
+          }
+          .preview-filename {
+            max-width: 160px;
+          }
         }
       `}</style>
     </div>
