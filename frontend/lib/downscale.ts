@@ -5,6 +5,16 @@ export interface DownscaleOptions {
   mimeType?: string;
 }
 
+export function isHeicFile(file: File): boolean {
+  const name = file.name.toLowerCase();
+  return (
+    file.type === "image/heic" ||
+    file.type === "image/heif" ||
+    name.endsWith(".heic") ||
+    name.endsWith(".heif")
+  );
+}
+
 export async function downscaleImage(
   file: File,
   options: DownscaleOptions = {}
@@ -59,7 +69,13 @@ export async function downscaleImage(
 
     img.onerror = () => {
       URL.revokeObjectURL(objectUrl);
-      reject(new Error("Failed to load image file into memory"));
+      if (isHeicFile(file)) {
+        reject(
+          new Error("This phone photo format could not be opened directly. Please take a regular screenshot and check that instead.")
+        );
+      } else {
+        reject(new Error("Failed to load image file into memory"));
+      }
     };
 
     img.src = objectUrl;
