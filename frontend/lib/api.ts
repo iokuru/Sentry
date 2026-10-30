@@ -1,4 +1,5 @@
 import { loadAppConfig } from "./config";
+import { getOrCreateDeviceId } from "./device";
 
 export interface PresignResponse {
   upload_url: string;
@@ -122,10 +123,15 @@ export async function submitIntake(payload: IntakePayload): Promise<IntakeRespon
   const config = await loadAppConfig();
   const url = new URL("/api/intake", config.apiUrl);
 
+  const finalPayload: IntakePayload = {
+    ...payload,
+    senior_id: payload.senior_id || getOrCreateDeviceId(),
+  };
+
   const res = await fetch(url.toString(), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(finalPayload),
   });
 
   if (!res.ok) {
