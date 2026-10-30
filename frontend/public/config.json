@@ -1,6 +1,7 @@
 {
-  "api_url": "",
-  "user_pool_id": "local",
-  "user_pool_client_id": "local",
-  "region": "local"
+  "api_url": "https://ni3bvlk951.execute-api.ap-south-1.amazonaws.com",
+  "user_pool_id": "ap-south-1_NRUTetHDH",
+  "user_pool_client_id": "4oo2js9m64ql6qbumihklgg4kv",
+  "region": "ap-south-1",
+  "ocr_mode": "browser"
 }

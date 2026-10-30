@@ -201,6 +201,7 @@ func main() {
 	if err := os.WriteFile(cfgPath, cfgBytes, 0644); err != nil {
 		failStep(fmt.Sprintf("Failed to write runtime config.json: %v", err), "Ensure frontend/build directory exists.")
 	}
+	_ = os.WriteFile(filepath.Join("frontend", "public", "config.json"), cfgBytes, 0644)
 
 	if frontendHost == "netlify" {
 		fmt.Println("\n--> Step 6/7: Deploying frontend bundle to Netlify...")

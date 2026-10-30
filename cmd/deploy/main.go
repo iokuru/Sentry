@@ -66,6 +66,7 @@ func main() {
 	if err := os.WriteFile(configPath, configBytes, 0644); err != nil {
 		log.Fatalf("write config.json: %v", err)
 	}
+	_ = os.WriteFile(filepath.Join("frontend", "public", "config.json"), configBytes, 0644)
 
 	var frontendHost, netlifySite, allowedOrigin string
 	if data, err := os.ReadFile("inputs.local.json"); err == nil {
