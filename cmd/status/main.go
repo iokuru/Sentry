@@ -20,12 +20,15 @@ import (
 )
 
 type Inputs struct {
-	AWSProfile    string `json:"aws_profile"`
-	AWSRegion     string `json:"aws_region"`
-	ProjectName   string `json:"project_name"`
-	Environment   string `json:"environment"`
-	UseComprehend string `json:"use_comprehend"`
-	OcrMode       string `json:"ocr_mode"`
+	AWSProfile      string `json:"aws_profile"`
+	AWSRegion       string `json:"aws_region"`
+	ProjectName     string `json:"project_name"`
+	Environment     string `json:"environment"`
+	UseComprehend   string `json:"use_comprehend"`
+	OcrMode         string `json:"ocr_mode"`
+	FrontendHost    string `json:"frontend_host"`
+	NetlifySiteName string `json:"netlify_site_name"`
+	AllowedOrigin   string `json:"allowed_origin"`
 }
 
 type StatusItem struct {
@@ -84,8 +87,36 @@ func main() {
 	dlqURL, _ := getTerraformOutput("analysis_dlq_url")
 	region, _ := getTerraformOutput("region")
 
-	// 1. Check CloudFront
-	if cloudfrontURL != "" {
+	// 1. Check Frontend Host
+	var inputs Inputs
+	if data, err := os.ReadFile("inputs.local.json"); err == nil {
+		_ = json.Unmarshal(data, &inputs)
+	}
+
+	frontendHost := strings.ToLower(strings.TrimSpace(inputs.FrontendHost))
+	if frontendHost == "netlify" {
+		targetURL := inputs.AllowedOrigin
+		if targetURL == "" && inputs.NetlifySiteName != "" {
+			targetURL = fmt.Sprintf("https://%s.netlify.app", inputs.NetlifySiteName)
+		}
+		if targetURL != "" {
+			res, err := httpClient.Get(targetURL)
+			if err != nil {
+				items = append(items, StatusItem{
+					Component: "Frontend (Netlify)",
+					Status:    "UNREACHABLE",
+					Details:   err.Error(),
+				})
+			} else {
+				defer res.Body.Close()
+				items = append(items, StatusItem{
+					Component: "Frontend (Netlify)",
+					Status:    fmt.Sprintf("HEALTHY (%d)", res.StatusCode),
+					Details:   targetURL,
+				})
+			}
+		}
+	} else if cloudfrontURL != "" {
 		res, err := httpClient.Get(cloudfrontURL)
 		if err != nil {
 			items = append(items, StatusItem{
@@ -103,9 +134,9 @@ func main() {
 		}
 	} else {
 		items = append(items, StatusItem{
-			Component: "CloudFront",
+			Component: "Frontend",
 			Status:    "UNKNOWN",
-			Details:   "terraform output cloudfront_url empty",
+			Details:   "no frontend host configured",
 		})
 	}
 
@@ -136,11 +167,6 @@ func main() {
 	}
 
 	// 3. Check SQS DLQ Depth and CloudWatch Alarm
-	var inputs Inputs
-	if data, err := os.ReadFile("inputs.local.json"); err == nil {
-		_ = json.Unmarshal(data, &inputs)
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
