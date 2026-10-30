@@ -8,7 +8,12 @@
 }
 
 html {
+  color-scheme: light;
   transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+html[data-theme="dark"], .dark {
+  color-scheme: dark;
 }
 
 body {

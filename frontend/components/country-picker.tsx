@@ -88,10 +88,18 @@ export function CountryPicker({
           color: var(--text-main);
           cursor: pointer;
           outline: none;
+          color-scheme: inherit;
         }
 
         .country-select:focus-visible {
           outline: none;
+        }
+
+        .country-select option {
+          background-color: var(--bg-card);
+          color: var(--text-main);
+          font-weight: 500;
+          padding: 8px 12px;
         }
       `}</style>
     </div>
