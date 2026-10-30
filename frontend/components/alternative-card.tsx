@@ -21,8 +21,8 @@ export function AlternativeCard({ action }: AlternativeCardProps) {
 
       <style jsx>{`
         .alternative-card {
-          background-color: #f6faf7;
-          border: 2px solid var(--color-safe);
+          background-color: var(--safe-bg);
+          border: 1px solid var(--safe-border);
           border-radius: var(--radius-lg);
           padding: 24px;
           display: flex;
@@ -44,15 +44,15 @@ export function AlternativeCard({ action }: AlternativeCardProps) {
           width: 42px;
           height: 42px;
           border-radius: var(--radius-md);
-          background-color: #dcfce7;
-          color: var(--color-safe);
+          background-color: var(--safe-icon-bg);
+          color: var(--safe-icon-ink);
           flex-shrink: 0;
         }
 
         .alternative-title {
           font-size: 1.35rem;
           font-weight: 700;
-          color: #166534;
+          color: var(--safe-title);
           letter-spacing: -0.01em;
         }
 

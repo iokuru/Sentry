@@ -21,8 +21,8 @@ export function HoldOffCard({ advice }: HoldOffCardProps) {
 
       <style jsx>{`
         .hold-card {
-          background-color: #fffaf0;
-          border: 2px solid #f59e0b;
+          background-color: var(--warning-bg);
+          border: 1px solid var(--warning-border);
           border-radius: var(--radius-lg);
           padding: 24px;
           display: flex;
@@ -44,15 +44,15 @@ export function HoldOffCard({ advice }: HoldOffCardProps) {
           width: 42px;
           height: 42px;
           border-radius: var(--radius-md);
-          background-color: #fef3c7;
-          color: #b45309;
+          background-color: var(--warning-icon-bg);
+          color: var(--warning-icon-ink);
           flex-shrink: 0;
         }
 
         .hold-title {
           font-size: 1.35rem;
           font-weight: 700;
-          color: #92400e;
+          color: var(--warning-title);
           letter-spacing: -0.01em;
         }
 
