@@ -16,6 +16,11 @@ func TestCheckUrgencyWording(t *testing.T) {
 			wantHit: true,
 		},
 		{
+			name:    "parcel fee deadline",
+			input:   Input{Text: "Update your address within 12 hours to avoid return."},
+			wantHit: true,
+		},
+		{
 			name:    "calm informational note",
 			input:   Input{Text: "Your weekly grocery flyer is ready to review."},
 			wantHit: false,
