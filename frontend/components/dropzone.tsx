@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { UploadCloud, Camera } from "lucide-react";
 
 export interface DropzoneProps {
@@ -9,6 +9,7 @@ export interface DropzoneProps {
 export function Dropzone({ onFileSelect, disabled = false }: DropzoneProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -29,10 +30,33 @@ export function Dropzone({ onFileSelect, disabled = false }: DropzoneProps) {
     }
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!disabled) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (!disabled && e.dataTransfer.files && e.dataTransfer.files[0]) {
+      onFileSelect(e.dataTransfer.files[0]);
+    }
+  };
+
   return (
     <div
-      className={`dropzone-box ${disabled ? "dropzone-disabled" : ""}`}
+      className={`dropzone-box ${isDragging ? "dropzone-active" : ""} ${disabled ? "dropzone-disabled" : ""}`}
       onClick={handleChooseFile}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
       role="button"
       tabIndex={disabled ? -1 : 0}
       aria-label="Upload screenshot or photo to check"
@@ -70,7 +94,9 @@ export function Dropzone({ onFileSelect, disabled = false }: DropzoneProps) {
         </div>
 
         <div className="dropzone-text">
-          <p className="dropzone-primary-text">Tap here to choose a screenshot or photo</p>
+          <p className="dropzone-primary-text">
+            {isDragging ? "Drop your image now" : "Tap here to choose a screenshot or photo"}
+          </p>
           <p className="dropzone-secondary-text">or drag and drop it anywhere on this card</p>
         </div>
 
@@ -100,9 +126,15 @@ export function Dropzone({ onFileSelect, disabled = false }: DropzoneProps) {
           user-select: none;
         }
 
-        .dropzone-box:hover:not(.dropzone-disabled) {
+        .dropzone-box:hover:not(.dropzone-disabled),
+        .dropzone-box:focus-visible {
           border-color: var(--color-primary);
           background-color: #f7faf8;
+        }
+
+        .dropzone-active {
+          border-color: var(--color-primary);
+          background-color: var(--bg-secondary);
         }
 
         .dropzone-disabled {
