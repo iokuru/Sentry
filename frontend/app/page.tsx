@@ -2,9 +2,69 @@
 
 import React, { useState } from "react";
 import { Shell } from "@/components/shell";
+import { Dropzone } from "@/components/dropzone";
+import { PreviewCard } from "@/components/preview";
+import { ContextNote } from "@/components/context-note";
+import { CheckButton } from "@/components/check-button";
+import { downscaleImage } from "@/lib/downscale";
+import { requestPresignedUrl, uploadImageToS3, submitIntake } from "@/lib/api";
 
 export default function SeniorPage() {
-  const [hasStarted, setHasStarted] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [contextText, setContextText] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const handleFileSelect = async (file: File) => {
+    try {
+      setErrorMessage(null);
+      const url = URL.createObjectURL(file);
+      setSelectedFile(file);
+      setPreviewUrl(url);
+    } catch {
+      setErrorMessage("Could not load image. Please try another photo.");
+    }
+  };
+
+  const handleClearFile = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setErrorMessage(null);
+  };
+
+  const handleCheck = async () => {
+    if (!selectedFile && !contextText.trim()) return;
+
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      let objectKey: string | undefined;
+
+      if (selectedFile) {
+        const { blob } = await downscaleImage(selectedFile);
+        const presign = await requestPresignedUrl(blob.type || "image/jpeg");
+        await uploadImageToS3(presign.upload_url, blob);
+        objectKey = presign.object_key;
+      }
+
+      await submitIntake({
+        object_key: objectKey,
+        context_text: contextText.trim() || undefined,
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      setErrorMessage(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const hasInput = Boolean(selectedFile || contextText.trim());
 
   return (
     <Shell activeSection="senior">
@@ -17,7 +77,37 @@ export default function SeniorPage() {
         </header>
 
         <div className="senior-workspace">
-          {/* Main intake area will be mounted here */}
+          {!selectedFile ? (
+            <Dropzone onFileSelect={handleFileSelect} disabled={isLoading} />
+          ) : (
+            previewUrl && (
+              <PreviewCard
+                file={selectedFile}
+                previewUrl={previewUrl}
+                onClear={handleClearFile}
+                disabled={isLoading}
+              />
+            )
+          )}
+
+          <ContextNote
+            value={contextText}
+            onChange={setContextText}
+            disabled={isLoading}
+          />
+
+          {errorMessage ? (
+            <div className="error-banner" role="alert">
+              {errorMessage}
+            </div>
+          ) : null}
+
+          <CheckButton
+            onClick={handleCheck}
+            loading={isLoading}
+            disabled={isLoading}
+            hasInput={hasInput}
+          />
         </div>
       </div>
 
@@ -54,7 +144,17 @@ export default function SeniorPage() {
         .senior-workspace {
           display: flex;
           flex-direction: column;
-          gap: 24px;
+          gap: 20px;
+        }
+
+        .error-banner {
+          background-color: var(--color-danger-subtle);
+          border: 1.5px solid var(--color-danger);
+          color: var(--color-danger);
+          padding: 14px 18px;
+          border-radius: var(--radius-md);
+          font-weight: 600;
+          font-size: 1rem;
         }
 
         @media (max-width: 640px) {
