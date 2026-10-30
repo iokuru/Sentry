@@ -46,18 +46,34 @@ export function ThemeToggle() {
         {theme === "dark" ? <Sun size={17} strokeWidth={1.8} /> : <Moon size={17} strokeWidth={1.8} />}
       </button>
       <style jsx>{`
+        .theme-toggle-placeholder {
+          display: grid;
+          place-items: center;
+          width: 60px;
+          height: 60px;
+        }
+
         .theme-toggle-btn {
-          display:grid; place-items:center; width:38px; height:38px;
-          background-color:var(--bg-muted);
-          border: 1px solid var(--border-light);
-          padding:0; border-radius:7px;
+          display: grid;
+          place-items: center;
+          width: 60px;
+          height: 60px;
+          min-width: 60px;
+          min-height: 60px;
+          background: transparent;
+          border: 1px solid transparent;
+          padding: 0;
+          border-radius: var(--radius-sm);
           color: var(--text-muted);
           cursor: pointer;
           transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
         }
 
         .theme-toggle-btn:hover {
-          background-color: var(--bg-secondary);
+          background-color: var(--bg-muted);
+          border-color: var(--border-light);
+          color: var(--text-main);
+        }
           color: var(--text-main);
           border-color: var(--border-focus);
         }
