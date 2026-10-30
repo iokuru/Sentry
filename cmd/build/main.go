@@ -66,7 +66,7 @@ func main() {
 func cleanArtifacts() error {
 	_ = os.RemoveAll("bin")
 	_ = os.RemoveAll(filepath.Join("frontend", "build"))
-	_ = os.RemoveAll(filepath.Join("frontend", ".svelte-kit"))
+	_ = os.RemoveAll(filepath.Join("frontend", ".next"))
 	return nil
 }
 
