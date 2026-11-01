@@ -1,0 +1,290 @@
+﻿[
+    {
+        "id":  "screen-01-delivery-sms-light",
+        "file":  "screen-01-delivery-sms-light.png",
+        "type":  "sms",
+        "theme":  "light",
+        "expected_text":  "USPS: Your package is on hold due to an unpaid redelivery fee of .99. Pay here: https://bit.ly/usps-fee-update",
+        "is_blurry":  false,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-02-bank-sms-dark",
+        "file":  "screen-02-bank-sms-dark.png",
+        "type":  "sms",
+        "theme":  "dark",
+        "expected_text":  "Chase Alert: Your debit card has been suspended due to suspicious activity. Verify identity immediately at https://chase-security-verify.com",
+        "is_blurry":  false,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-03-family-whatsapp-light",
+        "file":  "screen-03-family-whatsapp-light.png",
+        "type":  "whatsapp",
+        "theme":  "light",
+        "expected_text":  "Hi Mom, I dropped my phone in water and this is my new number. I have an urgent bill due today, could you transfer  for me?",
+        "is_blurry":  false,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-04-upi-whatsapp-dark",
+        "file":  "screen-04-upi-whatsapp-dark.png",
+        "type":  "whatsapp",
+        "theme":  "dark",
+        "expected_text":  "Scan this QR code on PhonePe or GooglePay and enter your secret UPI PIN to receive the Rs 15000 payment in your bank account.",
+        "is_blurry":  false,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-05-geek-squad-email-light",
+        "file":  "screen-05-geek-squad-email-light.png",
+        "type":  "email",
+        "theme":  "light",
+        "expected_text":  "Geek Squad Total Support auto renewed for .99 today. To dispute or cancel this charge, call our billing helpdesk at 1-800-555-0144.",
+        "is_blurry":  false,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-06-norton-email-dark",
+        "file":  "screen-06-norton-email-dark.png",
+        "type":  "email",
+        "theme":  "dark",
+        "expected_text":  "Norton Antivirus 3-year subscription renewed for .00. Debited from your registered account. Call 1-888-555-0183 to cancel.",
+        "is_blurry":  false,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-07-otp-sms-light",
+        "file":  "screen-07-otp-sms-light.png",
+        "type":  "sms",
+        "theme":  "light",
+        "expected_text":  "A wire transfer cancellation was requested. Please share the 6-digit verification code you just received to reverse the charge.",
+        "is_blurry":  false,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-08-prize-sms-dark",
+        "file":  "screen-08-prize-sms-dark.png",
+        "type":  "sms",
+        "theme":  "dark",
+        "expected_text":  "CONGRATULATIONS! You won ,000 in the National Cash Draw! Pay  processing fee via Apple gift card to claim funds today.",
+        "is_blurry":  false,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-09-techsupport-popup-light",
+        "file":  "screen-09-techsupport-popup-light.png",
+        "type":  "popup",
+        "theme":  "light",
+        "expected_text":  "VIRUS DETECTED: Spyware trojan found on your system. Do not restart computer. Call Windows Support immediately at 1-800-555-0199.",
+        "is_blurry":  false,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-10-defender-popup-dark",
+        "file":  "screen-10-defender-popup-dark.png",
+        "type":  "popup",
+        "theme":  "dark",
+        "expected_text":  "CRITICAL BREACH: Unauthorized network access detected. Remote session required to clean system. Call 1-800-555-0122 now.",
+        "is_blurry":  false,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-11-electricity-sms-light",
+        "file":  "screen-11-electricity-sms-light.png",
+        "type":  "sms",
+        "theme":  "light",
+        "expected_text":  "Electricity Disconnection Notice: Service scheduled for shutoff at 6 PM today due to unpaid bill. Call 1-800-555-0188 immediately.",
+        "is_blurry":  false,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-12-digital-arrest-whatsapp-light",
+        "file":  "screen-12-digital-arrest-whatsapp-light.png",
+        "type":  "whatsapp",
+        "theme":  "light",
+        "expected_text":  "Customs narcotics wing Delhi: Parcel seized under your Aadhaar. Digital arrest warrant active. Connect on Skype video call immediately.",
+        "is_blurry":  false,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-13-crypto-sms-dark",
+        "file":  "screen-13-crypto-sms-dark.png",
+        "type":  "sms",
+        "theme":  "dark",
+        "expected_text":  "Join our automated Binance trading group. Guaranteed 15% daily return on Bitcoin. Deposit 500 USDT to start earning immediately.",
+        "is_blurry":  false,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-14-romance-chat-light",
+        "file":  "screen-14-romance-chat-light.png",
+        "type":  "sms",
+        "theme":  "light",
+        "expected_text":  "My love, my medical trunk is held at customs immigration. Please send ,200 via wire transfer so I can get my flight to see you.",
+        "is_blurry":  false,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-15-job-task-sms-light",
+        "file":  "screen-15-job-task-sms-light.png",
+        "type":  "sms",
+        "theme":  "light",
+        "expected_text":  "Work from home part-time: Earn  to  daily evaluating products online. Pay  refundable training deposit to start tasks.",
+        "is_blurry":  false,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-16-kyc-pan-sms-light",
+        "file":  "screen-16-kyc-pan-sms-light.png",
+        "type":  "sms",
+        "theme":  "light",
+        "expected_text":  "Dear Customer, your SBI account KYC expired today. Netbanking will be blocked. Update PAN now by downloading: bit.ly/sbi-pan-app",
+        "is_blurry":  false,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-17-refund-overpay-sms-dark",
+        "file":  "screen-17-refund-overpay-sms-dark.png",
+        "type":  "sms",
+        "theme":  "dark",
+        "expected_text":  "Overpayment notice: We accidentally credited ,400 instead of  to your account. Wire back the excess ,160 immediately.",
+        "is_blurry":  false,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-18-craigslist-chat-light",
+        "file":  "screen-18-craigslist-chat-light.png",
+        "type":  "sms",
+        "theme":  "light",
+        "expected_text":  "I mailed a cashier cheque for ,200 for your dining table (). Please wire the  difference to my movers before tomorrow.",
+        "is_blurry":  false,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-19-delivery-blurry-light",
+        "file":  "screen-19-delivery-blurry-light.png",
+        "type":  "sms",
+        "theme":  "light",
+        "expected_text":  "FedEx: Delivery attempted. .50 redelivery fee required. Confirm address and payment at https://bit.ly/fdx-parcel-hold",
+        "is_blurry":  true,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-20-bank-blurry-dark",
+        "file":  "screen-20-bank-blurry-dark.png",
+        "type":  "sms",
+        "theme":  "dark",
+        "expected_text":  "Wells Fargo: Unusual debit card activity detected. Your card is temporarily locked. Verify now at bit.ly/wf-unlock-card",
+        "is_blurry":  true,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-21-family-blurry-light",
+        "file":  "screen-21-family-blurry-light.png",
+        "type":  "whatsapp",
+        "theme":  "light",
+        "expected_text":  "Hey Dad, my phone broke so texting from this friend number. I need  for emergency car repair please wire to my account.",
+        "is_blurry":  true,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-22-amazon-blurry-light",
+        "file":  "screen-22-amazon-blurry-light.png",
+        "type":  "email",
+        "theme":  "light",
+        "expected_text":  "Amazon Prime Membership renewed for .00 today. If this was not authorized by you, call customer desk at 1-800-555-0166.",
+        "is_blurry":  true,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-23-safe-chase-2fa-light",
+        "file":  "screen-23-safe-chase-2fa-light.png",
+        "type":  "sms",
+        "theme":  "light",
+        "expected_text":  "Your Chase verification code is 492011. Do not share this code with anyone. Chase will never call or text to ask for this code.",
+        "is_blurry":  false,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-24-safe-google-2fa-dark",
+        "file":  "screen-24-safe-google-2fa-dark.png",
+        "type":  "sms",
+        "theme":  "dark",
+        "expected_text":  "G-821940 is your Google verification code. Do not share your code with anyone.",
+        "is_blurry":  false,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-25-safe-usps-delivered-light",
+        "file":  "screen-25-safe-usps-delivered-light.png",
+        "type":  "sms",
+        "theme":  "light",
+        "expected_text":  "USPS: Package 9400111899562544 was delivered at 2:15 PM on your front porch. Thank you for shipping with USPS.",
+        "is_blurry":  false,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-26-safe-cvs-rx-light",
+        "file":  "screen-26-safe-cvs-rx-light.png",
+        "type":  "sms",
+        "theme":  "light",
+        "expected_text":  "CVS: Your prescription for Lisinopril is ready for pickup at 145 Main Street. Pharmacy closes today at 7:00 PM.",
+        "is_blurry":  false,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-27-safe-doctor-appt-light",
+        "file":  "screen-27-safe-doctor-appt-light.png",
+        "type":  "sms",
+        "theme":  "light",
+        "expected_text":  "Dr. Miller Office: Reminder for your dental cleaning tomorrow at 10:30 AM. Reply C to confirm or call 555-0122 to reschedule.",
+        "is_blurry":  false,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-28-safe-family-dinner-dark",
+        "file":  "screen-28-safe-family-dinner-dark.png",
+        "type":  "sms",
+        "theme":  "dark",
+        "expected_text":  "Hey Grandma, hope you had a good week! Are we still having family dinner this Sunday at 1:00 PM at your place?",
+        "is_blurry":  false,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-29-damage-control-card-light",
+        "file":  "screen-29-damage-control-card-light.png",
+        "type":  "sms",
+        "theme":  "light",
+        "expected_text":  "Netflix Billing: Payment failed. Update credit card at http://bit.ly/netflix-billing-fix. Entered card details on site.",
+        "is_blurry":  false,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-30-damage-control-wire-dark",
+        "file":  "screen-30-damage-control-wire-dark.png",
+        "type":  "sms",
+        "theme":  "dark",
+        "expected_text":  "IRS Settlement: Outstanding tax warrant of ,500. Wired settlement from credit union an hour ago.",
+        "is_blurry":  false,
+        "is_blank":  false
+    },
+    {
+        "id":  "screen-31-no-text-coffee-photo",
+        "file":  "screen-31-no-text-coffee-photo.png",
+        "type":  "photo",
+        "theme":  "light",
+        "expected_text":  "",
+        "is_blurry":  false,
+        "is_blank":  true
+    },
+    {
+        "id":  "screen-32-no-text-landscape-photo",
+        "file":  "screen-32-no-text-landscape-photo.png",
+        "type":  "photo",
+        "theme":  "dark",
+        "expected_text":  "",
+        "is_blurry":  false,
+        "is_blank":  true
+    }
+]
