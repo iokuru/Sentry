@@ -1,114 +1,139 @@
-# sentry
+# Sentry
 
-sentry helps an older adult check a suspicious screenshot or message for fraud. they drop an image, optionally type what happened, and get exactly three things:
-1. what to hold off on right now
-2. a safe alternative action
-3. a one tap button that dials the official fraud hotline for their country (us ftc, uk action fraud, india 1930, australia scamwatch)
+Sentry is an open-source, privacy-first anti-fraud triage tool built for older adults and families. When an unexpected text message or suspicious screenshot arrives, Sentry analyzes the content and delivers immediate, calm, and actionable guidance:
 
-when risk is high, linked caregivers receive an immediate alert by email and optional telegram. caregivers sign in to a portal that lists incidents as cards with severity, time, and status, with buttons to acknowledge or resolve.
+1. **What to hold off on right now**: Immediate containment advice to prevent irreversible loss.
+2. **Recommended next steps**: Clear, numbered actions to verify or isolate the threat safely.
+3. **A safe alternative action**: Official channels to verify the communication independently.
+4. **Official national fraud hotline**: One-tap phone dialer and verified government reporting link.
 
-## design decisions
+When high-risk fraud is identified, linked family members and caregivers receive real-time notifications via email and Telegram, with access to an incident dashboard to acknowledge and resolve issues.
 
-- **why no bedrock:** bedrock charges per input and output token with zero free tier allowance. llms can also hallucinate phone numbers or panic older adults. sentry uses a deterministic scoring engine with weighted regex signals, ensuring zero cost, reproducible results, and sub-second classification.
-- **why no orm:** orms add reflection overhead, memory overhead, and cold start latency to lambda binaries. sentry uses the official aws sdk go v2 dynamodb attributevalue marshaler directly.
+Live demo: [sentry-security-krisnakk.netlify.app](https://sentry-security-krisnakk.netlify.app)
 
-interface design is adapted from asksafe home (https://github.com/v0-community/asksafe-home).
+## How It Works
 
-## exact free tier allowances
+Visitors can evaluate suspicious messages through three intuitive paths:
 
-everything runs at zero usd on aws free tier or always-free allowances. textract and comprehend are the only services with limited free allowances, with a daily request cap of 100 requests per day enforced in code (falling back to rule-based classification when exhausted). an aws budget alarm is configured at 1 usd to alert on any unexpected spend.
+- **Screenshot Upload**: Drop or attach a screenshot of an SMS, WhatsApp message, email, or browser popup. Text is read directly inside your browser via an in-memory OCR worker, keeping your personal screenshots private.
+- **Pasted Text**: Copy and paste any suspicious message, tracking link, or voicemail transcript directly into the workbench.
+- **Sample Scenarios**: Test real-world examples across delivery alerts, banking suspensions, fake lottery prizes, and urgent family claims.
 
-### operational modes
+### Immediate Triage Output
 
-sentry supports three operational modes and two frontend hosting options in `inputs.local.json`:
+Each check produces a tailored safety summary:
+- **Alert Level**: Color-coded risk status (High Risk Alert, Caution Advised, Standard Message).
+- **Category Badge**: Automatic classification (Delivery Alert, Banking Alert, Family Impersonation, Legal / Tax Threat, Utility Alert, Tech Support Alert, Online Contact, Prize Claim).
+- **Detected Warning Signs**: Specific signals identified in the message (lookalike domains, urgency wording, payment redirection, QR codes).
+- **Official Helplines**: Country-specific fraud assistance numbers (US FTC 1-877-382-4357, UK Action Fraud 0300 123 2040, India Cybercrime 1930, Australia Scamwatch).
 
-- **frontend host:** `frontend_host: "netlify"` publishes directly to netlify with exact origin cors restrictions on api gateway and uploads storage. `frontend_host: "cloudfront"` deploys to s3 behind cloudfront.
+### Caregiver Portal
 
-1. **auto mode (default):** `use_comprehend: "auto"`, `ocr_mode: "auto"`. probes textract and comprehend. uses cloud services when available; automatically falls back to deterministic rules if comprehend throws subscription errors, and automatically hands off to client-side browser ocr worker if textract is blocked. services used: s3, cloudfront, api gateway, lambda, dynamodb, sqs, sns, cognito, eventbridge scheduler, cloudwatch, ssm, plus textract and comprehend when accessible.
-2. **cloud mode:** `use_comprehend: "on"`, `ocr_mode: "textract"`. enforces cloud textract ocr and comprehend analysis. preflight checks fail if your aws account lacks active subscriptions. services used: all thirteen services including textract and comprehend.
-3. **zero-subscription free mode:** `use_comprehend: "off"`, `ocr_mode: "browser"`. completely disables textract and comprehend. terraform creates no textract or comprehend iam policies. text extraction runs entirely inside the user's browser using a self-hosted web worker with bundled language models, and classification runs using local deterministic rules. services used: eleven always-free or free tier services (s3, cloudfront, api gateway, lambda, dynamodb, sqs, sns, cognito, eventbridge scheduler, cloudwatch, ssm). neither textract nor comprehend is touched.
+Caregivers can register and link to family members:
+- Secure authentication via Amazon Cognito.
+- Real-time incident feed showing severity, timestamps, detected signals, and review status.
+- One-click incident acknowledgment and resolution workflow.
 
-### services breakdown
+## Architecture and Design Decisions
 
-- **s3:** 5 gb standard storage and 20,000 get requests. private uploads expire after 1 day via s3 lifecycle rule and are deleted immediately after analysis completes.
-- **cloudfront:** 1 tb data transfer out per month and 10,000,000 requests (always free). serves static frontend with origin access control and security headers.
-- **api gateway:** http api has 1,000,000 free requests per month. jwt authorizer on caregiver routes, throttled intake route for seniors.
-- **lambda:** 1,000,000 free requests and 3,200,000 seconds of compute time per month (always free). compiled as single arm64 bootstrap binaries on provided.al2023.
-- **dynamodb:** on-demand pay-per-request billing mode with zero provisioned capacity. 25 gb free storage. ttl of 90 days on incident records.
-- **textract:** 1,000 pages per month free allowance for 3 months. a hard daily cap of 100 requests is enforced in code, falling back to rule-based analysis when reached.
-- **comprehend:** 50,000 text units per month free allowance for 12 months. capped in code at 100 requests per day, falling back to local linguistic rules.
-- **sqs:** 1,000,000 requests per month (always free). async analysis queue with dead-letter queue.
-- **sns:** 1,000,000 publishes and 100,000 email deliveries per month (always free). paid sms is strictly prohibited.
-- **cognito:** 50,000 monthly active users (always free). simple email and password sign in without hosted ui.
-- **eventbridge scheduler:** 14,000,000 invocations per month (always free). runs daily digest email for unresolved incidents.
-- **cloudwatch:** 7 day log retention across all functions and one alarm on dlq depth.
-- **ssm parameter store:** standard tier parameters only (always free). stores telegram credentials and optional hotline registry overrides.
-- **aws budgets:** 2 free budgets. a 1 usd budget alarm is configured to alert on unexpected usage.
+- **Deterministic Rule Engine**: Rather than relying on large language models that introduce latency, hallucinations, and recurring token costs, Sentry uses a weighted heuristic classification engine in Go. Responses are instantaneous, consistent, and zero-cost.
+- **Client-Side OCR Privacy**: Screenshot text extraction executes in the browser using a bundled Tesseract worker. Image payloads are discarded immediately after analysis.
+- **Zero-Maintenance Serverless**: The backend runs on AWS Lambda (ARM64 custom runtime), API Gateway HTTP API, DynamoDB on-demand, SQS async queues, and Amazon SNS notifications.
+- **Accessible Frontend**: Built with Next.js and TypeScript, designed with high-contrast type meeting WCAG AAA requirements, clear tap targets, and responsive layouts across mobile, tablet, and desktop screens.
 
-## one-touch deployment
+## Scam Categories Covered
 
-deploying sentry to a cold aws account requires only filling one inputs file and running two commands:
+- **Delivery Fee Redirection**: Fake postal hold alerts demanding redelivery charges or customs duty.
+- **Banking Phishing**: False card suspension alerts, unblock links, and one-time password theft.
+- **Family Impersonation**: Emergency claims from unrecognized numbers ("Mom, I broke my phone").
+- **Tech Support Remote Access**: Deceptive virus warnings directing users to call call-center software traps.
+- **Utility Disconnection**: Sudden electricity or water shutoff warnings demanding immediate wire or gift card payment.
+- **Prize and Advance-Fee Traps**: Lottery winnings and gift cards requiring upfront processing fees.
+- **Digital Arrest and Authority Threats**: Intimidation tactics impersonating law enforcement, police, or revenue agencies.
+- **Online Romance Requests**: Wire transfer or gift voucher demands from online contacts.
+- **Task Deposit Schemes**: Work-from-home schemes demanding upfront deposits to release earned funds.
 
-1. configure inputs:
-   ```bash
-   cp inputs.example.json inputs.local.json
-   ```
-   fill in your `aws_region`, `budget_alert_email`, `caregiver_email`, and optional telegram bot credentials.
+## Local Development
 
-2. verify preflight constraints:
-   ```bash
-   make preflight
-   ```
-   *(or `.\scripts\dev.ps1 preflight` on windows)*
+### Prerequisites
 
-3. execute automated go-live:
-   ```bash
-   make go-live
-   ```
-   *(or `.\scripts\dev.ps1 go-live` on windows)*
+- Go 1.22 or newer
+- Node.js 18 or newer
+- npm
 
-   this command compiles arm64 lambdas, builds the static frontend, applies terraform, stores ssm parameters, registers the telegram webhook, uploads assets to s3, invalidates cloudfront, and runs the live smoke test.
+### Running the Local Environment
 
-4. check deployment health anytime:
-   ```bash
-   make status
-   ```
-   *(or `.\scripts\dev.ps1 status` on windows)*
-
-5. clean up all resources:
-   ```bash
-   make teardown
-   ```
-   *(or `.\scripts\dev.ps1 teardown` on windows)*
-
-## local development
-
-start the backend and frontend with zero aws credentials:
+Start the local backend devserver and mock services:
 
 ```bash
 make dev
 ```
-*(or `.\scripts\dev.ps1 dev` on windows)*
 
-this launches:
-- `cmd/devserver` on http://localhost:8080 with in-memory stores, fake ocr, fake comprehend, and fake telegram dispatcher.
-- sveltekit frontend on http://localhost:5173 with proxy to backend.
+Or run the Go server directly:
 
-run the test suite:
+```bash
+go run ./cmd/devserver
+```
+
+In a separate terminal, launch the Next.js frontend:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The application will be accessible at `http://localhost:3000` with the local mock API at `http://localhost:8080`.
+
+### Running Tests
+
+Run the full Go test suite:
 
 ```bash
 make test
 ```
-*(or `.\scripts\dev.ps1 test` on windows)*
 
-run the local verification loop:
-
-```bash
-make smoke
-```
-
-generate fixture images across all categories:
+Run the case evaluation suite across 100+ scam and benign test scenarios:
 
 ```bash
-make seed
+make cases
 ```
+
+Run the frontend test suite:
+
+```bash
+cd frontend
+npm test
+```
+
+## Deployment
+
+Sentry deploys to AWS via Terraform and compiled Go binaries:
+
+1. Copy the example configuration:
+   ```bash
+   cp inputs.example.json inputs.local.json
+   ```
+2. Set your AWS region, caregiver email, and optional Telegram bot token.
+3. Validate preflight checks:
+   ```bash
+   make preflight
+   ```
+4. Deploy the infrastructure and services:
+   ```bash
+   make go-live
+   ```
+
+## Contributing and Suggestions
+
+Contributions, feature suggestions, and new scam test patterns are welcome.
+
+- **Add New Test Cases**: Add representative scam messages to `testdata/cases/` with expected classifications and signals.
+- **Suggest Detection Rules**: Enhance detection logic in `internal/risk/` to protect against emerging threats.
+- **Improve Accessibility**: Ensure all user flows remain simple, clear, and reassuring for non-technical users.
+
+Please review `CONTRIBUTING.md` for guidelines and workflow.
+
+## License
+
+This project is licensed under the MIT License.
