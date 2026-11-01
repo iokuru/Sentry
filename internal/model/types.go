@@ -50,6 +50,9 @@ type HotlineInfo struct {
 }
 
 type SeniorOutput struct {
+	Headline        string      `json:"headline"`
+	WhatThisIs      string      `json:"what_this_is"`
+	WhatToDoNext    string      `json:"what_to_do_next"`
 	HoldOff         string      `json:"hold_off"`
 	SafeAlternative string      `json:"safe_alternative"`
 	Hotline         HotlineInfo `json:"hotline"`
