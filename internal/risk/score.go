@@ -87,7 +87,7 @@ var Rules = []Rule{
 	{
 		ID:      "delivery_fee_or_redirection",
 		Name:    "delivery parcel on hold or fee link",
-		Weight:  40,
+		Weight:  60,
 		Checker: checkDeliveryFeeOrRedirection,
 	},
 	{
