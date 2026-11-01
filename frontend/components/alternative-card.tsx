@@ -78,6 +78,18 @@ export function AlternativeCard({ action }: AlternativeCardProps) {
             font-size: 1.05rem;
           }
         }
+
+        @media (max-width: 360px) {
+          .alternative-card {
+            padding: 16px;
+          }
+          .alternative-title {
+            font-size: 1.1rem;
+          }
+          .alternative-action {
+            font-size: 0.98rem;
+          }
+        }
       `}</style>
     </div>
   );

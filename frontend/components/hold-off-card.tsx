@@ -78,6 +78,18 @@ export function HoldOffCard({ advice }: HoldOffCardProps) {
             font-size: 1.05rem;
           }
         }
+
+        @media (max-width: 360px) {
+          .hold-card {
+            padding: 16px;
+          }
+          .hold-title {
+            font-size: 1.1rem;
+          }
+          .hold-advice {
+            font-size: 0.98rem;
+          }
+        }
       `}</style>
     </div>
   );

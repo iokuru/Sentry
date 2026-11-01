@@ -248,15 +248,23 @@ export default function SeniorPage() {
         {flowState === "result" && result && (
           <div className="result-layout">
             <header className="result-header">
-              <span className="result-eyebrow">Safety Assessment</span>
-              <h1 className="result-title">Here’s what to do next.</h1>
+              <span className="result-eyebrow">
+                {result.severity === "HIGH"
+                  ? "High Risk Alert"
+                  : result.severity === "MEDIUM"
+                  ? "Caution Advised"
+                  : "Standard Message"}
+              </span>
+              <h1 className="result-title">
+                {result.headline || "Here’s what to do next."}
+              </h1>
               <p className="result-subtitle">
-                Take a breath. Review these steps before responding or giving any personal information.
+                {result.what_this_is || "Take a breath. Review these steps before responding or giving any personal information."}
               </p>
             </header>
 
             <div className="result-cards">
-              <HoldOffCard advice={result.hold_off} />
+              <HoldOffCard advice={result.what_to_do_next || result.hold_off} />
               <AlternativeCard action={result.safe_alternative} />
               <HotlineButton
                 country={result.country || selectedCountry}

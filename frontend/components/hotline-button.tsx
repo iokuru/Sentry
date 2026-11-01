@@ -182,75 +182,21 @@ export function HotlineButton({
             font-size: 1.1rem;
           }
         }
-      `}</style>
-    </div>
-  );
-}
-          gap: 16px;
-          box-shadow: var(--shadow-sm);
-        }
 
-        .hotline-title {
-          font-size: 1.35rem;
-          font-weight: 700;
-          color: var(--text-main);
-          letter-spacing: -0.01em;
-          margin-bottom: 6px;
-        }
-
-        .hotline-desc {
-          font-size: 1.05rem;
-          color: var(--text-muted);
-          line-height: 1.5;
-        }
-
-        .hotline-dial-btn {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-          background-color: var(--color-primary);
-          color: var(--text-inverse);
-          padding: 16px 24px;
-          border-radius: var(--radius-md);
-          text-decoration: none;
-          min-height: 64px;
-          transition: background-color 0.15s ease, transform 0.05s ease;
-        }
-
-        .hotline-dial-btn:hover {
-          background-color: var(--color-primary-hover);
-        }
-
-        .hotline-dial-btn:active {
-          transform: translateY(1px);
-        }
-
-        .hotline-dial-icon {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 44px;
-          height: 44px;
-          border-radius: var(--radius-full);
-          background-color: rgba(255, 255, 255, 0.2);
-          flex-shrink: 0;
-        }
-
-        .hotline-dial-text {
-          display: flex;
-          flex-direction: column;
-        }
-
-        .hotline-agency {
-          font-size: 1.15rem;
-          font-weight: 700;
-          line-height: 1.3;
-        }
-
-        .hotline-phone-number {
-          font-size: 1rem;
-          font-weight: 500;
-          opacity: 0.92;
+        @media (max-width: 360px) {
+          .hotline-card {
+            padding: 16px;
+          }
+          .hotline-dial-btn {
+            padding: 12px 14px;
+            gap: 10px;
+          }
+          .hotline-agency {
+            font-size: 1.05rem;
+          }
+          .hotline-phone-number {
+            font-size: 0.95rem;
+          }
         }
       `}</style>
     </div>
