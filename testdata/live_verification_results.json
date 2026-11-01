@@ -7,7 +7,7 @@
     "expectedCat": "delivery",
     "actualCat": "delivery",
     "pass": true,
-    "duration": 1822,
+    "duration": 4208,
     "output": {
       "hold_off": "Do not click tracking links or pay unexpected redelivery fees.",
       "safe_alternative": "Track the item directly on the carrier official website or app using your original order number.",
@@ -28,7 +28,7 @@
     "expectedCat": "bank",
     "actualCat": "bank",
     "pass": true,
-    "duration": 1506,
+    "duration": 1485,
     "output": {
       "hold_off": "Do not tap message links, transfer money, or share any card PINs or passwords.",
       "safe_alternative": "Call the trusted phone number printed on the back of your bank card.",
@@ -49,7 +49,7 @@
     "expectedCat": "bank",
     "actualCat": "bank",
     "pass": true,
-    "duration": 1363,
+    "duration": 1379,
     "output": {
       "hold_off": "Do not tap message links, transfer money, or share any card PINs or passwords.",
       "safe_alternative": "Call the trusted phone number printed on the back of your bank card.",
@@ -70,7 +70,7 @@
     "expectedCat": "relative in need",
     "actualCat": "relative in need",
     "pass": true,
-    "duration": 1358,
+    "duration": 1381,
     "output": {
       "hold_off": "Do not send funds or purchase vouchers until you have spoken to them directly.",
       "safe_alternative": "Call the relative on their original phone number that was already saved in your contacts.",
@@ -91,7 +91,7 @@
     "expectedCat": "prize",
     "actualCat": "prize",
     "pass": true,
-    "duration": 1353,
+    "duration": 1359,
     "output": {
       "hold_off": "Do not pay any processing fee, tax deposit, or shipping fee to claim winnings.",
       "safe_alternative": "Delete the message and remember legitimate lotteries never require payment to release prizes.",
@@ -112,7 +112,7 @@
     "expectedCat": "tech support",
     "actualCat": "tech support",
     "pass": true,
-    "duration": 1350,
+    "duration": 1362,
     "output": {
       "hold_off": "Do not grant screen access, install remote software, or give callers your computer password.",
       "safe_alternative": "Shut down your computer or ask a family member or local technician to inspect it in person.",
@@ -133,7 +133,7 @@
     "expectedCat": "tax",
     "actualCat": "tax",
     "pass": true,
-    "duration": 1621,
+    "duration": 1348,
     "output": {
       "hold_off": "Do not transfer money or disclose your tax identification number under threat of arrest.",
       "safe_alternative": "Contact the official national tax agency directly through their verified government website.",
@@ -154,7 +154,7 @@
     "expectedCat": "other",
     "actualCat": "other",
     "pass": true,
-    "duration": 1639,
+    "duration": 1655,
     "output": {
       "hold_off": "Do not click links, send money, or share private personal information.",
       "safe_alternative": "Verify the request through an established contact method you know and trust.",
@@ -175,10 +175,10 @@
     "expectedCat": "romance",
     "actualCat": "romance",
     "pass": true,
-    "duration": 1720,
+    "duration": 1364,
     "output": {
-      "hold_off": "Pause before clicking any link or sending money to this sender.",
-      "safe_alternative": "Contact the organization through their official phone number or website.",
+      "hold_off": "Do not send electronic funds, gift vouchers, or parcels to online acquaintances.",
+      "safe_alternative": "Discuss the situation openly with a close relative or confidant before considering any assistance.",
       "hotline": {
         "country": "US",
         "name": "US FTC Fraud Hotline",
@@ -196,7 +196,7 @@
     "expectedCat": "other",
     "actualCat": "other",
     "pass": true,
-    "duration": 1352,
+    "duration": 1687,
     "output": {
       "hold_off": "Do not click links, send money, or share private personal information.",
       "safe_alternative": "Verify the request through an established contact method you know and trust.",
@@ -217,7 +217,7 @@
     "expectedCat": "utility",
     "actualCat": "utility",
     "pass": true,
-    "duration": 1358,
+    "duration": 1374,
     "output": {
       "hold_off": "Do not make immediate card payments over the phone or buy gift cards to stop shutoffs.",
       "safe_alternative": "Check your utility account online or call the customer service number on your last paper bill.",
@@ -238,7 +238,7 @@
     "expectedCat": "bank",
     "actualCat": "bank",
     "pass": true,
-    "duration": 1343,
+    "duration": 1357,
     "output": {
       "hold_off": "Do not tap message links, transfer money, or share any card PINs or passwords.",
       "safe_alternative": "Call the trusted phone number printed on the back of your bank card.",
@@ -259,7 +259,7 @@
     "expectedCat": "bank",
     "actualCat": "bank",
     "pass": true,
-    "duration": 1342,
+    "duration": 1368,
     "output": {
       "hold_off": "Call your bank now to freeze your accounts and stop any further transfers.",
       "safe_alternative": "Change your passwords from a separate trusted device and report the incident.",
@@ -280,7 +280,7 @@
     "expectedCat": "other",
     "actualCat": "other",
     "pass": true,
-    "duration": 1352,
+    "duration": 1371,
     "output": {
       "hold_off": "Nothing urgent found. Take your time and do not feel pressured to act immediately.",
       "safe_alternative": "Double-check the sender details through an official website or your existing contacts.",
@@ -301,7 +301,7 @@
     "expectedCat": "other",
     "actualCat": "other",
     "pass": true,
-    "duration": 1340,
+    "duration": 1409,
     "output": {
       "hold_off": "Nothing urgent found. Take your time and do not feel pressured to act immediately.",
       "safe_alternative": "Double-check the sender details through an official website or your existing contacts.",
@@ -322,7 +322,7 @@
     "expectedCat": "bank",
     "actualCat": "bank",
     "pass": true,
-    "duration": 1683,
+    "duration": 2691,
     "output": {
       "hold_off": "Do not tap message links, transfer money, or share any card PINs or passwords.",
       "safe_alternative": "Call the trusted phone number printed on the back of your bank card.",
@@ -343,7 +343,7 @@
     "expectedCat": "delivery",
     "actualCat": "delivery",
     "pass": true,
-    "duration": 1519,
+    "duration": 1494,
     "output": {
       "hold_off": "Do not click tracking links or pay unexpected redelivery fees.",
       "safe_alternative": "Track the item directly on the carrier official website or app using your original order number.",
@@ -364,7 +364,7 @@
     "expectedCat": "tax",
     "actualCat": "tax",
     "pass": true,
-    "duration": 1560,
+    "duration": 1527,
     "output": {
       "hold_off": "Do not transfer money or disclose your tax identification number under threat of arrest.",
       "safe_alternative": "Contact the official national tax agency directly through their verified government website.",
