@@ -1,0 +1,17 @@
+{
+  "id": "delivery-fee-caps",
+  "input_text": "ROYAL MAIL ALERT!! 🚨 YOUR PARCEL CANNOT BE DELIVERED WITHOUT 1.50 GBP CUSTOMS FEE. PAY IMMEDIATELY AT HTTPS://BIT.LY/RM-FEE-PAY",
+  "context": "Text message",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "delivery",
+  "required_signals": [
+    "suspicious_link",
+    "delivery_fee_or_redirection"
+  ],
+  "required_wording_points": [
+    "carrier",
+    "fee"
+  ],
+  "caregiver_alert": true
+}

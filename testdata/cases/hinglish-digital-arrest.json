@@ -1,0 +1,17 @@
+{
+  "id": "hinglish-digital-arrest",
+  "input_text": "Customs narcotics wing Delhi: Parcel seized containing MDMA under your Aadhaar number. CBI court digital arrest warrant active. Connect on Skype video call immediately or police team will arrest.",
+  "context": "Incoming message",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "tax",
+  "required_signals": [
+    "authority_impersonation",
+    "digital_arrest_or_legal_threat"
+  ],
+  "required_wording_points": [
+    "police",
+    "arrest"
+  ],
+  "caregiver_alert": true
+}

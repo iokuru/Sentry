@@ -1,0 +1,17 @@
+{
+  "id": "police-threat-sloppy",
+  "input_text": "cbi police notice: narcotics detected in yr parcel sent from mumbai. u are under digital arrest remain on video call or police will reach your home",
+  "context": "WhatsApp video notice",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "tax",
+  "required_signals": [
+    "authority_impersonation",
+    "digital_arrest_or_legal_threat"
+  ],
+  "required_wording_points": [
+    "police",
+    "arrest"
+  ],
+  "caregiver_alert": true
+}

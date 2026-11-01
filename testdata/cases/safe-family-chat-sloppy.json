@@ -1,0 +1,14 @@
+{
+  "id": "safe-family-chat-sloppy",
+  "input_text": "hi mom did you find my blue sweater at your house? love you talk later",
+  "context": "Chat from daughter",
+  "source": "text",
+  "expected_level": "low",
+  "expected_category": "relative in need",
+  "required_signals": [],
+  "required_wording_points": [
+    "standard",
+    "update"
+  ],
+  "caregiver_alert": false
+}

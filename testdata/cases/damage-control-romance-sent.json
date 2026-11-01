@@ -1,0 +1,17 @@
+{
+  "id": "damage-control-romance-sent",
+  "input_text": "My love, I am trapped in the Istanbul airport, please wire $1,000 via Western Union.",
+  "context": "I sent the Western Union transfer this morning because he sounded desperate",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "romance",
+  "required_signals": [
+    "damage_control_stated",
+    "untraceable_payment"
+  ],
+  "required_wording_points": [
+    "containment",
+    "bank"
+  ],
+  "caregiver_alert": true
+}

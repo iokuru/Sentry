@@ -1,0 +1,17 @@
+{
+  "id": "marketplace-buyer-clean",
+  "input_text": "I have mailed a certified cashier cheque for $1,200 for your dining table ($400). Please wire the remaining $800 to my mover so they can pick up the furniture tomorrow.",
+  "context": "Marketplace message",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "bank",
+  "required_signals": [
+    "refund_overpayment_claim",
+    "untraceable_payment"
+  ],
+  "required_wording_points": [
+    "funds",
+    "extra"
+  ],
+  "caregiver_alert": true
+}

@@ -1,0 +1,17 @@
+{
+  "id": "damage-control-card-entered",
+  "input_text": "Netflix: Payment declined, update credit card at https://bit.ly/netflix-billing-fix",
+  "context": "I typed in my debit card number and CVV on that website before checking",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "other",
+  "required_signals": [
+    "damage_control_stated",
+    "suspicious_link"
+  ],
+  "required_wording_points": [
+    "containment",
+    "bank"
+  ],
+  "caregiver_alert": true
+}

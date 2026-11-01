@@ -1,0 +1,16 @@
+{
+  "id": "refund-overpayment-sloppy",
+  "input_text": "sir check your bank we sent 3500 extra by mistake please refund the difference 3000 to our upi id right now",
+  "context": "Caller messaging",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "bank",
+  "required_signals": [
+    "refund_overpayment_claim"
+  ],
+  "required_wording_points": [
+    "overpaid",
+    "difference"
+  ],
+  "caregiver_alert": true
+}

@@ -1,0 +1,16 @@
+{
+  "id": "upi-collect-sloppy",
+  "input_text": "sir i made payment for table on phonepe approve the collect request of 8000 and enter upi pin so money comes in your account",
+  "context": "WhatsApp message",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "bank",
+  "required_signals": [
+    "upi_collect_or_qr_receive"
+  ],
+  "required_wording_points": [
+    "QR",
+    "PIN"
+  ],
+  "caregiver_alert": true
+}

@@ -1,0 +1,14 @@
+{
+  "id": "safe-verification-requested-clean",
+  "input_text": "Uber: 382910 is your verification code. You requested this code to sign in to your Uber driver account.",
+  "context": "Sign in verification requested right now by user",
+  "source": "text",
+  "expected_level": "low",
+  "expected_category": "other",
+  "required_signals": [],
+  "required_wording_points": [
+    "review",
+    "expected"
+  ],
+  "caregiver_alert": false
+}

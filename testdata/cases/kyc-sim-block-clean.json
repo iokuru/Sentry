@@ -1,0 +1,17 @@
+{
+  "id": "kyc-sim-block-clean",
+  "input_text": "Jio Alert: Your SIM card services will be blocked within 12 hours due to incomplete KYC verification. Click to update Aadhaar: http://bit.ly/jio-aadhaar-update",
+  "context": "SMS alert",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "utility",
+  "required_signals": [
+    "kyc_pan_deadline",
+    "suspicious_link"
+  ],
+  "required_wording_points": [
+    "KYC",
+    "PAN"
+  ],
+  "caregiver_alert": true
+}

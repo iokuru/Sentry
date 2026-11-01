@@ -1,0 +1,17 @@
+{
+  "id": "utility-threat-sloppy",
+  "input_text": "water dept urgent: ur water meter will b shutoff in 1 hr due to unpaid bill pay immediately with gift card or call 8885550199",
+  "context": "SMS alert",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "utility",
+  "required_signals": [
+    "utility_disconnection_threat",
+    "untraceable_payment"
+  ],
+  "required_wording_points": [
+    "utility",
+    "bill"
+  ],
+  "caregiver_alert": true
+}

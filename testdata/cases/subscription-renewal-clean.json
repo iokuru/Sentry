@@ -1,0 +1,16 @@
+{
+  "id": "subscription-renewal-clean",
+  "input_text": "Geek Squad Order Confirmation: Your annual Total Tech Support subscription has auto-renewed for $399.99 and charged to your account. If you did not authorize this charge, call +1-800-555-0144 to cancel immediately.",
+  "context": "Email receipt",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "tech support",
+  "required_signals": [
+    "subscription_renewal_trap"
+  ],
+  "required_wording_points": [
+    "renewal",
+    "cancellation"
+  ],
+  "caregiver_alert": true
+}

@@ -1,0 +1,14 @@
+{
+  "id": "safe-bank-2fa-sloppy",
+  "input_text": "google verification code: 821940. do not share your code with anyone.",
+  "context": "Sign in prompt",
+  "source": "text",
+  "expected_level": "low",
+  "expected_category": "other",
+  "required_signals": [],
+  "required_wording_points": [
+    "review",
+    "expected"
+  ],
+  "caregiver_alert": false
+}

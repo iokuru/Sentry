@@ -1,0 +1,17 @@
+{
+  "id": "hinglish-police-customs-clean",
+  "input_text": "Delhi Customs Office: Foreign currency parcel detected with your name and passport. Digital arrest order issued. Join Skype investigation immediately or local police will seize property.",
+  "context": "WhatsApp official notice",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "tax",
+  "required_signals": [
+    "authority_impersonation",
+    "digital_arrest_or_legal_threat"
+  ],
+  "required_wording_points": [
+    "police",
+    "arrest"
+  ],
+  "caregiver_alert": true
+}

@@ -1,0 +1,17 @@
+{
+  "id": "telecom-broadband-threat-sloppy",
+  "input_text": "spectrum notice: internet service will terminate tonight unpaid bill pay right now at bit.ly/spec-pay-now",
+  "context": "Text message",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "utility",
+  "required_signals": [
+    "utility_disconnection_threat",
+    "suspicious_link"
+  ],
+  "required_wording_points": [
+    "utility",
+    "bill"
+  ],
+  "caregiver_alert": true
+}

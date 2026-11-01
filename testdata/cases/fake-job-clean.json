@@ -1,0 +1,17 @@
+{
+  "id": "fake-job-clean",
+  "input_text": "Global Media Partners is hiring remote product evaluators. Earn $300 to $500 per day working 1 hour from home. Submit a refundable equipment deposit of $150 to receive your tasks.",
+  "context": "Job inquiry response",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "other",
+  "required_signals": [
+    "fake_job_or_task",
+    "untraceable_payment"
+  ],
+  "required_wording_points": [
+    "job",
+    "fee"
+  ],
+  "caregiver_alert": true
+}

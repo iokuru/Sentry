@@ -1,0 +1,14 @@
+{
+  "id": "safe-calendar-invite-caps",
+  "input_text": "ROTARY CLUB BREAKFAST MEETING: WEDNESDAY 7:30 AM AT CITY HALL. RSVP ON THE CLUB BULLETIN.",
+  "context": "Meeting notice",
+  "source": "text",
+  "expected_level": "low",
+  "expected_category": "other",
+  "required_signals": [],
+  "required_wording_points": [
+    "standard",
+    "update"
+  ],
+  "caregiver_alert": false
+}

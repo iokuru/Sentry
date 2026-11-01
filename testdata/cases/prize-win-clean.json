@@ -1,0 +1,17 @@
+{
+  "id": "prize-win-clean",
+  "input_text": "Congratulations! You have been selected as the 2nd place winner of the Walmart Community Sweepstakes worth $5,000. To claim your prize, wire a $75 administrative processing fee to our claims agent.",
+  "context": "Letter and text",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "prize",
+  "required_signals": [
+    "untraceable_payment",
+    "prize_lottery_claim"
+  ],
+  "required_wording_points": [
+    "prize",
+    "processing"
+  ],
+  "caregiver_alert": true
+}

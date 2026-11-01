@@ -1,0 +1,17 @@
+{
+  "id": "damage-control-wire-transfer",
+  "input_text": "Internal Revenue Service: Pay $3,500 tax audit settlement immediately to avoid arrest.",
+  "context": "I panicked and wired the money from my credit union an hour ago",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "tax",
+  "required_signals": [
+    "damage_control_stated",
+    "authority_impersonation"
+  ],
+  "required_wording_points": [
+    "containment",
+    "bank"
+  ],
+  "caregiver_alert": true
+}

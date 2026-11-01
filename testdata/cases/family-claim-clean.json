@@ -1,0 +1,17 @@
+{
+  "id": "family-claim-clean",
+  "input_text": "Hi Mom, I dropped my phone in the water and this is my temporary number. I have an urgent bill that needs to be paid before 5 PM today, could you please transfer $650 for me?",
+  "context": "WhatsApp message",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "relative in need",
+  "required_signals": [
+    "family_impersonation",
+    "untraceable_payment"
+  ],
+  "required_wording_points": [
+    "family",
+    "number"
+  ],
+  "caregiver_alert": true
+}

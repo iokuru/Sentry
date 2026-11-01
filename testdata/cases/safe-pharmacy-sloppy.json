@@ -1,0 +1,14 @@
+{
+  "id": "safe-pharmacy-sloppy",
+  "input_text": "walgreens rx ready: order 98211 ready at drive thru window pharmacy closes at 8pm",
+  "context": "Pharmacy SMS",
+  "source": "text",
+  "expected_level": "low",
+  "expected_category": "other",
+  "required_signals": [],
+  "required_wording_points": [
+    "standard",
+    "update"
+  ],
+  "caregiver_alert": false
+}

@@ -1,0 +1,14 @@
+{
+  "id": "safe-bank-2fa-caps",
+  "input_text": "NETFLIX SIGN IN PASSCODE: 772910. NEVER SHARE THIS CODE. ENTER IT ON YOUR DEVICE SCREEN TO CONTINUE.",
+  "context": "Sign-in code",
+  "source": "text",
+  "expected_level": "low",
+  "expected_category": "other",
+  "required_signals": [],
+  "required_wording_points": [
+    "review",
+    "expected"
+  ],
+  "caregiver_alert": false
+}

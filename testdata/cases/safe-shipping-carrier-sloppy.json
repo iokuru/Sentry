@@ -1,0 +1,14 @@
+{
+  "id": "safe-shipping-carrier-sloppy",
+  "input_text": "fedex update: pkg 772189901 has arrived at pickup locker. pin to open locker is on receipt.",
+  "context": "Carrier alert",
+  "source": "text",
+  "expected_level": "low",
+  "expected_category": "delivery",
+  "required_signals": [],
+  "required_wording_points": [
+    "standard",
+    "update"
+  ],
+  "caregiver_alert": false
+}

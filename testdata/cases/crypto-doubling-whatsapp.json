@@ -1,0 +1,17 @@
+{
+  "id": "crypto-doubling-whatsapp",
+  "input_text": "Join our automated Binance trading desk. Send 0.1 ETH and get 0.2 ETH credited back within 6 hours. Zero risk with smart contracts.",
+  "context": "WhatsApp group invite",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "other",
+  "required_signals": [
+    "investment_trading_scheme",
+    "untraceable_payment"
+  ],
+  "required_wording_points": [
+    "trading",
+    "deposit"
+  ],
+  "caregiver_alert": true
+}

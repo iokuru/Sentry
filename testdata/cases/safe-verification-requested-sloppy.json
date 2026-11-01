@@ -1,0 +1,14 @@
+{
+  "id": "safe-verification-requested-sloppy",
+  "input_text": "apple id verification: 610283. use this code to complete your password reset on your ipad.",
+  "context": "User triggered reset",
+  "source": "text",
+  "expected_level": "low",
+  "expected_category": "other",
+  "required_signals": [],
+  "required_wording_points": [
+    "review",
+    "expected"
+  ],
+  "caregiver_alert": false
+}

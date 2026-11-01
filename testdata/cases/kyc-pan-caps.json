@@ -1,0 +1,17 @@
+{
+  "id": "kyc-pan-caps",
+  "input_text": "HDFC BANK ALERT!! ⚠️ AADHAAR PAN LINKING MANDATORY! YOUR ACCOUNT WILL BE FROZEN TODAY IF NOT UPDATED. DOWNLOAD APK: HTTPS://BIT.LY/HDFC-PAN-APP",
+  "context": "SMS alert",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "bank",
+  "required_signals": [
+    "kyc_pan_deadline",
+    "suspicious_link"
+  ],
+  "required_wording_points": [
+    "KYC",
+    "PAN"
+  ],
+  "caregiver_alert": true
+}

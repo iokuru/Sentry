@@ -1,0 +1,14 @@
+{
+  "id": "safe-shipping-carrier-caps",
+  "input_text": "AUSTRALIA POST: YOUR DELIVERY #AP98124 IS OUT FOR DELIVERY TODAY WITH YOUR POSTIE. NO SIGNATURE REQUIRED.",
+  "context": "Delivery text",
+  "source": "text",
+  "expected_level": "low",
+  "expected_category": "delivery",
+  "required_signals": [],
+  "required_wording_points": [
+    "standard",
+    "update"
+  ],
+  "caregiver_alert": false
+}

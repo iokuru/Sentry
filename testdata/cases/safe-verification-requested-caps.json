@@ -1,0 +1,14 @@
+{
+  "id": "safe-verification-requested-caps",
+  "input_text": "MICROSOFT SECURITY CODE: 918230. USE TO SIGN IN TO YOUR OUTLOOK ACCOUNT. NEVER SHARE WITH THIRD PARTIES.",
+  "context": "Verification text",
+  "source": "text",
+  "expected_level": "low",
+  "expected_category": "other",
+  "required_signals": [],
+  "required_wording_points": [
+    "review",
+    "expected"
+  ],
+  "caregiver_alert": false
+}

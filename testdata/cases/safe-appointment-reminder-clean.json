@@ -1,0 +1,14 @@
+{
+  "id": "safe-appointment-reminder-clean",
+  "input_text": "Dr. Miller Office: Reminder for your dental cleaning appointment tomorrow at 10:30 AM. Reply C to confirm or call 555-0122 to reschedule.",
+  "context": "Healthcare appointment SMS",
+  "source": "text",
+  "expected_level": "low",
+  "expected_category": "other",
+  "required_signals": [],
+  "required_wording_points": [
+    "standard",
+    "update"
+  ],
+  "caregiver_alert": false
+}

@@ -1,0 +1,17 @@
+{
+  "id": "prize-win-sloppy",
+  "input_text": "u won 50k in national lottery draw!! just buy 100 apple gift card to pay clearance tax and claim your cash reward",
+  "context": "SMS",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "prize",
+  "required_signals": [
+    "untraceable_payment",
+    "prize_lottery_claim"
+  ],
+  "required_wording_points": [
+    "prize",
+    "gift"
+  ],
+  "caregiver_alert": true
+}

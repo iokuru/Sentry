@@ -1,0 +1,16 @@
+{
+  "id": "otp-request-clean",
+  "input_text": "Your account security team: A cancellation request was initiated for your wire transfer. Please share the 6-digit verification code you just received to cancel the transaction.",
+  "context": "Caller sent SMS during call",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "bank",
+  "required_signals": [
+    "otp_request"
+  ],
+  "required_wording_points": [
+    "verification",
+    "code"
+  ],
+  "caregiver_alert": true
+}

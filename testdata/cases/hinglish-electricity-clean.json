@@ -1,0 +1,16 @@
+{
+  "id": "hinglish-electricity-clean",
+  "input_text": "Dear Consumer, your electricity power will be disconnected at 9:30 PM from the power house because your previous month bill was not updated. Please immediately contact our power officer at 9876543210.",
+  "context": "SMS in Hinglish",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "utility",
+  "required_signals": [
+    "utility_disconnection_threat"
+  ],
+  "required_wording_points": [
+    "utility",
+    "bill"
+  ],
+  "caregiver_alert": true
+}

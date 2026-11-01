@@ -1,0 +1,16 @@
+{
+  "id": "otp-request-caps",
+  "input_text": "URGENT FRAUD ALERT: DO NOT IGNORE! SEND THE 6 DIGIT SECURITY PASSCODE IMMEDIATELY TO REVERSE THE PENDING $850 CHARGE!!",
+  "context": "SMS",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "bank",
+  "required_signals": [
+    "otp_request"
+  ],
+  "required_wording_points": [
+    "verification",
+    "code"
+  ],
+  "caregiver_alert": true
+}

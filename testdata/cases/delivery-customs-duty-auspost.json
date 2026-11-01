@@ -1,0 +1,17 @@
+{
+  "id": "delivery-customs-duty-auspost",
+  "input_text": "AusPost: We were unable to deliver your international parcel #AU918231 due to unpaid duty of $4.20. Pay duty online here: https://bit.ly/auspost-duty-pay",
+  "context": "SMS alert",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "delivery",
+  "required_signals": [
+    "suspicious_link",
+    "delivery_fee_or_redirection"
+  ],
+  "required_wording_points": [
+    "carrier",
+    "fee"
+  ],
+  "caregiver_alert": true
+}

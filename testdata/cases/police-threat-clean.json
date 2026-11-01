@@ -1,0 +1,17 @@
+{
+  "id": "police-threat-clean",
+  "input_text": "Internal Revenue Service: You have unpaid federal taxes totaling $4,820. An arrest warrant has been issued in your district. To avoid federal custody, wire settlement funds today.",
+  "context": "Voicemail transcript",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "tax",
+  "required_signals": [
+    "authority_impersonation",
+    "untraceable_payment"
+  ],
+  "required_wording_points": [
+    "tax",
+    "arrest"
+  ],
+  "caregiver_alert": true
+}

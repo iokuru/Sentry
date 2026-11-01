@@ -1,0 +1,17 @@
+{
+  "id": "tech-support-clean",
+  "input_text": "Microsoft Security Alert: Trojan spyware detected on your computer. Your financial data is at risk. Call Windows Support immediately at +1-800-555-0199 and do not restart your device.",
+  "context": "Browser pop up",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "tech support",
+  "required_signals": [
+    "tech_support_remote_access",
+    "authority_impersonation"
+  ],
+  "required_wording_points": [
+    "screen",
+    "remote"
+  ],
+  "caregiver_alert": true
+}

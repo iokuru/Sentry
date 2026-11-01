@@ -1,0 +1,16 @@
+{
+  "id": "tech-support-sloppy",
+  "input_text": "apple support warning: virus found in system files download anydesk immediately and call 18885550144 to clean device",
+  "context": "Website warning",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "tech support",
+  "required_signals": [
+    "tech_support_remote_access"
+  ],
+  "required_wording_points": [
+    "screen",
+    "remote"
+  ],
+  "caregiver_alert": true
+}

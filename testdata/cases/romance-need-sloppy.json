@@ -1,0 +1,16 @@
+{
+  "id": "romance-need-sloppy",
+  "input_text": "darling my oil rig had a breakdown and my credit card isnt working here can u send wire transfer 800 for my flight tickets to meet u",
+  "context": "Email message",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "romance",
+  "required_signals": [
+    "untraceable_payment"
+  ],
+  "required_wording_points": [
+    "funds",
+    "online"
+  ],
+  "caregiver_alert": true
+}

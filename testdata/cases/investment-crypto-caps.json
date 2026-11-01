@@ -1,0 +1,16 @@
+{
+  "id": "investment-crypto-caps",
+  "input_text": "INVESTMENT OPPORTUNITY OF THE YEAR!! 🚀 JOIN OUR SECRET CRYPTO TRADING CLUB AND MULTIPLY YOUR SAVINGS! ZERO RISK GUARANTEED RETURN!!",
+  "context": "SMS text",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "other",
+  "required_signals": [
+    "investment_trading_scheme"
+  ],
+  "required_wording_points": [
+    "trading",
+    "deposit"
+  ],
+  "caregiver_alert": true
+}

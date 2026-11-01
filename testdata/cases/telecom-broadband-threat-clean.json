@@ -1,0 +1,16 @@
+{
+  "id": "telecom-broadband-threat-clean",
+  "input_text": "Verizon Support: Your home broadband and fiber connection will be suspended today due to past due balance of $128. Call +1-800-555-0182 immediately to pay.",
+  "context": "SMS alert",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "utility",
+  "required_signals": [
+    "utility_disconnection_threat"
+  ],
+  "required_wording_points": [
+    "utility",
+    "bill"
+  ],
+  "caregiver_alert": true
+}

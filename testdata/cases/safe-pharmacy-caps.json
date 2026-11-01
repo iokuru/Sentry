@@ -1,0 +1,14 @@
+{
+  "id": "safe-pharmacy-caps",
+  "input_text": "BOOTS PHARMACY UK: YOUR REPEAT PRESCRIPTION HAS BEEN DISPENSED AND IS READY FOR COLLECTION AT HIGH STREET STORE.",
+  "context": "Pharmacy text",
+  "source": "text",
+  "expected_level": "low",
+  "expected_category": "other",
+  "required_signals": [],
+  "required_wording_points": [
+    "standard",
+    "update"
+  ],
+  "caregiver_alert": false
+}

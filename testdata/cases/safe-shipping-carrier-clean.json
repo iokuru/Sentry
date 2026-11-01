@@ -1,0 +1,14 @@
+{
+  "id": "safe-shipping-carrier-clean",
+  "input_text": "USPS Tracking: Package #9400111899562544 was delivered at 2:15 PM at your front door. Thank you for using USPS.",
+  "context": "Delivery confirmation SMS",
+  "source": "text",
+  "expected_level": "low",
+  "expected_category": "delivery",
+  "required_signals": [],
+  "required_wording_points": [
+    "standard",
+    "update"
+  ],
+  "caregiver_alert": false
+}

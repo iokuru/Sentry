@@ -1,0 +1,16 @@
+{
+  "id": "subscription-renewal-sloppy",
+  "input_text": "norton antivirus renewal notice: 449.00 usd debited from bank card for 3 yr plan. to dispute or cancel call billing support at 18885550183",
+  "context": "Email text",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "tech support",
+  "required_signals": [
+    "subscription_renewal_trap"
+  ],
+  "required_wording_points": [
+    "renewal",
+    "cancellation"
+  ],
+  "caregiver_alert": true
+}

@@ -1,0 +1,16 @@
+{
+  "id": "hinglish-job-telegram",
+  "input_text": "Ghar baithe kaam kare aur rozana 2000 se 5000 kamaye. Sirf video like karke screenshot bhejna hai. Registration fees 300 rs pay kare.",
+  "context": "Telegram message",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "other",
+  "required_signals": [
+    "fake_job_or_task"
+  ],
+  "required_wording_points": [
+    "job",
+    "fee"
+  ],
+  "caregiver_alert": true
+}

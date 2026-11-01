@@ -1,0 +1,14 @@
+{
+  "id": "safe-family-chat-caps",
+  "input_text": "HEY DAD! HAPPY BIRTHDAY!! CALL US LATER WHEN YOU HAVE A MINUTE TO CATCH UP!",
+  "context": "Birthday text from son",
+  "source": "text",
+  "expected_level": "low",
+  "expected_category": "relative in need",
+  "required_signals": [],
+  "required_wording_points": [
+    "standard",
+    "update"
+  ],
+  "caregiver_alert": false
+}

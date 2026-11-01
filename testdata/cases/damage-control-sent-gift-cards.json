@@ -1,0 +1,17 @@
+{
+  "id": "damage-control-sent-gift-cards",
+  "input_text": "Geek Squad: Virus detected, buy 3 Target gift cards for $500 each to pay cleanup technician.",
+  "context": "I already bought the gift cards and read the numbers to the man on the phone",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "tech support",
+  "required_signals": [
+    "damage_control_stated",
+    "untraceable_payment"
+  ],
+  "required_wording_points": [
+    "containment",
+    "bank"
+  ],
+  "caregiver_alert": true
+}

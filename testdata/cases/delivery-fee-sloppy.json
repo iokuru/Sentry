@@ -1,0 +1,17 @@
+{
+  "id": "delivery-fee-sloppy",
+  "input_text": "fedex parcel update: yr package is on hold at depo coz of 2.10 postage fee visit bit.ly/fdx-deliv now",
+  "context": "Received on phone",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "delivery",
+  "required_signals": [
+    "suspicious_link",
+    "delivery_fee_or_redirection"
+  ],
+  "required_wording_points": [
+    "carrier",
+    "fee"
+  ],
+  "caregiver_alert": true
+}

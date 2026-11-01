@@ -1,0 +1,16 @@
+{
+  "id": "upi-collect-caps",
+  "input_text": "SCAN QR CODE TO RECEIVE RS 25,000 CASH PRIZE ON GOOGLEPAY!! ENTER UPI PIN IMMEDIATELY TO CLAIM INSTANT BANK TRANSFER!!",
+  "context": "SMS text",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "bank",
+  "required_signals": [
+    "upi_collect_or_qr_receive"
+  ],
+  "required_wording_points": [
+    "QR",
+    "PIN"
+  ],
+  "caregiver_alert": true
+}

@@ -1,0 +1,17 @@
+{
+  "id": "utility-threat-clean",
+  "input_text": "Notice of Disconnection: Your electric service account #91823 has a past due balance of $214.50. Service will be terminated today unless payment is made by calling +1-800-555-0188.",
+  "context": "Automated text message",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "utility",
+  "required_signals": [
+    "utility_disconnection_threat",
+    "urgency_wording"
+  ],
+  "required_wording_points": [
+    "utility",
+    "bill"
+  ],
+  "caregiver_alert": true
+}

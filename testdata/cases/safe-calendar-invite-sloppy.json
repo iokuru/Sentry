@@ -1,0 +1,14 @@
+{
+  "id": "safe-calendar-invite-sloppy",
+  "input_text": "reminder: book club discussion tomorrow 4pm at the library meeting room bring your copy",
+  "context": "Event reminder",
+  "source": "text",
+  "expected_level": "low",
+  "expected_category": "other",
+  "required_signals": [],
+  "required_wording_points": [
+    "standard",
+    "update"
+  ],
+  "caregiver_alert": false
+}

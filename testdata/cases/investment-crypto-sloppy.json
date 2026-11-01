@@ -1,0 +1,16 @@
+{
+  "id": "investment-crypto-sloppy",
+  "input_text": "whatsapp trading group: sir make 10x returns in 3 days on bitcoin invest 200 today withdraw 2000 tomorrow 100% genuine guaranteed",
+  "context": "WhatsApp invite",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "other",
+  "required_signals": [
+    "investment_trading_scheme"
+  ],
+  "required_wording_points": [
+    "trading",
+    "deposit"
+  ],
+  "caregiver_alert": true
+}

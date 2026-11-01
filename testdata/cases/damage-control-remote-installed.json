@@ -1,0 +1,17 @@
+{
+  "id": "damage-control-remote-installed",
+  "input_text": "Windows Support: Your computer has a trojan, install AnyDesk so we can clean it.",
+  "context": "I let the caller connect to my computer and they opened a black screen",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "tech support",
+  "required_signals": [
+    "damage_control_stated",
+    "tech_support_remote_access"
+  ],
+  "required_wording_points": [
+    "containment",
+    "bank"
+  ],
+  "caregiver_alert": true
+}

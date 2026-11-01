@@ -1,0 +1,14 @@
+{
+  "id": "safe-pharmacy-clean",
+  "input_text": "CVS Pharmacy: Your prescription for Lisinopril is ready for pickup at 145 Main Street. Pharmacy hours today: 9:00 AM to 7:00 PM.",
+  "context": "Automated pharmacy text",
+  "source": "text",
+  "expected_level": "low",
+  "expected_category": "other",
+  "required_signals": [],
+  "required_wording_points": [
+    "standard",
+    "update"
+  ],
+  "caregiver_alert": false
+}

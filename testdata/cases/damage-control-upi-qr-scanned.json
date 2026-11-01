@@ -1,0 +1,17 @@
+{
+  "id": "damage-control-upi-qr-scanned",
+  "input_text": "Scan QR code to receive Rs 10,000 for your old refrigerator sale.",
+  "context": "Maine QR code scan karke apna UPI PIN daal diya aur mere account se 10,000 kat gaye",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "bank",
+  "required_signals": [
+    "damage_control_stated",
+    "upi_collect_or_qr_receive"
+  ],
+  "required_wording_points": [
+    "containment",
+    "bank"
+  ],
+  "caregiver_alert": true
+}

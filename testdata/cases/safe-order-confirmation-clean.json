@@ -1,0 +1,14 @@
+{
+  "id": "safe-order-confirmation-clean",
+  "input_text": "Thank you for your order at Powell Books! Order #78291 has been confirmed with 2 items. Expected delivery Tuesday.",
+  "context": "Order confirmation email",
+  "source": "text",
+  "expected_level": "low",
+  "expected_category": "other",
+  "required_signals": [],
+  "required_wording_points": [
+    "standard",
+    "update"
+  ],
+  "caregiver_alert": false
+}

@@ -1,0 +1,14 @@
+{
+  "id": "safe-calendar-invite-clean",
+  "input_text": "Calendar Invitation: Annual Garden Club Meeting on Thursday, October 15 from 10:00 AM to 11:30 AM at the community center.",
+  "context": "Calendar notification",
+  "source": "text",
+  "expected_level": "low",
+  "expected_category": "other",
+  "required_signals": [],
+  "required_wording_points": [
+    "standard",
+    "update"
+  ],
+  "caregiver_alert": false
+}

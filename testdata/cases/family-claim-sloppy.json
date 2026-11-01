@@ -1,0 +1,17 @@
+{
+  "id": "family-claim-sloppy",
+  "input_text": "hey dad broke my screen text me on this new number lost my wallet need 400 bucks for rent right now pls wire it",
+  "context": "Text message",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "relative in need",
+  "required_signals": [
+    "family_impersonation",
+    "untraceable_payment"
+  ],
+  "required_wording_points": [
+    "family",
+    "number"
+  ],
+  "caregiver_alert": true
+}

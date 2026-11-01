@@ -1,0 +1,16 @@
+{
+  "id": "fake-job-caps",
+  "input_text": "WORK FROM HOME HIRING IMMEDIATELY!! 💼 EARN $4000 WEEKLY REVIEWING HOTELS ONLINE! PAY $99 STARTER KIT DEPOSIT TO BEGIN WORK TODAY!!",
+  "context": "SMS text",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "other",
+  "required_signals": [
+    "fake_job_or_task"
+  ],
+  "required_wording_points": [
+    "job",
+    "fee"
+  ],
+  "caregiver_alert": true
+}

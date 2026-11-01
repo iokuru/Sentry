@@ -1,0 +1,17 @@
+{
+  "id": "hinglish-bank-blocked",
+  "input_text": "Aapka SBI yono account block kar diya gaya hai. Turant pan card update karne ke liye link pe click kare: bit.ly/sbi-pan-link",
+  "context": "SMS",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "bank",
+  "required_signals": [
+    "kyc_pan_deadline",
+    "suspicious_link"
+  ],
+  "required_wording_points": [
+    "KYC",
+    "PAN"
+  ],
+  "caregiver_alert": true
+}

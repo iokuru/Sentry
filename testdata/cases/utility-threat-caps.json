@@ -1,0 +1,17 @@
+{
+  "id": "utility-threat-caps",
+  "input_text": "FINAL NOTICE POWER SHUTOFF!! ⚡ ELECTRICITY DISCONNECTION SCHEDULED FOR 6 PM TODAY! CALL IMMEDIATE PAYMENT LINE 1-800-555-0177 TO PREVENT SHUTOFF!!",
+  "context": "Text alert",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "utility",
+  "required_signals": [
+    "utility_disconnection_threat",
+    "urgency_wording"
+  ],
+  "required_wording_points": [
+    "utility",
+    "bill"
+  ],
+  "caregiver_alert": true
+}

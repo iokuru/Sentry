@@ -1,0 +1,14 @@
+{
+  "id": "safe-order-confirmation-caps",
+  "input_text": "AMAZON.COM: ORDER CONFIRMED! 1 ITEM DISPATCHED TO YOUR ADDRESS. TRACK YOUR SHIPMENT IN THE AMAZON APP.",
+  "context": "Order alert",
+  "source": "text",
+  "expected_level": "low",
+  "expected_category": "other",
+  "required_signals": [],
+  "required_wording_points": [
+    "standard",
+    "update"
+  ],
+  "caregiver_alert": false
+}

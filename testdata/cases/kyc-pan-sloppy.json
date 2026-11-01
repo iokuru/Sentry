@@ -1,0 +1,17 @@
+{
+  "id": "kyc-pan-sloppy",
+  "input_text": "ur jio sim card will be deactivated tonight kyc not verified download jio-support.apk from bit.ly/jio-kyc to prevent disconnection",
+  "context": "SMS message",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "utility",
+  "required_signals": [
+    "kyc_pan_deadline",
+    "suspicious_link"
+  ],
+  "required_wording_points": [
+    "KYC",
+    "PAN"
+  ],
+  "caregiver_alert": true
+}

@@ -1,0 +1,17 @@
+{
+  "id": "marketplace-buyer-caps",
+  "input_text": "CRAIGSLIST BUYER PAYMENT RECEIPT: SENT $1500 VIA OVERSEAS WIRE FOR $500 ITEM. WIRE BACK $1000 DIFFERENCE VIA WESTERN UNION IMMEDIATELY!!",
+  "context": "Chat message",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "bank",
+  "required_signals": [
+    "refund_overpayment_claim",
+    "untraceable_payment"
+  ],
+  "required_wording_points": [
+    "funds",
+    "extra"
+  ],
+  "caregiver_alert": true
+}

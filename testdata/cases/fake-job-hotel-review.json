@@ -1,0 +1,17 @@
+{
+  "id": "fake-job-hotel-review",
+  "input_text": "Earn $200-$400 daily from home by rating luxury hotels on TripAdvisor. No experience needed, daily instant withdrawal via Telegram: https://bit.ly/hotel-rating-job",
+  "context": "Job post invite",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "other",
+  "required_signals": [
+    "fake_job_or_task",
+    "suspicious_link"
+  ],
+  "required_wording_points": [
+    "job",
+    "fee"
+  ],
+  "caregiver_alert": true
+}

@@ -1,0 +1,14 @@
+{
+  "id": "safe-order-confirmation-sloppy",
+  "input_text": "target receipt: order 1829910 ready for store pickup. items: paper towels, laundry soap.",
+  "context": "Order notice",
+  "source": "text",
+  "expected_level": "low",
+  "expected_category": "other",
+  "required_signals": [],
+  "required_wording_points": [
+    "standard",
+    "update"
+  ],
+  "caregiver_alert": false
+}

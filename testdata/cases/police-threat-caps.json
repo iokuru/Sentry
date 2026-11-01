@@ -1,0 +1,17 @@
+{
+  "id": "police-threat-caps",
+  "input_text": "AUSTRALIAN TAXATION OFFICE: FINAL NOTICE BEFORE COURT SUMMONS! PAY OUTSTANDING DEBT OF $3400 VIA BITCOIN ATM WITHIN 2 HOURS OR POLICE WILL ARREST YOU!!",
+  "context": "SMS text",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "tax",
+  "required_signals": [
+    "authority_impersonation",
+    "untraceable_payment"
+  ],
+  "required_wording_points": [
+    "tax",
+    "arrest"
+  ],
+  "caregiver_alert": true
+}

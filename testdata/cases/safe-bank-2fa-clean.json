@@ -1,0 +1,14 @@
+{
+  "id": "safe-bank-2fa-clean",
+  "input_text": "Your Chase one-time verification code is 492011. Do not share this code with anyone. Our employees will never call or text you to ask for it.",
+  "context": "2FA SMS from bank shortcode",
+  "source": "text",
+  "expected_level": "low",
+  "expected_category": "bank",
+  "required_signals": [],
+  "required_wording_points": [
+    "review",
+    "expected"
+  ],
+  "caregiver_alert": false
+}

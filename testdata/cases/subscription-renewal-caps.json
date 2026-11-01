@@ -1,0 +1,16 @@
+{
+  "id": "subscription-renewal-caps",
+  "input_text": "AMAZON PRIME ANNUAL RENEWAL INVOICE #89128: $499.00 CHARGED TODAY! NOT YOU? CALL CANCELLATION HELPLINE IMMEDIATELY AT 1-800-555-0166 TO REVERSE PAYMENT!!",
+  "context": "Email invoice text",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "other",
+  "required_signals": [
+    "subscription_renewal_trap"
+  ],
+  "required_wording_points": [
+    "renewal",
+    "cancellation"
+  ],
+  "caregiver_alert": true
+}

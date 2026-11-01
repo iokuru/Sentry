@@ -1,0 +1,17 @@
+{
+  "id": "prize-win-caps",
+  "input_text": "WINNER NOTIFICATION!! 🏆 YOU WON $250,000 IN THE MEGA JACKPOT!! PAY $250 RELEASE FEE VIA BITCOIN TO CLAIM YOUR FUNDS TODAY!!",
+  "context": "SMS message",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "prize",
+  "required_signals": [
+    "untraceable_payment",
+    "prize_lottery_claim"
+  ],
+  "required_wording_points": [
+    "prize",
+    "fee"
+  ],
+  "caregiver_alert": true
+}

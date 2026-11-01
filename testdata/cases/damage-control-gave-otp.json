@@ -1,0 +1,17 @@
+{
+  "id": "damage-control-gave-otp",
+  "input_text": "Chase Fraud team: Share the 6 digit code sent to cancel the wire transfer.",
+  "context": "I got scared and gave the caller the 6-digit code on the phone",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "bank",
+  "required_signals": [
+    "damage_control_stated",
+    "otp_request"
+  ],
+  "required_wording_points": [
+    "containment",
+    "bank"
+  ],
+  "caregiver_alert": true
+}

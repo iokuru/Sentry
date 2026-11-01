@@ -1,0 +1,17 @@
+{
+  "id": "kyc-pan-clean",
+  "input_text": "Dear Customer, your State Bank account KYC has expired today. Your netbanking access will be blocked within 24 hours. Update your PAN card details now by installing: http://bit.ly/sbi-kyc-update",
+  "context": "SMS from unknown header",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "bank",
+  "required_signals": [
+    "kyc_pan_deadline",
+    "suspicious_link"
+  ],
+  "required_wording_points": [
+    "KYC",
+    "PAN"
+  ],
+  "caregiver_alert": true
+}

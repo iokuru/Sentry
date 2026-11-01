@@ -1,0 +1,17 @@
+{
+  "id": "refund-overpayment-caps",
+  "input_text": "ACCIDENTAL REFUND ERROR: WE SENT $4,500 BY MISTAKE! RETURN THE EXCESS $4,000 VIA CASH APP OR BITCOIN IMMEDIATELY OR WE REPORT FRAUD TO POLICE!!",
+  "context": "SMS message",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "bank",
+  "required_signals": [
+    "refund_overpayment_claim",
+    "untraceable_payment"
+  ],
+  "required_wording_points": [
+    "overpaid",
+    "difference"
+  ],
+  "caregiver_alert": true
+}

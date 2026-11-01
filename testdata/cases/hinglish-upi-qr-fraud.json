@@ -1,0 +1,16 @@
+{
+  "id": "hinglish-upi-qr-fraud",
+  "input_text": "Bhaiya maine 5000 PhonePe pe bhej diya hai, ye QR code scan karo aur apna UPI PIN daalo to paisa turant aapke bank account me add ho jayega.",
+  "context": "Marketplace message",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "bank",
+  "required_signals": [
+    "upi_collect_or_qr_receive"
+  ],
+  "required_wording_points": [
+    "QR",
+    "PIN"
+  ],
+  "caregiver_alert": true
+}

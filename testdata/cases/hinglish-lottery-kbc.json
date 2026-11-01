@@ -1,0 +1,17 @@
+{
+  "id": "hinglish-lottery-kbc",
+  "input_text": "KBC Jio Lucky Grahak Award: Badhai ho aapka Jio number 25 lakh lottery jeet gaya hai. Certificate lene ke liye registration charge 1500 gpay karo.",
+  "context": "WhatsApp text",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "prize",
+  "required_signals": [
+    "untraceable_payment",
+    "prize_lottery_claim"
+  ],
+  "required_wording_points": [
+    "prize",
+    "processing"
+  ],
+  "caregiver_alert": true
+}

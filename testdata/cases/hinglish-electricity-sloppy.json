@@ -1,0 +1,16 @@
+{
+  "id": "hinglish-electricity-sloppy",
+  "input_text": "bijli vibhag notice: aapka bijli connection aaj raat kat jayega bill update nahi hua call karo officer ko 9876501234",
+  "context": "WhatsApp forward",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "utility",
+  "required_signals": [
+    "utility_disconnection_threat"
+  ],
+  "required_wording_points": [
+    "utility",
+    "bill"
+  ],
+  "caregiver_alert": true
+}

@@ -1,0 +1,17 @@
+{
+  "id": "damage-control-pan-apk-installed",
+  "input_text": "SBI Alert: Download sbi-update.apk to complete mandatory PAN link today.",
+  "context": "Maine wo APK file phone me download karke install kar li thi",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "bank",
+  "required_signals": [
+    "damage_control_stated",
+    "kyc_pan_deadline"
+  ],
+  "required_wording_points": [
+    "containment",
+    "bank"
+  ],
+  "caregiver_alert": true
+}

@@ -1,0 +1,14 @@
+{
+  "id": "safe-appointment-reminder-caps",
+  "input_text": "VALLEY HEALTH CLINIC: REMINDER FOR YOUR LAB TEST TOMORROW AT 8:00 AM. PLEASE REMAIN FASTING AFTER MIDNIGHT.",
+  "context": "Clinic alert",
+  "source": "text",
+  "expected_level": "low",
+  "expected_category": "other",
+  "required_signals": [],
+  "required_wording_points": [
+    "standard",
+    "update"
+  ],
+  "caregiver_alert": false
+}

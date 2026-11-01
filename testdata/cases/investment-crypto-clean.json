@@ -1,0 +1,17 @@
+{
+  "id": "investment-crypto-clean",
+  "input_text": "Exclusive invitation: Join our elite cryptocurrency VIP trading desk. Our automated arbitrage algorithm generates 15% daily guaranteed profit. Deposit $500 in USDT to start trading.",
+  "context": "Telegram message",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "other",
+  "required_signals": [
+    "investment_trading_scheme",
+    "untraceable_payment"
+  ],
+  "required_wording_points": [
+    "trading",
+    "deposit"
+  ],
+  "caregiver_alert": true
+}

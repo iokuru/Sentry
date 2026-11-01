@@ -1,0 +1,17 @@
+{
+  "id": "family-claim-caps",
+  "input_text": "HELLO MUM!! LOST MY PHONE THIS IS MY FRIEND PHONE NUMBER! EMERGENCY PLEASE SEND 500 POUNDS VIA BANK TRANSFER RIGHT NOW I AM STRANDED!!",
+  "context": "WhatsApp message",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "relative in need",
+  "required_signals": [
+    "family_impersonation",
+    "untraceable_payment"
+  ],
+  "required_wording_points": [
+    "family",
+    "number"
+  ],
+  "caregiver_alert": true
+}

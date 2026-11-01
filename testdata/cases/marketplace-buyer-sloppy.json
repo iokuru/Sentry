@@ -1,0 +1,16 @@
+{
+  "id": "marketplace-buyer-sloppy",
+  "input_text": "hey i sent 500 extra for shipping on paypal pls send back the extra 500 with zelle before delivery guy comes",
+  "context": "Text message",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "bank",
+  "required_signals": [
+    "refund_overpayment_claim"
+  ],
+  "required_wording_points": [
+    "funds",
+    "extra"
+  ],
+  "caregiver_alert": true
+}

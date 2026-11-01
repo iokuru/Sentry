@@ -1,0 +1,17 @@
+{
+  "id": "damage-control-clicked-link",
+  "input_text": "USPS: Redelivery fee pending. Pay at http://bit.ly/usps-fake-hold",
+  "context": "I clicked the link and entered my name and home address already",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "delivery",
+  "required_signals": [
+    "damage_control_stated",
+    "suspicious_link"
+  ],
+  "required_wording_points": [
+    "containment",
+    "bank"
+  ],
+  "caregiver_alert": true
+}

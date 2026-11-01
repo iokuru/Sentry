@@ -1,0 +1,17 @@
+{
+  "id": "refund-overpayment-clean",
+  "input_text": "We accidentally sent an overpayment of $2,400 instead of $240 to your checking account. Please wire back the excess $2,160 immediately to avoid legal prosecution.",
+  "context": "Email with attachment",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "bank",
+  "required_signals": [
+    "refund_overpayment_claim",
+    "untraceable_payment"
+  ],
+  "required_wording_points": [
+    "overpaid",
+    "difference"
+  ],
+  "caregiver_alert": true
+}

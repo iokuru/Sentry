@@ -1,0 +1,16 @@
+{
+  "id": "romance-need-caps",
+  "input_text": "SWEETHEART I AM DETAINED AT AIRPORT IMMIGRATION! THEY DEMAND $950 CASH VIA WESTERN UNION TO RELEASE MY PASSPORT PLEASE HELP ME MY LOVE!!",
+  "context": "Direct message",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "romance",
+  "required_signals": [
+    "untraceable_payment"
+  ],
+  "required_wording_points": [
+    "funds",
+    "online"
+  ],
+  "caregiver_alert": true
+}

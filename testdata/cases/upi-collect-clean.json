@@ -1,0 +1,16 @@
+{
+  "id": "upi-collect-clean",
+  "input_text": "To receive your OLX sofa sale payment of Rs 15,000, please scan this QR code on Google Pay or PhonePe and enter your secret UPI PIN to credit your bank account.",
+  "context": "Marketplace chat",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "bank",
+  "required_signals": [
+    "upi_collect_or_qr_receive"
+  ],
+  "required_wording_points": [
+    "QR",
+    "PIN"
+  ],
+  "caregiver_alert": true
+}

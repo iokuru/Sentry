@@ -1,0 +1,17 @@
+{
+  "id": "damage-control-crypto-deposited",
+  "input_text": "VIP Trading Group: Deposit 0.05 BTC to double your money in 24 hours.",
+  "context": "I transferred Bitcoin to the wallet address they gave me yesterday",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "other",
+  "required_signals": [
+    "damage_control_stated",
+    "untraceable_payment"
+  ],
+  "required_wording_points": [
+    "containment",
+    "bank"
+  ],
+  "caregiver_alert": true
+}

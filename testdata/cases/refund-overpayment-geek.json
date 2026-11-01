@@ -1,0 +1,17 @@
+{
+  "id": "refund-overpayment-geek",
+  "input_text": "Geek Squad billing: We mistakenly processed a refund of $899 to your checking account instead of $89. You must send back $810 immediately to our agent via Apple gift cards.",
+  "context": "Email invoice",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "tech support",
+  "required_signals": [
+    "subscription_renewal_trap",
+    "untraceable_payment"
+  ],
+  "required_wording_points": [
+    "overpaid",
+    "difference"
+  ],
+  "caregiver_alert": true
+}

@@ -1,0 +1,14 @@
+{
+  "id": "safe-family-chat-clean",
+  "input_text": "Hey Grandma, hope you had a good week! Are we still having family dinner this Sunday at 1:00 PM?",
+  "context": "Family SMS",
+  "source": "text",
+  "expected_level": "low",
+  "expected_category": "relative in need",
+  "required_signals": [],
+  "required_wording_points": [
+    "standard",
+    "update"
+  ],
+  "caregiver_alert": false
+}

@@ -1,0 +1,16 @@
+{
+  "id": "fake-job-sloppy",
+  "input_text": "part time job offer: like youtube videos and get 50 rs per like daily payout 3000 rs send 500 registration fee on upi to start work",
+  "context": "Telegram chat",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "other",
+  "required_signals": [
+    "fake_job_or_task"
+  ],
+  "required_wording_points": [
+    "job",
+    "fee"
+  ],
+  "caregiver_alert": true
+}

@@ -1,0 +1,16 @@
+{
+  "id": "otp-request-sloppy",
+  "input_text": "hey this is support agent mark, tell me the otp pin sent to ur phone quickly so i can stop the fraud charge",
+  "context": "Incoming chat",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "bank",
+  "required_signals": [
+    "otp_request"
+  ],
+  "required_wording_points": [
+    "verification",
+    "code"
+  ],
+  "caregiver_alert": true
+}
