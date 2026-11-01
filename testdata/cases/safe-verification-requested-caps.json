@@ -4,7 +4,7 @@
   "context": "Verification text",
   "source": "text",
   "expected_level": "low",
-  "expected_category": "other",
+  "expected_category": "tech support",
   "required_signals": [],
   "required_wording_points": [
     "review",

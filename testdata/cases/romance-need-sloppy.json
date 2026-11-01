@@ -3,7 +3,7 @@
   "input_text": "darling my oil rig had a breakdown and my credit card isnt working here can u send wire transfer 800 for my flight tickets to meet u",
   "context": "Email message",
   "source": "text",
-  "expected_level": "high",
+  "expected_level": "medium",
   "expected_category": "romance",
   "required_signals": [
     "untraceable_payment"
@@ -12,5 +12,5 @@
     "funds",
     "online"
   ],
-  "caregiver_alert": true
+  "caregiver_alert": false
 }

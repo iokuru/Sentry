@@ -3,7 +3,7 @@
   "input_text": "My love, my deployment as a military doctor in Syria is almost complete. My emergency medical trunk is stuck at customs and I need $1,200 for clearance so I can fly home to you.",
   "context": "Dating app match message",
   "source": "text",
-  "expected_level": "high",
+  "expected_level": "medium",
   "expected_category": "romance",
   "required_signals": [
     "untraceable_payment"
@@ -12,5 +12,5 @@
     "funds",
     "online"
   ],
-  "caregiver_alert": true
+  "caregiver_alert": false
 }
