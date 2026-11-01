@@ -7,16 +7,28 @@ import { InputField } from "@/components/field";
 import { IncidentCard, type IncidentItem } from "@/components/incident-card";
 import { InviteModal } from "@/components/invite-modal";
 import { Plus, LogOut, Search, Image as ImageIcon, Users } from "lucide-react";
-import { getStoredSession, signInCaregiver, signOutCaregiver, type AuthSession } from "@/lib/auth";
+import {
+  getStoredSession,
+  signInCaregiver,
+  signUpCaregiver,
+  confirmSignUpCaregiver,
+  resendConfirmationCode,
+  signOutCaregiver,
+  type AuthSession,
+} from "@/lib/auth";
 import { loadAppConfig } from "@/lib/config";
 import { normalizeIncident } from "@/lib/api";
 
 export default function CaregiverPage() {
   const [session, setSession] = useState<AuthSession | null>(null);
+  const [authMode, setAuthMode] = useState<"signin" | "signup" | "confirm">("signin");
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [confirmCode, setConfirmCode] = useState("");
+  const [authSuccessMsg, setAuthSuccessMsg] = useState<string | null>(null);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isResending, setIsResending] = useState(false);
 
   const [incidents, setIncidents] = useState<IncidentItem[]>([]);
   const [statusFilter, setStatusFilter] = useState<"ALL" | "NEW" | "ACKNOWLEDGED" | "RESOLVED">("ALL");
@@ -90,6 +102,7 @@ export default function CaregiverPage() {
 
     setIsLoggingIn(true);
     setLoginError(null);
+    setAuthSuccessMsg(null);
 
     const res = await signInCaregiver(loginEmail, loginPassword);
     setIsLoggingIn(false);
@@ -101,12 +114,79 @@ export default function CaregiverPage() {
     }
   };
 
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!loginEmail.trim() || !loginPassword) return;
+
+    setIsLoggingIn(true);
+    setLoginError(null);
+    setAuthSuccessMsg(null);
+
+    const res = await signUpCaregiver(loginEmail, loginPassword);
+    setIsLoggingIn(false);
+
+    if (res.success) {
+      if (res.needsConfirmation) {
+        setAuthMode("confirm");
+        setAuthSuccessMsg(`A verification code was sent to ${loginEmail.trim()}. Enter it below to activate your account.`);
+      } else {
+        const loginRes = await signInCaregiver(loginEmail, loginPassword);
+        if (loginRes.success && loginRes.session) {
+          setSession(loginRes.session);
+        }
+      }
+    } else {
+      setLoginError(res.error || "Sign up failed. Password must be at least 8 characters with numbers and special symbols.");
+    }
+  };
+
+  const handleConfirmSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!loginEmail.trim() || !confirmCode.trim()) return;
+
+    setIsLoggingIn(true);
+    setLoginError(null);
+
+    const res = await confirmSignUpCaregiver(loginEmail, confirmCode);
+    if (!res.success) {
+      setIsLoggingIn(false);
+      setLoginError(res.error || "Verification code is invalid or expired.");
+      return;
+    }
+
+    const loginRes = await signInCaregiver(loginEmail, loginPassword);
+    setIsLoggingIn(false);
+
+    if (loginRes.success && loginRes.session) {
+      setSession(loginRes.session);
+    } else {
+      setAuthMode("signin");
+      setAuthSuccessMsg("Account verified successfully. Please sign in.");
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (!loginEmail.trim()) return;
+    setIsResending(true);
+    setLoginError(null);
+    const res = await resendConfirmationCode(loginEmail);
+    setIsResending(false);
+    if (res.success) {
+      setAuthSuccessMsg(`A new code was sent to ${loginEmail.trim()}.`);
+    } else {
+      setLoginError(res.error || "Could not resend code.");
+    }
+  };
+
   const handleSignOut = () => {
     signOutCaregiver();
     setSession(null);
     setLoginEmail("");
     setLoginPassword("");
+    setConfirmCode("");
+    setAuthSuccessMsg(null);
     setLoginError(null);
+    setAuthMode("signin");
   };
 
   const handleUpdateStatus = async (id: string, newStatus: "ACKNOWLEDGED" | "RESOLVED") => {
@@ -153,37 +233,116 @@ export default function CaregiverPage() {
               <span className="login-icon-pill" aria-hidden="true">
                 <Users size={24} />
               </span>
-              <h1 className="login-title">Caregiver Portal</h1>
+              <h1 className="login-title">
+                {authMode === "confirm"
+                  ? "Verify your account"
+                  : authMode === "signup"
+                  ? "Create caregiver account"
+                  : "Caregiver portal"}
+              </h1>
               <p className="login-sub">
-                Sign in to view real-time scam alerts and manage linked family members.
+                {authMode === "confirm"
+                  ? "Enter the 6-digit confirmation code sent to your email."
+                  : authMode === "signup"
+                  ? "Sign up to receive alerts and look after your family members."
+                  : "Sign in to monitor alerts and pair with senior devices."}
               </p>
             </div>
 
-            <form onSubmit={handleLogin} className="login-form">
-              <InputField
-                label="Email address"
-                type="email"
-                placeholder="caregiver@example.com"
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
-                required
-              />
+            {authMode !== "confirm" && (
+              <div className="auth-tab-bar" role="tablist">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={authMode === "signin"}
+                  className={`auth-tab-btn ${authMode === "signin" ? "auth-tab-active" : ""}`}
+                  onClick={() => {
+                    setAuthMode("signin");
+                    setLoginError(null);
+                    setAuthSuccessMsg(null);
+                  }}
+                >
+                  Sign in
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={authMode === "signup"}
+                  className={`auth-tab-btn ${authMode === "signup" ? "auth-tab-active" : ""}`}
+                  onClick={() => {
+                    setAuthMode("signup");
+                    setLoginError(null);
+                    setAuthSuccessMsg(null);
+                  }}
+                >
+                  Create account
+                </button>
+              </div>
+            )}
 
-              <InputField
-                label="Password"
-                type="password"
-                placeholder="Enter your password"
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-                required
-              />
+            {authSuccessMsg && <p className="auth-success" role="status">{authSuccessMsg}</p>}
+            {loginError && <p className="login-error" role="alert">{loginError}</p>}
 
-              {loginError ? <p className="login-error" role="alert">{loginError}</p> : null}
-
-              <Button type="submit" variant="primary" size="large" fullWidth loading={isLoggingIn}>
-                Sign in to caregiver feed
-              </Button>
-            </form>
+            {authMode === "confirm" ? (
+              <form onSubmit={handleConfirmSignUp} className="login-form">
+                <InputField
+                  label="Email address"
+                  type="email"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  disabled
+                />
+                <InputField
+                  label="Verification code"
+                  type="text"
+                  placeholder="Enter 6-digit code"
+                  value={confirmCode}
+                  onChange={(e) => setConfirmCode(e.target.value)}
+                  required
+                />
+                <Button type="submit" variant="primary" size="large" fullWidth loading={isLoggingIn}>
+                  Confirm and sign in
+                </Button>
+                <div className="auth-footer-actions">
+                  <button type="button" className="auth-link-btn" onClick={handleResendCode} disabled={isResending}>
+                    {isResending ? "Resending..." : "Resend code"}
+                  </button>
+                  <span className="auth-dot-sep">·</span>
+                  <button type="button" className="auth-link-btn" onClick={() => setAuthMode("signin")}>
+                    Back to sign in
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={authMode === "signup" ? handleSignUp : handleLogin} className="login-form">
+                <InputField
+                  label="Email address"
+                  type="email"
+                  placeholder="caregiver@example.com"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  required
+                />
+                <InputField
+                  label="Password"
+                  type="password"
+                  placeholder={authMode === "signup" ? "Min 8 chars with numbers and symbols" : "Enter your password"}
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  required
+                />
+                <Button type="submit" variant="primary" size="large" fullWidth loading={isLoggingIn}>
+                  {authMode === "signup" ? "Create account" : "Sign in to caregiver feed"}
+                </Button>
+                <p className="auth-toggle-note">
+                  {authMode === "signup" ? (
+                    <>Already have an account? <button type="button" className="auth-link-btn" onClick={() => setAuthMode("signin")}>Sign in</button></>
+                  ) : (
+                    <>New to Sentry? <button type="button" className="auth-link-btn" onClick={() => setAuthMode("signup")}>Create an account</button></>
+                  )}
+                </p>
+              </form>
+            )}
           </div>
         ) : (
           <>
@@ -343,6 +502,82 @@ export default function CaregiverPage() {
           color: var(--color-danger);
           font-size: 0.88rem;
           font-weight: 600;
+        }
+
+        .auth-tab-bar {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 6px;
+          background: var(--surface-raised);
+          padding: 4px;
+          border-radius: var(--radius-md);
+          border: 1px solid var(--border-light);
+        }
+
+        .auth-tab-btn {
+          border: none;
+          background: transparent;
+          color: var(--text-muted);
+          padding: 8px 12px;
+          font-size: 0.92rem;
+          font-weight: 600;
+          border-radius: calc(var(--radius-md) - 2px);
+          cursor: pointer;
+          transition: background 150ms ease, color 150ms ease;
+        }
+
+        .auth-tab-btn:hover {
+          color: var(--text-main);
+        }
+
+        .auth-tab-active {
+          background: var(--bg-card);
+          color: var(--text-main);
+          box-shadow: var(--shadow-sm);
+        }
+
+        .auth-success {
+          background: var(--safe-bg);
+          border: 1px solid var(--safe-border);
+          color: var(--safe-title);
+          padding: 10px 14px;
+          border-radius: var(--radius-md);
+          font-size: 0.88rem;
+          line-height: 1.45;
+        }
+
+        .auth-footer-actions {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          margin-top: 4px;
+        }
+
+        .auth-toggle-note {
+          text-align: center;
+          color: var(--text-muted);
+          font-size: 0.88rem;
+          margin-top: 4px;
+        }
+
+        .auth-link-btn {
+          background: none;
+          border: none;
+          color: var(--color-primary);
+          font-size: inherit;
+          font-weight: 650;
+          cursor: pointer;
+          padding: 0;
+          text-decoration: underline;
+        }
+
+        .auth-link-btn:hover {
+          opacity: 0.85;
+        }
+
+        .auth-dot-sep {
+          color: var(--text-subtle);
         }
 
         .caregiver-header {

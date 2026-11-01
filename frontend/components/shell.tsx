@@ -41,6 +41,10 @@ export function Shell({ children, activeSection = "senior" }: ShellProps) {
         <header className="app-topbar">
           <div className="topbar-title">{isSenior ? "Message check" : isCaregiver ? "Family space" : ""}</div>
           <div className="topbar-controls">
+            <Link href="/caregiver" className="topbar-portal-link">
+              <UsersRound size={16} aria-hidden="true" />
+              <span>{isCaregiver ? "Family feed" : "Caregiver portal"}</span>
+            </Link>
             <ThemeToggle />
           </div>
         </header>
@@ -67,7 +71,9 @@ export function Shell({ children, activeSection = "senior" }: ShellProps) {
         .app-main-column { min-width:0; }
         .app-topbar { position:sticky; top:0; z-index:30; display:flex; align-items:center; justify-content:space-between; min-height:60px; padding:0 clamp(20px,3vw,48px); border-bottom:1px solid var(--border-light); background:var(--bg-page); }
         .topbar-title { color:var(--text-main); font-size:15px; font-weight:600; }
-        .topbar-controls { display:flex; align-items:center; justify-content:flex-end; min-width:60px; min-height:60px; }
+        .topbar-controls { display:flex; align-items:center; justify-content:flex-end; min-width:60px; min-height:60px; gap:8px; }
+        :global(.topbar-portal-link) { display:inline-flex; align-items:center; gap:8px; min-height:40px; padding:0 14px; border-radius:var(--radius-md); background:var(--bg-muted); border:1px solid var(--border-light); color:var(--text-main)!important; font-size:13px; font-weight:600; text-decoration:none; transition:background 140ms ease,border-color 140ms ease; }
+        :global(.topbar-portal-link:hover) { background:var(--surface-raised); border-color:var(--border-medium); }
         .app-main { min-width:0; }
         .shell-container { width:100%; max-width:1500px; margin:0 auto; padding:24px clamp(20px,3.2vw,48px) 64px; }
         @media(max-width:900px) { .app-shell { grid-template-columns:220px minmax(0,1fr); } .app-rail { width:220px; padding-inline:12px; } .shell-container { padding:24px 20px 52px; } }
