@@ -1,5 +1,5 @@
 import React from "react";
-import { PhoneCall } from "lucide-react";
+import { PhoneCall, ExternalLink } from "lucide-react";
 
 export interface HotlineButtonProps {
   country: string;
@@ -8,47 +8,69 @@ export interface HotlineButtonProps {
   officialUrl?: string;
 }
 
-const defaultHotlines: Record<string, { name: string; phone: string; numberLabel: string }> = {
-  US: { name: "US FTC Fraud Hotline", phone: "+18773824357", numberLabel: "1-877-382-4357" },
-  UK: { name: "UK Action Fraud", phone: "+443001232040", numberLabel: "0300 123 2040" },
-  IN: { name: "National Cyber Crime Helpline", phone: "1930", numberLabel: "1930" },
-  AU: { name: "Australian Scamwatch Hotline", phone: "+611300795995", numberLabel: "1300 795 995" },
+const defaultHotlines: Record<string, { name: string; phone: string; numberLabel: string; url: string }> = {
+  US: { name: "US FTC Fraud Hotline", phone: "+18773824357", numberLabel: "1-877-382-4357", url: "https://reportfraud.ftc.gov" },
+  UK: { name: "UK Action Fraud", phone: "+443001232040", numberLabel: "0300 123 2040", url: "https://www.actionfraud.police.uk" },
+  GB: { name: "UK Action Fraud", phone: "+443001232040", numberLabel: "0300 123 2040", url: "https://www.actionfraud.police.uk" },
+  IN: { name: "National Cyber Crime Helpline", phone: "1930", numberLabel: "1930", url: "https://cybercrime.gov.in" },
+  AU: { name: "Australian ReportCyber & Scamwatch", phone: "+611300292371", numberLabel: "1300 292 371", url: "https://www.cyber.gov.au/report-and-recover/report" },
+  CA: { name: "Canadian Anti-Fraud Centre", phone: "+18884958501", numberLabel: "1-888-495-8501", url: "https://www.antifraudcentre-centreantifraude.ca" },
+  NZ: { name: "New Zealand NetSafe", phone: "+64508638723", numberLabel: "0508 638 723", url: "https://www.netsafe.org.nz" },
 };
 
 export function HotlineButton({
   country,
   hotlineName,
   phoneNumber,
+  officialUrl,
 }: HotlineButtonProps) {
   const normCountry = (country || "US").toUpperCase();
   const fallback = defaultHotlines[normCountry] || defaultHotlines.US;
 
   const displayName = hotlineName || fallback.name;
   const telNumber = phoneNumber || fallback.phone;
-  const visibleNumber = fallback.numberLabel;
+  const visibleNumber = fallback.numberLabel || telNumber;
+  const webUrl = officialUrl || fallback.url;
 
   return (
     <div className="hotline-card">
       <div className="hotline-header">
         <h2 className="hotline-title">3. Official fraud hotline</h2>
         <p className="hotline-desc">
-          Tap the button below to speak directly with official fraud specialists in your country.
+          Contact official fraud specialists in your country to report or verify this incident.
         </p>
       </div>
 
-      <a
-        href={`tel:${telNumber}`}
-        className="hotline-dial-btn"
-        aria-label={`Call ${displayName} at ${visibleNumber}`}
-      >
-        <span className="hotline-dial-icon" aria-hidden="true">
-          <PhoneCall size={26} strokeWidth={2.4} />
-        </span>
-        <div className="hotline-dial-text">
-          <span className="hotline-agency">{displayName}</span>
-          <span className="hotline-phone-number">Dial {visibleNumber}</span>
-        </div>
-      </a>
+      <div className="hotline-actions">
+        {telNumber && (
+          <a
+            href={telNumber.startsWith("tel:") ? telNumber : `tel:${telNumber}`}
+            className="hotline-dial-btn"
+            aria-label={`Call ${displayName} at ${visibleNumber}`}
+          >
+            <span className="hotline-dial-icon" aria-hidden="true">
+              <PhoneCall size={26} strokeWidth={2.4} />
+            </span>
+            <div className="hotline-dial-text">
+              <span className="hotline-agency">{displayName}</span>
+              <span className="hotline-phone-number">Dial {visibleNumber}</span>
+            </div>
+          </a>
+        )}
+
+        {webUrl && (
+          <a
+            href={webUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hotline-web-link"
+            aria-label={`Visit official reporting website for ${displayName}`}
+          >
+            <span>Official reporting site ({new URL(webUrl).hostname})</span>
+            <ExternalLink size={16} aria-hidden="true" />
+          </a>
+        )}
+      </div>
 
       <style jsx>{`
         .hotline-card {
@@ -58,6 +80,112 @@ export function HotlineButton({
           padding: 24px;
           display: flex;
           flex-direction: column;
+          gap: 16px;
+          box-shadow: var(--shadow-sm);
+        }
+
+        .hotline-header {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .hotline-title {
+          font-size: 1.35rem;
+          font-weight: 700;
+          color: var(--text-main);
+          letter-spacing: -0.01em;
+          margin-bottom: 6px;
+        }
+
+        .hotline-desc {
+          font-size: 1.05rem;
+          color: var(--text-muted);
+          line-height: 1.5;
+        }
+
+        .hotline-actions {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .hotline-dial-btn {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          background-color: var(--color-primary);
+          color: var(--text-inverse);
+          padding: 16px 24px;
+          border-radius: var(--radius-md);
+          text-decoration: none;
+          min-height: 64px;
+          transition: background-color 0.15s ease, transform 0.05s ease;
+        }
+
+        .hotline-dial-btn:hover {
+          background-color: var(--color-primary-hover);
+        }
+
+        .hotline-dial-btn:active {
+          transform: translateY(1px);
+        }
+
+        .hotline-dial-icon {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .hotline-dial-text {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .hotline-agency {
+          font-size: 0.9rem;
+          opacity: 0.9;
+          font-weight: 500;
+        }
+
+        .hotline-phone-number {
+          font-size: 1.25rem;
+          font-weight: 750;
+          letter-spacing: 0.02em;
+        }
+
+        .hotline-web-link {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          color: var(--color-primary);
+          font-size: 14px;
+          font-weight: 600;
+          text-decoration: none;
+          padding: 4px 2px;
+        }
+
+        .hotline-web-link:hover {
+          text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+          .hotline-card {
+            padding: 18px;
+          }
+          .hotline-title {
+            font-size: 1.2rem;
+          }
+          .hotline-phone-number {
+            font-size: 1.1rem;
+          }
+        }
+      `}</style>
+    </div>
+  );
+}
           gap: 16px;
           box-shadow: var(--shadow-sm);
         }

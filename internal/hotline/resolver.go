@@ -31,6 +31,10 @@ func ResolveCountry(locale string) string {
 		return "IN"
 	case "AU", "AUS":
 		return "AU"
+	case "CA", "CAN":
+		return "CA"
+	case "NZ", "NZL":
+		return "NZ"
 	}
 
 	// check primary language tag if region was omitted

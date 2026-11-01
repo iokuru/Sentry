@@ -34,10 +34,24 @@ var (
 		},
 		"AU": {
 			Country: "AU",
-			Name:    "Australia Scamwatch",
-			Number:  "1300 795 995",
-			TelURI:  "tel:+611300795995",
-			URL:     "https://www.scamwatch.gov.au",
+			Name:    "Australian ReportCyber & Scamwatch",
+			Number:  "1300 292 371",
+			TelURI:  "tel:+611300292371",
+			URL:     "https://www.cyber.gov.au/report-and-recover/report",
+		},
+		"CA": {
+			Country: "CA",
+			Name:    "Canadian Anti-Fraud Centre",
+			Number:  "1-888-495-8501",
+			TelURI:  "tel:+18884958501",
+			URL:     "https://www.antifraudcentre-centreantifraude.ca",
+		},
+		"NZ": {
+			Country: "NZ",
+			Name:    "New Zealand NetSafe",
+			Number:  "0508 638 723",
+			TelURI:  "tel:+64508638723",
+			URL:     "https://www.netsafe.org.nz",
 		},
 	}
 )
