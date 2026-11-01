@@ -22,6 +22,7 @@ export interface IncidentResult {
   incident_id: string;
   status: "NEW" | "ACKNOWLEDGED" | "RESOLVED" | "ANALYZING";
   severity: "HIGH" | "MEDIUM" | "LOW";
+  category?: string;
   signals: string[];
   headline?: string;
   what_this_is?: string;
@@ -60,6 +61,7 @@ export function normalizeIncident(raw: any, fallbackId = ""): IncidentResult {
         ? rawStatus
         : "ANALYZING",
     severity: risk === "HIGH" || risk === "MEDIUM" ? risk : "LOW",
+    category: raw.category || undefined,
     signals,
     headline: raw.headline || output.headline || "",
     what_this_is: raw.what_this_is || output.what_this_is || "",
