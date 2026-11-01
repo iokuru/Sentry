@@ -2,18 +2,25 @@ import React from "react";
 import { Loader2 } from "lucide-react";
 
 export interface ProgressCardProps {
-  phase: "uploading" | "analyzing";
+  phase: "uploading" | "analyzing" | "extracting";
 }
 
 export function ProgressCard({ phase }: ProgressCardProps) {
   const isUploading = phase === "uploading";
+  const isExtracting = phase === "extracting";
 
   return (
     <div
       className="progress-card"
       role="status"
       aria-live="polite"
-      aria-label={isUploading ? "Uploading image" : "Analyzing message"}
+      aria-label={
+        isExtracting
+          ? "Reading screenshot text"
+          : isUploading
+          ? "Uploading screenshot"
+          : "Analyzing message"
+      }
     >
       <div className="progress-spinner" aria-hidden="true">
         <Loader2 size={40} className="animate-spin" />
@@ -21,10 +28,16 @@ export function ProgressCard({ phase }: ProgressCardProps) {
 
       <div className="progress-text">
         <h2 className="progress-title">
-          {isUploading ? "Uploading screenshot securely" : "Checking message for scam signals"}
+          {isExtracting
+            ? "Reading text from screenshot"
+            : isUploading
+            ? "Uploading screenshot securely"
+            : "Checking message for scam signals"}
         </h2>
         <p className="progress-sub">
-          {isUploading
+          {isExtracting
+            ? "Recognizing words, sender info, and links directly on your device."
+            : isUploading
             ? "Preparing your photo for a quick check. This only takes a moment."
             : "Reviewing text, urgency patterns, and payment requests to provide safe guidance."}
         </p>

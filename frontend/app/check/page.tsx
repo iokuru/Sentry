@@ -108,11 +108,21 @@ export default function SeniorPage() {
       let objectKey: string | undefined;
       let preparedBlob: Blob | undefined;
 
+      let extractedText = "";
       if (activeFile) {
         setFlowState("uploading");
         window.scrollTo({ top: 0, behavior: "smooth" });
         const { blob } = await downscaleImage(activeFile);
         preparedBlob = blob;
+
+        setFlowState("extracting");
+        try {
+          extractedText = await extractTextInBrowser(blob);
+        } catch (ocrErr) {
+          console.warn("Client-side OCR warning:", ocrErr);
+        }
+
+        setFlowState("uploading");
         const presign = await requestPresignedUrl(blob.type || "image/jpeg", activeFile.name);
         await uploadImageToS3(presign.upload_url, blob);
         objectKey = presign.image_key;
@@ -121,40 +131,22 @@ export default function SeniorPage() {
       setFlowState("analyzing");
       window.scrollTo({ top: 0, behavior: "smooth" });
 
-      let intakeRes;
-      try {
-        intakeRes = await submitIntake({
-          image_key: objectKey,
-          user_context: activeText || undefined,
-          country: selectedCountry,
-        });
-      } catch (err: unknown) {
-        if (
-          err instanceof ApiError &&
-          (err.status === 422 || err.code === "TEXTRACT_UNAVAILABLE") &&
-          preparedBlob
-        ) {
-          setFlowState("extracting");
-          const extractedText = await extractTextInBrowser(preparedBlob);
-          setFlowState("analyzing");
-          intakeRes = await submitIntake({
-            image_key: objectKey,
-            user_context: [extractedText, activeText].filter(Boolean).join("\n") || undefined,
-            country: selectedCountry,
-          });
-        } else if (err instanceof ApiError && err.status === 429) {
-          setFlowState("quota");
-          return;
-        } else {
-          throw err;
-        }
-      }
+      const combinedText = [extractedText, activeText].filter(Boolean).join("\n");
+      const intakeRes = await submitIntake({
+        image_key: objectKey,
+        user_context: combinedText || undefined,
+        country: selectedCountry,
+      });
 
       const completed = await pollIncidentResult(intakeRes.incident_id);
       setResult(completed);
       setFlowState("result");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err: unknown) {
+      if (err instanceof ApiError && err.status === 429) {
+        setFlowState("quota");
+        return;
+      }
       const msg = err instanceof Error ? err.message : "Unable to complete safety check";
       setErrorMessage(msg);
       setFlowState("error");
@@ -232,7 +224,13 @@ export default function SeniorPage() {
           flowState === "extracting" ||
           flowState === "analyzing") && (
           <ProgressCard
-            phase={flowState === "uploading" ? "uploading" : "analyzing"}
+            phase={
+              flowState === "extracting"
+                ? "extracting"
+                : flowState === "uploading"
+                ? "uploading"
+                : "analyzing"
+            }
           />
         )}
 
