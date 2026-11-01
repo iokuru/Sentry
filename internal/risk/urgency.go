@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-var urgencyRegex = regexp.MustCompile(`(?i)\b(urgent|urgently|immediate|immediately|right now|within\s+\d+\s+(minutes?|hours?|days?)|act now|hurry|final notice|last warning|expires today|deadline|action required|suspended today|account suspension|immediate action)\b`)
+var urgencyRegex = regexp.MustCompile(`(?i)\b(urgent|urgently|immediate|immediately|right now|within\s+\d+\s+(minutes?|hours?|days?)|act now|hurry|quickly|quick|asap|fast|promptly|final notice|last warning|expires today|deadline|action required|suspended today|account suspension|immediate action)\b`)
 
 func checkUrgencyWording(in Input) (bool, string) {
 	combined := strings.ToLower(in.Text + " " + in.Context)

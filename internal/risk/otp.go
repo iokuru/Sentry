@@ -2,14 +2,17 @@ package risk
 
 import (
 	"regexp"
-	"strings"
 )
 
-var otpRegex = regexp.MustCompile(`(?i)\b(otp|one-time\s*passcode|verification\s*code|6-digit\s*code|security\s*code|secret\s*pin|pin|passcode|password|passwords|share\s*the\s*code|send\s*the\s*digits|read\s*the\s*code|two-factor\s*code|2fa\s*code|password\s*reset\s*code)\b`)
+var (
+	advisoryRegex   = regexp.MustCompile(`(?i)\b(do\s*not|don'?t|never|no\s*one\s*will\s*ask\s*you\s*to)\s*(share|send|tell|give|provide|disclose)\s*(this|the|your|ur)?\s*(6[- ]digit\s*)?(code|otp(\s*pin)?|pin|passcode|digits)\b`)
+	otpRequestRegex = regexp.MustCompile(`(?i)\b((share|send|tell|give|provide|read)\s*(me|us|back)?\s*(the|your|ur|this)?\s*(6[- ]digit\s*)?(code|otp(\s*pin)?|pin|passcode|digits)|enter\s*(your\s*)?(secret\s*)?(upi\s*)?pin\s*to\s*(receive|credit|claim|cancel|reverse)|code\s*(you\s*)?just\s*received\s*to\s*(cancel|reverse|verify|stop)|security\s*passcode\s*immediately\s*to\s*(reverse|cancel)|provide\s*to\s*representative\s*to\s*verify)\b`)
+)
 
 func checkOTPAndPIN(in Input) (bool, string) {
-	combined := strings.ToLower(in.Text + " " + in.Context)
-	if match := otpRegex.FindString(combined); match != "" {
+	combined := in.Text + " " + in.Context
+	sanitized := advisoryRegex.ReplaceAllString(combined, "")
+	if otpRequestRegex.MatchString(sanitized) {
 		return true, "requests a private one-time verification code, pin, or password"
 	}
 	return false, ""

@@ -9,18 +9,28 @@ import (
 )
 
 var (
-	bankRegex     = regexp.MustCompile(`(?i)\b(bank|account|checking|savings|overdraft|wire|transfer|credit\s*card|debit\s*card|chase|wells\s*fargo|bank\s*of\s*america|citi|barclays|commbank|anz|nab|westpac|sbi|hdfc|icici)\b`)
-	deliveryRegex = regexp.MustCompile(`(?i)\b(parcel|package|delivery|redelivery|shipment|tracking|courier|postage|customs\s*fee|usps|ups|fedex|auspost|australia\s*post|royal\s*mail|dhl)\b`)
-	utilityRegex  = regexp.MustCompile(`(?i)\b(electric|electricity|power|gas\s*bill|water\s*service|broadband|utility|shutoff|meter|disconnection)\b`)
-	prizeRegex    = regexp.MustCompile(`(?i)\b(lottery|winner|won|prize|sweepstakes|reward\s*points|jackpot|claim\s*reward|lucky\s*draw|congratulations\s*you\s*won)\b`)
-	techRegex     = regexp.MustCompile(`(?i)\b(microsoft|windows\s*defender|apple\s*support|geek\s*squad|computer\s*virus|trojan|malware|anydesk|teamviewer|remote\s*access|firewall\s*breached)\b`)
-	familyRegex   = regexp.MustCompile(`(?i)\b(hi\s*mum|hi\s*mom|hey\s*dad|new\s*number|broke\s*my\s*phone|grandson|granddaughter|bail\s*money|family\s*emergency)\b`)
+	familyRegex   = regexp.MustCompile(`(?i)\b(hi\s*mum|hi\s*mom|hey\s*dad|hello\s*mum|hello\s*mom|new\s*number|broke\s*my\s*phone|dropped\s*my\s*phone|lost\s*my\s*phone|grandson|granddaughter|daughter|son|grandma|grandpa|family\s*dinner)\b`)
+	taxRegex      = regexp.MustCompile(`(?i)\b(tax\s*refund|irs|ato|hmrc|unpaid\s*taxes|tax\s*audit|taxation\s*office|revenue\s*service|police|cbi|digital\s*arrest|arrest\s*warrant|narcotics|court\s*summons|lawsuit|national\s*insurance)\b`)
+	techRegex     = regexp.MustCompile(`(?i)\b(microsoft|windows\s*defender|apple\s*support|geek\s*squad|norton|mcafee|antivirus|computer\s*virus|trojan|malware|anydesk|teamviewer|remote\s*access|remote\s*screen|firewall\s*breached|system\s*breach|tech\s*support|(subscription|annual)\s*renewal)\b`)
 	romanceRegex  = regexp.MustCompile(`(?i)\b(soulmate|sweetheart|military\s*doctor|oil\s*rig|send\s*money\s*for\s*flight|my\s*love|darling|meet\s*you\s*in\s*person)\b`)
-	taxRegex      = regexp.MustCompile(`(?i)\b(tax\s*refund|irs|ato|hmrc|unpaid\s*taxes|tax\s*audit|taxation\s*office|revenue\s*service)\b`)
+	prizeRegex    = regexp.MustCompile(`(?i)\b(lottery|winner|won|prize|sweepstakes|reward\s*points|jackpot|claim\s*reward|lucky\s*draw|congratulations\s*you\s*won|kbc\s*jio|cash\s*prize)\b`)
+	utilityRegex  = regexp.MustCompile(`(?i)\b(electric|electricity|power|gas\s*bill|water\s*service|water\s*dept|broadband|fiber|spectrum|verizon|jio|airtel|sim\s*card|bijli|utility|shutoff|meter|disconnection)\b`)
+	deliveryRegex = regexp.MustCompile(`(?i)\b(parcel|package|redelivery|courier|postage|customs\s*fee|customs\s*duty|clearance\s*fee|usps|ups|fedex|auspost|australia\s*post|royal\s*mail|dhl)\b`)
+	bankRegex     = regexp.MustCompile(`(?i)\b(bank(\s*account)?|checking|savings|overdraft|wire|transfer|credit\s*card|debit\s*card|chase|wells\s*fargo|bank\s*of\s*america|bofa|citi|citibank|barclays|commbank|anz|nab|westpac|sbi|hdfc|icici|pan\s*card|aadhaar|upi|qr\s*code|phonepe|google\s*pay|googlepay|gpay|paytm|netbanking|overpayment|cashier\s*cheque|cheque|fraud\s*(charge|alert|department)|security\s*passcode|pending.*charge)\b`)
 )
 
 func ClassifyCategory(in Input) model.Category {
 	combined := strings.ToLower(in.Text + " " + in.Context)
+
+	// Job and investment scams belong to CategoryOther
+	if fakeJobRegex.MatchString(combined) || investmentSchemeRegex.MatchString(combined) {
+		return model.CategoryOther
+	}
+
+	// Refund and overpayment claims belong to CategoryBank
+	if refundOverpayRegex.MatchString(combined) {
+		return model.CategoryBank
+	}
 
 	switch {
 	case familyRegex.MatchString(combined):
