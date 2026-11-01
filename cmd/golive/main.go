@@ -52,9 +52,7 @@ type Outputs struct {
 
 func main() {
 	fixSSOCacheTimestamps()
-	fmt.Println("================================================================")
-	fmt.Println("SENTRY GO-LIVE DEPLOYMENT")
-	fmt.Println("================================================================")
+	fmt.Println("Sentry deployment started")
 
 	// Step 1: Run preflight
 	fmt.Println("\n--> Step 1/7: Running preflight checks...")
@@ -276,9 +274,7 @@ func main() {
 		}
 	}
 
-	fmt.Println("\n================================================================")
-	fmt.Println("SENTRY GO-LIVE SUCCESSFUL")
-	fmt.Println("================================================================")
+	fmt.Println("\nSentry go-live completed")
 	fmt.Printf("Frontend URL:           %s\n", frontendURL)
 	fmt.Printf("Caregiver Sign In:      %s/caregiver\n", frontendURL)
 	fmt.Printf("Caregiver User:         %s\n", inputs.CaregiverEmail)
@@ -289,15 +285,12 @@ func main() {
 	fmt.Printf("API Gateway Endpoint:   %s\n", outputs.ApiURL)
 	fmt.Printf("Cognito User Pool ID:   %s\n", outputs.UserPoolID)
 	fmt.Printf("Cognito App Client ID:  %s\n", outputs.UserPoolClientID)
-	fmt.Println("================================================================")
 	fmt.Println("Next: Sign up your caregiver account at the link above, then pair seniors via the portal.")
 }
 
 func failStep(errSummary, retryAdvice string) {
-	fmt.Println("\n================================================================")
-	fmt.Printf("GO-LIVE STOPPED: %s\n", errSummary)
-	fmt.Printf("HOW TO RETRY:    %s\n", retryAdvice)
-	fmt.Println("================================================================")
+	fmt.Printf("Go-live stopped: %s\n", errSummary)
+	fmt.Printf("How to retry:    %s\n", retryAdvice)
 	os.Exit(1)
 }
 

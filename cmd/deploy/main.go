@@ -125,14 +125,12 @@ func main() {
 		}
 	}
 
-	fmt.Println("\n=======================================================")
-	fmt.Println("Sentry deployment successfully completed!")
+	fmt.Println("\nSentry deployment completed")
 	fmt.Printf("Frontend URL: %s\n", frontendUrl)
 	fmt.Printf("API URL:      %s\n", outputs.ApiUrl)
 	fmt.Printf("User Pool:    %s\n", outputs.UserPoolId)
 	fmt.Printf("App Client:   %s\n", outputs.UserPoolClientId)
 	fmt.Printf("AWS Region:   %s\n", outputs.Region)
-	fmt.Println("=======================================================")
 }
 
 func readOutputs() (*DeploymentOutputs, error) {

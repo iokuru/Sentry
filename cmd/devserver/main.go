@@ -466,13 +466,11 @@ func (s *Server) printAlert(inc *model.Incident) {
 		inc.UpdatedAt,
 	)
 
-	fmt.Printf("\n==================== [DEV ALERT] ====================\n")
-	fmt.Printf("[Email Alert]: Caregiver email notification queued for %s\n\n", inc.ID)
+	fmt.Printf("\n[Dev Alert]: Caregiver email notification queued for %s\n\n", inc.ID)
 	fmt.Printf("[Telegram Alert Message]:\n%s\n\n", formattedTelegram)
 	fmt.Printf("Simulated Telegram Action Buttons:\n")
 	fmt.Printf("-> Acknowledge: http://localhost:8080/telegram/simulate?action=ack&id=%s\n", inc.ID)
-	fmt.Printf("-> Resolve:     http://localhost:8080/telegram/simulate?action=res&id=%s\n", inc.ID)
-	fmt.Printf("=====================================================\n\n")
+	fmt.Printf("-> Resolve:     http://localhost:8080/telegram/simulate?action=res&id=%s\n\n", inc.ID)
 }
 
 func (s *Server) handleTelegramSimulate(w http.ResponseWriter, r *http.Request) {

@@ -41,9 +41,7 @@ func main() {
 	localFlag := flag.Bool("local", false, "check local devserver health instead of deployed AWS resources")
 	flag.Parse()
 
-	fmt.Println("================================================================================")
-	fmt.Println("SENTRY STATUS REPORT")
-	fmt.Println("================================================================================")
+	fmt.Println("Sentry status report")
 
 	var items []StatusItem
 	httpClient := &http.Client{Timeout: 5 * time.Second}
@@ -319,11 +317,9 @@ func main() {
 
 func printTable(items []StatusItem) {
 	fmt.Printf("%-18s %-16s %s\n", "COMPONENT", "STATUS", "DETAILS")
-	fmt.Println("--------------------------------------------------------------------------------")
 	for _, it := range items {
 		fmt.Printf("%-18s %-16s %s\n", it.Component, it.Status, it.Details)
 	}
-	fmt.Println("================================================================================")
 }
 
 func getTerraformOutput(name string) (string, error) {

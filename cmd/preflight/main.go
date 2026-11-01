@@ -39,9 +39,7 @@ type Inputs struct {
 
 func main() {
 	fixSSOCacheTimestamps()
-	fmt.Println("================================================================")
-	fmt.Println("SENTRY PREFLIGHT CHECK")
-	fmt.Println("================================================================")
+	fmt.Println("Sentry preflight check")
 
 	var failures []string
 	var warnings []string
@@ -267,25 +265,22 @@ func main() {
 }
 
 func printSummaryAndExit(failures, warnings []string) {
-	fmt.Println("================================================================")
 	if len(warnings) > 0 {
-		fmt.Println("NOTICE:")
+		fmt.Println("Notice:")
 		for _, w := range warnings {
 			fmt.Printf("  - %s\n", w)
 		}
 	}
 
 	if len(failures) > 0 {
-		fmt.Println("PREFLIGHT FAILED:")
+		fmt.Println("Preflight failed:")
 		for _, f := range failures {
 			fmt.Printf("  - %s\n", f)
 		}
-		fmt.Println("================================================================")
 		os.Exit(1)
 	}
 
 	fmt.Println("Preflight passed. Ready for deployment.")
-	fmt.Println("================================================================")
 }
 
 func fixSSOCacheTimestamps() {

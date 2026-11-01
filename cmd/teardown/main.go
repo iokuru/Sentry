@@ -26,9 +26,7 @@ func main() {
 	forceFlag := flag.Bool("force", false, "skip interactive confirmation prompt")
 	flag.Parse()
 
-	fmt.Println("================================================================")
-	fmt.Println("SENTRY TEARDOWN")
-	fmt.Println("================================================================")
+	fmt.Println("Sentry teardown")
 
 	var inputs Inputs
 	if data, err := os.ReadFile("inputs.local.json"); err == nil {
@@ -105,9 +103,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println("\n================================================================")
-	fmt.Println("Teardown completed. Zero AWS resources remaining.")
-	fmt.Println("================================================================")
+	fmt.Println("\nTeardown completed. Zero AWS resources remaining.")
 }
 
 func getTerraformOutput(name string) (string, error) {
