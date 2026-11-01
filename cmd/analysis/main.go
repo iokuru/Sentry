@@ -22,6 +22,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	textractsvc "github.com/aws/aws-sdk-go-v2/service/textract"
 	"github.com/iokuru/sentry/internal/awsconfig"
+	"github.com/iokuru/sentry/internal/caregiver"
 	"github.com/iokuru/sentry/internal/comprehend"
 	"github.com/iokuru/sentry/internal/logging"
 	"github.com/iokuru/sentry/internal/model"
@@ -211,7 +212,14 @@ func handleAnalysis(ctx context.Context, sqsEvent events.SQSEvent) error {
 
 		score, level, matches := risk.CalculateScore(input)
 		category := risk.ClassifyCategory(input)
-		output := risk.BuildSeniorOutput(category, level, msg.Country)
+		var isDamageControl bool
+		for _, m := range matches {
+			if m.ID == "damage_control_stated" {
+				isDamageControl = true
+				break
+			}
+		}
+		output := risk.BuildSeniorOutput(category, level, msg.Country, isDamageControl)
 
 		inc := &model.Incident{
 			ID:            msg.IncidentID,
@@ -252,15 +260,16 @@ func handleAnalysis(ctx context.Context, sqsEvent events.SQSEvent) error {
 			slog.String("category", string(category)),
 		)
 
-		if level == model.RiskHigh {
-			notifyCaregivers(recCtx, inc, score, category, matches, output)
+		_, channels := caregiver.DetermineAlertDispatch(level, isDamageControl)
+		if channels.SNS || channels.Telegram {
+			notifyCaregivers(recCtx, inc, score, category, matches, output, isDamageControl)
 		}
 	}
 
 	return nil
 }
 
-func notifyCaregivers(ctx context.Context, inc *model.Incident, score int, category model.Category, matches []model.SignalMatch, output model.SeniorOutput) {
+func notifyCaregivers(ctx context.Context, inc *model.Incident, score int, category model.Category, matches []model.SignalMatch, output model.SeniorOutput, isDamageControl bool) {
 	var wg sync.WaitGroup
 
 	if snsClient != nil && alertsTopicArn != "" {
@@ -273,8 +282,11 @@ func notifyCaregivers(ctx context.Context, inc *model.Incident, score int, categ
 			}
 
 			subject := fmt.Sprintf("[Sentry Alert] High risk scam detected (score %d/100)", score)
+			if isDamageControl {
+				subject = fmt.Sprintf("[Sentry Alert] URGENT ACTION TAKEN (score %d/100)", score)
+			}
 			body := fmt.Sprintf(
-				"Sentry detected a high risk incident.\n\n"+
+				"Sentry detected an incident requiring caregiver attention.\n\n"+
 					"Incident ID: %s\n"+
 					"Risk Score: %d / 100\n"+
 					"Category: %s\n"+
@@ -306,7 +318,9 @@ func notifyCaregivers(ctx context.Context, inc *model.Incident, score int, categ
 		go func() {
 			defer wg.Done()
 			detectedOneLine := "Suspicious patterns detected"
-			if len(matches) > 0 {
+			if isDamageControl {
+				detectedOneLine = "URGENT: User reported taking action (containment needed)"
+			} else if len(matches) > 0 {
 				detectedOneLine = matches[0].Description
 			}
 
