@@ -1,0 +1,16 @@
+{
+  "id": "holdout-hmrc-threat-clean",
+  "input_text": "HM Revenue and Customs: A lawsuit has been filed under your National Insurance number. To avoid immediate court summons, settle outstanding balance of 1,850 GBP by calling 0300 555 0192.",
+  "context": "Voicemail text",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "tax",
+  "required_signals": [
+    "authority_impersonation"
+  ],
+  "required_wording_points": [
+    "tax",
+    "arrest"
+  ],
+  "caregiver_alert": true
+}

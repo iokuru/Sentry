@@ -1,0 +1,17 @@
+{
+  "id": "holdout-damage-control-pin-sent",
+  "input_text": "Your bank verification code is 891230. Provide to representative to verify refund.",
+  "context": "I spoke to someone claiming to be fraud support and gave them my 6 digit code",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "bank",
+  "required_signals": [
+    "damage_control_stated",
+    "otp_request"
+  ],
+  "required_wording_points": [
+    "containment",
+    "bank"
+  ],
+  "caregiver_alert": true
+}

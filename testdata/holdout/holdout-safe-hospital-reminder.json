@@ -1,0 +1,14 @@
+{
+  "id": "holdout-safe-hospital-reminder",
+  "input_text": "St. Jude Medical Center: Appointment reminder for cardiology consultation on Friday at 9:15 AM with Dr. Adams. Please arrive 15 minutes early.",
+  "context": "Appointment SMS",
+  "source": "text",
+  "expected_level": "low",
+  "expected_category": "other",
+  "required_signals": [],
+  "required_wording_points": [
+    "standard",
+    "update"
+  ],
+  "caregiver_alert": false
+}

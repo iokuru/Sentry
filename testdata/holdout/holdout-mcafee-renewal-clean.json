@@ -1,0 +1,16 @@
+{
+  "id": "holdout-mcafee-renewal-clean",
+  "input_text": "McAfee Antivirus Protection: Your 2-year multi-device license has auto-renewed for $299.00. If you wish to cancel this charge, call our billing helpdesk at +1-888-555-0177 within 24 hours.",
+  "context": "Email receipt",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "tech support",
+  "required_signals": [
+    "subscription_renewal_trap"
+  ],
+  "required_wording_points": [
+    "renewal",
+    "cancellation"
+  ],
+  "caregiver_alert": true
+}

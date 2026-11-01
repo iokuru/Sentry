@@ -1,0 +1,14 @@
+{
+  "id": "holdout-safe-school-chat",
+  "input_text": "Hi Grandpa, soccer practice was moved to 5 PM today. Can you still pick me up afterwards?",
+  "context": "Message from grandson",
+  "source": "text",
+  "expected_level": "low",
+  "expected_category": "relative in need",
+  "required_signals": [],
+  "required_wording_points": [
+    "standard",
+    "update"
+  ],
+  "caregiver_alert": false
+}

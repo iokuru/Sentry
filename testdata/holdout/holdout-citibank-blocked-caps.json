@@ -1,0 +1,17 @@
+{
+  "id": "holdout-citibank-blocked-caps",
+  "input_text": "CITIBANK CRITICAL SECURITY ALERT: DEBIT CARD HAS BEEN RESTRICTED! REACTIVATE ACCOUNT AT HTTPS://BIT.LY/CITI-REACTIVE-NOW",
+  "context": "Phone message",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "bank",
+  "required_signals": [
+    "suspicious_link",
+    "bank_security_alert"
+  ],
+  "required_wording_points": [
+    "bank",
+    "card"
+  ],
+  "caregiver_alert": true
+}

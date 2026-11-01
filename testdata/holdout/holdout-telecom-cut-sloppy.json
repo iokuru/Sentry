@@ -1,0 +1,16 @@
+{
+  "id": "holdout-telecom-cut-sloppy",
+  "input_text": "airtel alert: yr mobile number will be disconnected tonight kyc pending call support officer 9812304918",
+  "context": "SMS",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "utility",
+  "required_signals": [
+    "kyc_pan_deadline"
+  ],
+  "required_wording_points": [
+    "KYC",
+    "PAN"
+  ],
+  "caregiver_alert": true
+}

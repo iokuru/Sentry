@@ -1,0 +1,17 @@
+{
+  "id": "holdout-dhl-customs-sloppy",
+  "input_text": "dhl express notice: shipment 982190 on hold at hub pay 3.50 clearance fee now bit.ly/dhl-clear-pkg",
+  "context": "SMS text",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "delivery",
+  "required_signals": [
+    "suspicious_link",
+    "delivery_fee_or_redirection"
+  ],
+  "required_wording_points": [
+    "carrier",
+    "fee"
+  ],
+  "caregiver_alert": true
+}

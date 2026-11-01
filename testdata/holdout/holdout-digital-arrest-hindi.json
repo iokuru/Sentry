@@ -1,0 +1,17 @@
+{
+  "id": "holdout-digital-arrest-hindi",
+  "input_text": "Mumbai Police Cyber Crime: Aapka bank account illegal money laundering me use hua hai. Turant video call pe join kare digital arrest proceed karne ke liye.",
+  "context": "Incoming notice",
+  "source": "text",
+  "expected_level": "high",
+  "expected_category": "tax",
+  "required_signals": [
+    "authority_impersonation",
+    "digital_arrest_or_legal_threat"
+  ],
+  "required_wording_points": [
+    "police",
+    "arrest"
+  ],
+  "caregiver_alert": true
+}

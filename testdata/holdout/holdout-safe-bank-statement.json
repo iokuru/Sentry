@@ -1,0 +1,14 @@
+{
+  "id": "holdout-safe-bank-statement",
+  "input_text": "Barclays: Your monthly account statement for October is now available to view in your online banking app.",
+  "context": "Monthly statement notice",
+  "source": "text",
+  "expected_level": "low",
+  "expected_category": "bank",
+  "required_signals": [],
+  "required_wording_points": [
+    "standard",
+    "update"
+  ],
+  "caregiver_alert": false
+}
