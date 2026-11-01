@@ -36,6 +36,24 @@ import {
 
 type FlowState = "idle" | "uploading" | "extracting" | "analyzing" | "result" | "quota" | "error";
 
+function formatCategory(cat?: string): string {
+  if (!cat) return "";
+  const map: Record<string, string> = {
+    bank: "Banking Alert",
+    delivery: "Delivery Alert",
+    utility: "Utility Alert",
+    prize: "Prize Claim",
+    tech_support: "Tech Support Alert",
+    "tech support": "Tech Support Alert",
+    relative_in_need: "Family Impersonation",
+    "relative in need": "Family Impersonation",
+    romance: "Online Contact",
+    tax: "Legal / Tax Threat",
+    other: "Suspicious Request",
+  };
+  return map[cat.toLowerCase()] || cat.charAt(0).toUpperCase() + cat.slice(1);
+}
+
 export default function SeniorPage() {
   const [flowState, setFlowState] = useState<FlowState>("idle");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -246,23 +264,49 @@ export default function SeniorPage() {
         {flowState === "result" && result && (
           <div className="result-layout">
             <header className="result-header">
-              <span className="result-eyebrow">
-                {result.severity === "HIGH"
-                  ? "High Risk Alert"
-                  : result.severity === "MEDIUM"
-                  ? "Caution Advised"
-                  : "Standard Message"}
-              </span>
+              <div className="result-badge-row">
+                <span className={`result-eyebrow ${result.severity.toLowerCase()}`}>
+                  {result.severity === "HIGH"
+                    ? "High Risk Alert"
+                    : result.severity === "MEDIUM"
+                    ? "Caution Advised"
+                    : "Standard Message"}
+                </span>
+                {result.category && (
+                  <span className="result-category-badge">
+                    {formatCategory(result.category)}
+                  </span>
+                )}
+              </div>
               <h1 className="result-title">
                 {result.headline || "Here’s what to do next."}
               </h1>
               <p className="result-subtitle">
                 {result.what_this_is || "Take a breath. Review these steps before responding or giving any personal information."}
               </p>
+
+              {result.signals && result.signals.length > 0 && (
+                <div className="result-signals">
+                  <span className="signals-label">Detected warning signs</span>
+                  <div className="signals-chips">
+                    {result.signals.map((sig, idx) => (
+                      <span key={idx} className="signal-chip">
+                        {sig}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </header>
 
             <div className="result-cards">
-              <HoldOffCard advice={result.what_to_do_next || result.hold_off} />
+              <HoldOffCard advice={result.hold_off || result.what_to_do_next || ""} />
+              {result.what_to_do_next && result.hold_off && result.what_to_do_next !== result.hold_off && (
+                <div className="steps-card">
+                  <h2 className="steps-title">Recommended next steps</h2>
+                  <p className="steps-text">{result.what_to_do_next}</p>
+                </div>
+              )}
               <AlternativeCard action={result.safe_alternative} />
               <HotlineButton
                 country={result.country || selectedCountry}
@@ -353,12 +397,47 @@ export default function SeniorPage() {
           text-align: left;
         }
 
+        .result-badge-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+          margin-bottom: 8px;
+        }
+
         .result-eyebrow {
-          font-size: 0.8rem;
+          display: inline-flex;
+          align-items: center;
+          font-size: 0.76rem;
           font-weight: 750;
           text-transform: uppercase;
-          letter-spacing: 0.12em;
-          color: var(--color-primary);
+          letter-spacing: 0.08em;
+          padding: 4px 10px;
+          border-radius: 999px;
+          background: rgba(220, 38, 38, 0.12);
+          color: #dc2626;
+        }
+
+        .result-eyebrow.medium {
+          background: rgba(217, 119, 6, 0.14);
+          color: #b45309;
+        }
+
+        .result-eyebrow.low {
+          background: rgba(22, 163, 74, 0.12);
+          color: #15803d;
+        }
+
+        .result-category-badge {
+          display: inline-flex;
+          align-items: center;
+          font-size: 0.76rem;
+          font-weight: 650;
+          letter-spacing: 0.04em;
+          padding: 4px 10px;
+          border-radius: 999px;
+          background: var(--border-light);
+          color: var(--text-muted);
         }
 
         .result-title {
@@ -373,6 +452,68 @@ export default function SeniorPage() {
           font-size: 1.1rem;
           color: var(--text-muted);
           margin-top: 6px;
+        }
+
+        .result-signals {
+          margin-top: 14px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .signals-label {
+          font-size: 0.74rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          color: var(--text-subtle);
+        }
+
+        .signals-chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .signal-chip {
+          display: inline-flex;
+          align-items: center;
+          font-size: 0.84rem;
+          font-weight: 550;
+          line-height: 1.4;
+          padding: 5px 11px;
+          border-radius: 6px;
+          background: var(--warning-bg);
+          border: 1px solid var(--warning-border);
+          color: var(--text-main);
+        }
+
+        .steps-card {
+          background-color: var(--work-card);
+          border: 1px solid var(--border-light);
+          border-radius: var(--radius-lg);
+          padding: 24px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          box-shadow: var(--shadow-sm);
+        }
+
+        .steps-title {
+          font-size: 1.2rem;
+          font-weight: 700;
+          color: var(--text-main);
+          letter-spacing: -0.01em;
+          margin: 0;
+        }
+
+        .steps-text {
+          font-size: 1.05rem;
+          line-height: 1.7;
+          color: var(--text-muted);
+          font-weight: 500;
+          white-space: pre-line;
+          margin: 0;
         }
 
         .result-cards {

@@ -65,6 +65,7 @@ export function HoldOffCard({ advice }: HoldOffCardProps) {
           line-height: 1.6;
           color: var(--text-main);
           font-weight: 600;
+          white-space: pre-line;
         }
 
         @media (max-width: 600px) {
