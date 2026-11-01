@@ -1,6 +1,9 @@
-.PHONY: all build build-lambdas test dev plan apply destroy seed clean check smoke smoke-live telegram-hook deploy costguard preflight go-live status teardown
+.PHONY: all build build-lambdas test cases dev plan apply destroy seed clean check smoke smoke-live telegram-hook deploy costguard preflight go-live status teardown
 
 all: build test
+
+cases:
+	go test -v ./internal/risk -run TestExecuteCaseSuite
 
 preflight:
 	go run ./cmd/preflight
